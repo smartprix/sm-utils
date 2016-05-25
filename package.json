@@ -7,9 +7,6 @@
     "type": "git",
     "url": "https://github.com/smartprix/sm-utils"
   },
-  "engines": {
-    "node": "5.1.1"
-  },
   "directories": {
     "test": "test"
   },
@@ -40,8 +37,7 @@
     "chai": "3.4.1",
     "ghooks": "1.0.1",
     "isparta": "4.0.0",
-    "mocha": "2.3.4",
-    "nodemon": "1.8.1"
+    "mocha": "2.3.4"
   },
   "babel": {
     "presets": [
