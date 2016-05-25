@@ -7,9 +7,6 @@
     "type": "git",
     "url": "https://github.com/smartprix/sm-utils"
   },
-  "engines": {
-    "node": "5.1.1"
-  },
   "directories": {
     "test": "test"
   },
