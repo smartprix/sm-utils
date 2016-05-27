@@ -1,8 +1,8 @@
 "use strict";
 
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } step("next"); }); }; }
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { return step("next", value); }, function (err) { return step("throw", err); }); } } return step("next"); }); }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -16,7 +16,7 @@ var _chmodr = promisify(require("chmodr"));
 var _chownr = promisify(require("chownr"));
 var system = require("./system");
 
-var File = (function () {
+var File = function () {
     function File(path) {
         _classCallCheck(this, File);
 
@@ -25,7 +25,7 @@ var File = (function () {
 
     _createClass(File, [{
         key: "exists",
-        value: (function () {
+        value: function () {
             var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee() {
                 return regeneratorRuntime.wrap(function _callee$(_context) {
                     while (1) {
@@ -51,13 +51,15 @@ var File = (function () {
                 }, _callee, this, [[0, 6]]);
             }));
 
-            return function exists() {
+            function exists() {
                 return ref.apply(this, arguments);
-            };
-        })()
+            }
+
+            return exists;
+        }()
     }, {
         key: "isFile",
-        value: (function () {
+        value: function () {
             var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee2() {
                 return regeneratorRuntime.wrap(function _callee2$(_context2) {
                     while (1) {
@@ -83,13 +85,15 @@ var File = (function () {
                 }, _callee2, this, [[0, 6]]);
             }));
 
-            return function isFile() {
+            function isFile() {
                 return ref.apply(this, arguments);
-            };
-        })()
+            }
+
+            return isFile;
+        }()
     }, {
         key: "isDir",
-        value: (function () {
+        value: function () {
             var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee3() {
                 return regeneratorRuntime.wrap(function _callee3$(_context3) {
                     while (1) {
@@ -115,13 +119,15 @@ var File = (function () {
                 }, _callee3, this, [[0, 6]]);
             }));
 
-            return function isDir() {
+            function isDir() {
                 return ref.apply(this, arguments);
-            };
-        })()
+            }
+
+            return isDir;
+        }()
     }, {
         key: "mtime",
-        value: (function () {
+        value: function () {
             var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee4() {
                 return regeneratorRuntime.wrap(function _callee4$(_context4) {
                     while (1) {
@@ -147,13 +153,15 @@ var File = (function () {
                 }, _callee4, this, [[0, 6]]);
             }));
 
-            return function mtime() {
+            function mtime() {
                 return ref.apply(this, arguments);
-            };
-        })()
+            }
+
+            return mtime;
+        }()
     }, {
         key: "ctime",
-        value: (function () {
+        value: function () {
             var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee5() {
                 return regeneratorRuntime.wrap(function _callee5$(_context5) {
                     while (1) {
@@ -179,13 +187,15 @@ var File = (function () {
                 }, _callee5, this, [[0, 6]]);
             }));
 
-            return function ctime() {
+            function ctime() {
                 return ref.apply(this, arguments);
-            };
-        })()
+            }
+
+            return ctime;
+        }()
     }, {
         key: "atime",
-        value: (function () {
+        value: function () {
             var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee6() {
                 return regeneratorRuntime.wrap(function _callee6$(_context6) {
                     while (1) {
@@ -211,13 +221,15 @@ var File = (function () {
                 }, _callee6, this, [[0, 6]]);
             }));
 
-            return function atime() {
+            function atime() {
                 return ref.apply(this, arguments);
-            };
-        })()
+            }
+
+            return atime;
+        }()
     }, {
         key: "crtime",
-        value: (function () {
+        value: function () {
             var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee7() {
                 return regeneratorRuntime.wrap(function _callee7$(_context7) {
                     while (1) {
@@ -243,13 +255,15 @@ var File = (function () {
                 }, _callee7, this, [[0, 6]]);
             }));
 
-            return function crtime() {
+            function crtime() {
                 return ref.apply(this, arguments);
-            };
-        })()
+            }
+
+            return crtime;
+        }()
     }, {
         key: "chmod",
-        value: (function () {
+        value: function () {
             var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee8(mode) {
                 return regeneratorRuntime.wrap(function _callee8$(_context8) {
                     while (1) {
@@ -269,13 +283,15 @@ var File = (function () {
                 }, _callee8, this);
             }));
 
-            return function chmod(_x) {
+            function chmod(_x) {
                 return ref.apply(this, arguments);
-            };
-        })()
+            }
+
+            return chmod;
+        }()
     }, {
         key: "chmodr",
-        value: (function () {
+        value: function () {
             var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee9(mode) {
                 return regeneratorRuntime.wrap(function _callee9$(_context9) {
                     while (1) {
@@ -295,13 +311,15 @@ var File = (function () {
                 }, _callee9, this);
             }));
 
-            return function chmodr(_x2) {
+            function chmodr(_x2) {
                 return ref.apply(this, arguments);
-            };
-        })()
+            }
+
+            return chmodr;
+        }()
     }, {
         key: "chown",
-        value: (function () {
+        value: function () {
             var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee10(user, group) {
                 return regeneratorRuntime.wrap(function _callee10$(_context10) {
                     while (1) {
@@ -333,13 +351,15 @@ var File = (function () {
                 }, _callee10, this);
             }));
 
-            return function chown(_x3, _x4) {
+            function chown(_x3, _x4) {
                 return ref.apply(this, arguments);
-            };
-        })()
+            }
+
+            return chown;
+        }()
     }, {
         key: "chownr",
-        value: (function () {
+        value: function () {
             var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee11(user, group) {
                 return regeneratorRuntime.wrap(function _callee11$(_context11) {
                     while (1) {
@@ -371,13 +391,15 @@ var File = (function () {
                 }, _callee11, this);
             }));
 
-            return function chownr(_x5, _x6) {
+            function chownr(_x5, _x6) {
                 return ref.apply(this, arguments);
-            };
-        })()
+            }
+
+            return chownr;
+        }()
     }, {
         key: "rename",
-        value: (function () {
+        value: function () {
             var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee12(new_name) {
                 return regeneratorRuntime.wrap(function _callee12$(_context12) {
                     while (1) {
@@ -397,13 +419,15 @@ var File = (function () {
                 }, _callee12, this);
             }));
 
-            return function rename(_x7) {
+            function rename(_x7) {
                 return ref.apply(this, arguments);
-            };
-        })()
+            }
+
+            return rename;
+        }()
     }, {
         key: "unlink",
-        value: (function () {
+        value: function () {
             var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee13() {
                 return regeneratorRuntime.wrap(function _callee13$(_context13) {
                     while (1) {
@@ -423,13 +447,15 @@ var File = (function () {
                 }, _callee13, this);
             }));
 
-            return function unlink() {
+            function unlink() {
                 return ref.apply(this, arguments);
-            };
-        })()
+            }
+
+            return unlink;
+        }()
     }, {
         key: "rm",
-        value: (function () {
+        value: function () {
             var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee14() {
                 return regeneratorRuntime.wrap(function _callee14$(_context14) {
                     while (1) {
@@ -449,13 +475,15 @@ var File = (function () {
                 }, _callee14, this);
             }));
 
-            return function rm() {
+            function rm() {
                 return ref.apply(this, arguments);
-            };
-        })()
+            }
+
+            return rm;
+        }()
     }, {
         key: "rmdir",
-        value: (function () {
+        value: function () {
             var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee15() {
                 return regeneratorRuntime.wrap(function _callee15$(_context15) {
                     while (1) {
@@ -475,13 +503,15 @@ var File = (function () {
                 }, _callee15, this);
             }));
 
-            return function rmdir() {
+            function rmdir() {
                 return ref.apply(this, arguments);
-            };
-        })()
+            }
+
+            return rmdir;
+        }()
     }, {
         key: "rmrf",
-        value: (function () {
+        value: function () {
             var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee16() {
                 return regeneratorRuntime.wrap(function _callee16$(_context16) {
                     while (1) {
@@ -501,13 +531,15 @@ var File = (function () {
                 }, _callee16, this);
             }));
 
-            return function rmrf() {
+            function rmrf() {
                 return ref.apply(this, arguments);
-            };
-        })()
+            }
+
+            return rmrf;
+        }()
     }, {
         key: "mkdir",
-        value: (function () {
+        value: function () {
             var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee17(mode) {
                 return regeneratorRuntime.wrap(function _callee17$(_context17) {
                     while (1) {
@@ -528,13 +560,15 @@ var File = (function () {
                 }, _callee17, this);
             }));
 
-            return function mkdir(_x8) {
+            function mkdir(_x8) {
                 return ref.apply(this, arguments);
-            };
-        })()
+            }
+
+            return mkdir;
+        }()
     }, {
         key: "mkdirp",
-        value: (function () {
+        value: function () {
             var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee18(mode) {
                 return regeneratorRuntime.wrap(function _callee18$(_context18) {
                     while (1) {
@@ -554,13 +588,15 @@ var File = (function () {
                 }, _callee18, this);
             }));
 
-            return function mkdirp(_x9) {
+            function mkdirp(_x9) {
                 return ref.apply(this, arguments);
-            };
-        })()
+            }
+
+            return mkdirp;
+        }()
     }, {
         key: "glob",
-        value: (function () {
+        value: function () {
             var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee19() {
                 return regeneratorRuntime.wrap(function _callee19$(_context19) {
                     while (1) {
@@ -580,13 +616,15 @@ var File = (function () {
                 }, _callee19, this);
             }));
 
-            return function glob() {
+            function glob() {
                 return ref.apply(this, arguments);
-            };
-        })()
+            }
+
+            return glob;
+        }()
     }, {
         key: "read",
-        value: (function () {
+        value: function () {
             var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee20() {
                 return regeneratorRuntime.wrap(function _callee20$(_context20) {
                     while (1) {
@@ -606,13 +644,15 @@ var File = (function () {
                 }, _callee20, this);
             }));
 
-            return function read() {
+            function read() {
                 return ref.apply(this, arguments);
-            };
-        })()
+            }
+
+            return read;
+        }()
     }, {
         key: "mkdirp_path",
-        value: (function () {
+        value: function () {
             var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee21(mode) {
                 return regeneratorRuntime.wrap(function _callee21$(_context21) {
                     while (1) {
@@ -633,13 +673,15 @@ var File = (function () {
                 }, _callee21, this);
             }));
 
-            return function mkdirp_path(_x10) {
+            function mkdirp_path(_x10) {
                 return ref.apply(this, arguments);
-            };
-        })()
+            }
+
+            return mkdirp_path;
+        }()
     }, {
         key: "write",
-        value: (function () {
+        value: function () {
             var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee22(contents, file_mode, dir_mode) {
                 return regeneratorRuntime.wrap(function _callee22$(_context22) {
                     while (1) {
@@ -666,13 +708,15 @@ var File = (function () {
                 }, _callee22, this);
             }));
 
-            return function write(_x11, _x12, _x13) {
+            function write(_x11, _x12, _x13) {
                 return ref.apply(this, arguments);
-            };
-        })()
+            }
+
+            return write;
+        }()
     }, {
         key: "append",
-        value: (function () {
+        value: function () {
             var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee23(contents, file_mode, dir_mode) {
                 return regeneratorRuntime.wrap(function _callee23$(_context23) {
                     while (1) {
@@ -699,13 +743,15 @@ var File = (function () {
                 }, _callee23, this);
             }));
 
-            return function append(_x14, _x15, _x16) {
+            function append(_x14, _x15, _x16) {
                 return ref.apply(this, arguments);
-            };
-        })()
+            }
+
+            return append;
+        }()
     }, {
         key: "realpath",
-        value: (function () {
+        value: function () {
             var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee24() {
                 return regeneratorRuntime.wrap(function _callee24$(_context24) {
                     while (1) {
@@ -725,14 +771,16 @@ var File = (function () {
                 }, _callee24, this);
             }));
 
-            return function realpath() {
+            function realpath() {
                 return ref.apply(this, arguments);
-            };
-        })()
+            }
+
+            return realpath;
+        }()
     }]);
 
     return File;
-})();
+}();
 
 function file(path) {
     return new File(path);
