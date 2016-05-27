@@ -12,8 +12,8 @@
   },
   "scripts": {
     "start": "nodemon src/index.js --exec babel-node --presets es2015,stage-0",
-    "check-coverage": "istanbul check-coverage --statements 1 --functions 1 --branches 1 --lines 1",
-    "test": "babel-node ./node_modules/.bin/isparta cover -x *.test.js _mocha -- -R spec test/index.test.js",
+    "test": "mocha --compilers js:babel-register test/*.test.js",
+    "check-coverage": "true",
     "build": "babel src --out-dir dist"
   },
   "author": "Hitesh Khandelwal <hitesh@smartprix.com> (http://www.smartprix.com/)",
