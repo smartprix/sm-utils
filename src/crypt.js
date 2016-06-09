@@ -1,17 +1,23 @@
 var crypto = require('crypto');
+var _ = require('lodash');
+require('./lodash_utils');
 var baseConvert = require('./base_convert');
 
 var chars = {};
 chars.NUMERIC = '0123456789';
 chars.LOWER = 'abcdefghijklmnopqrstuvwxyz';
 chars.UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-chars.SYMBOLS = '!#$%&()*+,-./:;<=>?@[]^_`{|}~';   // missing ', ", space, \ (as these might cause problems when copying strings)
+chars.SYMBOLS = '-_!#$%&()*+,./:;<=>?@[]^`{|}~';   // missing ', ", space, \ (as these might cause problems when copying strings)
 chars.HEX = chars.NUMERIC + 'abcdef';
 chars.BASE_36 = chars.NUMERIC + chars.LOWER;
 chars.ALPHA = chars.LOWER + chars.UPPER;
 chars.ALPHA_NUMERIC = chars.NUMERIC + chars.ALPHA;
-chars.BASE_64 = chars.ALPHA_NUMERIC + '+/';
+chars.BASE_62 = chars.ALPHA_NUMERIC;
+chars.BASE_64 = chars.ALPHA_NUMERIC + '-_';
 chars.PRINTABLE = chars.ALPHA_NUMERIC + chars.SYMBOLS;
+
+// private data for this module
+var data = {};
 
 /**
  * Count the minimum number of bits to represent the provided number
@@ -109,15 +115,31 @@ function nanoSecondsAlpha(base36 = false) {
 }
 
 /**
+ * get sequential number that resets every millisecond
+ * multiple call within the same millisecond will return 1, 2, 3 so on..
+ * the counter will reset on next millisecond
+*/
+function msCounter(current_time) {
+	current_time = current_time || Date.now();
+	if(current_time != data.current_millis) {
+		data.current_millis = current_time;
+		data.counter = 0;
+	}
+
+	data.counter = (data.counter || 0) + 1;
+	return data.counter;
+}
+
+/**
  * generate a sequential id based on current time in millisecond and some randomness
  * It can be treated as a Sequential UUID
  * Ideal for use as a DB primary key
+ * For best results use atleast 15 characters in base62 and 18 characters in base36 encoding
  *
  * @param int length
  * @return string id
  */
 function sequentialID(options) {
-	var current_time, random_string;
 	var length = 20;
 	var base36 = false;
 
@@ -126,26 +148,35 @@ function sequentialID(options) {
 	}
 
 	if(typeof options === 'object') {
-		length = options.length || 20;
-		base36 = options.base36 || false;
+		length = options.length || length;
+		base36 = options.base36 || options.lowercase || base36;
 	}
 	else if(typeof options === 'number') {
 		length = options;
 	}
 
+	var current_time = Date.now();
+	var counter = msCounter(current_time);
+	var result;
+
 	if(base36) {
 		// convert current time in milliseconds to base36
-		var current_time = baseConvert(Date.now(), 10, 36);
+		// This will always return 8 characters till 2058
+		result = baseConvert(current_time, 10, 36);
+		result += _.padStart(baseConvert(counter, 10, 36), 4, '0');
 	}
 	else {
 		// convert current time in milliseconds to base62
-		current_time = baseConvert(Date.now(), 10, 62);
+		// This will always return 7 characters till 2080
+		result = baseConvert(current_time, 10, 62);
+		result += _.padStart(baseConvert(counter, 10, 62), 3, '0');
 	}
 
-	var result = current_time + nanoSecondsAlpha(base36);
 	if(length < result.length) {
 		return result.substring(0, length);
 	}
+
+	var random_string;
 
 	if(base36) {
 		random_string = randomString({length: length - result.length, charset: chars.BASE_36});
@@ -187,6 +218,216 @@ function randomUUID() {
 	return addDashesForUUID(randomString({length: 30, charset: chars.HEX}));
 }
 
+/**
+ * Compute hash of a string using given algorithm
+ * encoding can be 'hex', 'binary', 'ascii', 'base64', 'base64url', 'utf8', 'buffer'
+*/
+function hash(algo, string, encoding = 'hex') {
+	if(encoding == 'buffer') encoding = undefined;
+	return crypto.createHash(algo).update(string).digest(encoding);
+}
+
+function md5(string, encoding = 'hex') {
+	return hash("md5", string, encoding);
+}
+
+function sha1(string, encoding = 'hex') {
+	return hash("sha1", string, encoding);
+}
+
+function sha256(string, encoding = 'hex') {
+	return hash("sha256", string, encoding);
+}
+
+function sha512(string, encoding = 'hex') {
+	return hash("sha512", string, encoding);
+}
+
+/**
+ * Create cryptographic HMAC digests
+*/
+function hmac(algo, string, key, encoding = 'hex') {
+	if(encoding == 'buffer') encoding = undefined;
+	return crypto.createHmac(algo, key).update(string).digest(encoding);
+}
+
+function sha1Hmac(string, key, encoding = 'hex') {
+	return hmac("sha1", key, string, encoding);
+}
+
+function sha256Hmac(string, key, encoding = 'hex') {
+	return hmac("sha256", key, string, encoding);
+}
+
+/**
+ * Encode the string/buffer using a given encoding
+*/
+function baseEncode(string, encoding = 'base64url', in_encoding = 'binary') {
+	var buffer = (string instanceof Buffer) ? string : Buffer.from(string, in_encoding);
+
+	encoding = encoding.toLowerCase();
+
+	if(encoding === "buffer") {
+		return buffer;
+	}
+
+	if(["ascii", "utf8", "utf16le", "ucs2", "base64", "binary", "hex"].indexOf(encoding) > -1) {
+		return buffer.toString(encoding);
+	}
+
+	if(encoding === 'base64url') {
+		return buffer.toString("base64")
+			.replace(/\+/g, '-')
+			.replace(/\//g, '_')
+			.replace(/=+$/, '');
+	}
+
+	return string;
+}
+
+/**
+ * Decode the string encoded using a given encoding
+ * You can give out_encoding to en
+*/
+function baseDecode(string, encoding = 'base64url', out_encoding = 'binary') {
+	encoding = encoding.toLowerCase();
+
+	if(encoding === "buffer") {
+		return Buffer.from(string);
+	}
+
+	if(["ascii", "utf8", "utf16le", "ucs2", "base64", "binary", "hex"].indexOf(encoding) > -1) {
+		return baseEncode(Buffer.from(string, encoding), out_encoding);
+	}
+
+	if(encoding === 'base64url') {
+		return baseEncode(Buffer.from(string, "base64"), out_encoding);
+	}
+
+	return string;
+}
+
+/**
+ * Encrypt the given string with the given key using AES 256
+ * Calling encrypt on the same string multiple times will return different encrypted strings
+ * Optionally specify encoding in which you want to get the output
+*/
+function encrypt(string, key, encoding = 'base64url') {
+	if(string.length < 7) {
+		string = _.padEnd(string, 7, "\v");
+	}
+
+	if(key.length != 32) {
+		key = sha256(key, 'buffer');
+	}
+
+	var iv = crypto.randomBytes(16);
+
+	var cipher = crypto.createCipheriv('AES-256-CFB', key, iv);
+	var crypted = Buffer.concat([iv, cipher.update(string), cipher.final()]);
+	return '1' + baseEncode(crypted, encoding);
+}
+
+/**
+ * Decrypt the given string with the given key encrypted using encrypt
+*/
+function decrypt(string, key, encoding = 'base64url') {
+	if(key.length != 32) {
+		key = sha256(key, 'buffer');
+	}
+
+	var version = string.substring(0,1);
+	var decoded = baseDecode(string.substring(1), encoding, "buffer");
+
+	var decipher = crypto.createDecipheriv('AES-256-CFB', key, decoded.slice(0, 16));
+	var decrypted = Buffer.concat([decipher.update(decoded.slice(16)), decipher.final()]);
+	return _.trimEnd(decrypted, "\v");
+}
+
+/**
+ * Encrypt the given string with the given key using AES 256
+ * Calling EncryptStatic on the same string multiple times will return same encrypted strings
+ * this encryption is weaker than Encrypt but has the benefit of returing same encypted string
+ * for same string and key.
+*/
+function encryptStatic(string, key, encoding = 'base64url') {
+	if(string.length < 7) {
+		//string = _.padEnd(string, 7, "\v");
+	}
+
+	var cipher = crypto.createCipher('AES-256-CFB', key);
+	var crypted = Buffer.concat([cipher.update(string), cipher.final()]);
+	return '1' + baseEncode(crypted, encoding);
+}
+
+/**
+ * Decrypt the given string with the given key encrypted using encryptStatic
+*/
+function decryptStatic(string, key, encoding = 'base64url') {
+	var version = string.substring(0,1);
+	var decoded = baseDecode(string.substring(1), encoding, "buffer");
+
+	var decipher = crypto.createDecipher('AES-256-CFB', key);
+	var decrypted = Buffer.concat([decipher.update(decoded), decipher.final()]);
+	return _.trimEnd(decrypted, "\v");
+}
+
+/**
+ * Hash a given password using cryptographically strong hash function
+ * Returns a 50 character long hash
+*/
+function hashPassword(password, salt) {
+	if(salt === undefined) {
+		salt = crypto.randomBytes(12);
+	}
+
+	var hash = crypto.pbkdf2Sync(password, salt, 1000, 25, 'sha256');
+	var pass_hash = '1' + baseEncode(Buffer.concat([salt, hash]), 'base64url');
+
+	return pass_hash.substring(0, 50);
+}
+
+/**
+ * Verify that given password and hashed password are same or not
+*/
+function verifyPassword(password, hashed) {
+	var version = hashed.substring(0, 1);
+	var salt = baseDecode(hashed.substring(1), 'base64url', 'buffer').slice(0, 12);
+
+	if(hashed === hashPassword(password, salt)) return true;
+	if(hashed === hashPassword(password.trim(), salt)) return true;
+	if(hashed === hashPassword(_.upperFirst(password), salt)) return true;
+	if(hashed === hashPassword(_.invertCase(password), salt)) return true;
+}
+
+/**
+ * Base64 Encode
+*/
+function base64Encode(string) {
+	return baseEncode(string, "base64");
+}
+
+/**
+ * URL Safe Base64 Encode
+*/
+function base64UrlEncode(string) {
+	return baseEncode(string, "base64url");
+}
+
+/**
+ * Base64 Decode
+*/
+function base64Decode(string) {
+	return baseDecode(string, 'base64');
+}
+
+/**
+ * URL Safe Base64 Decode
+*/
+function base64UrlDecode(string) {
+	return baseDecode(string, 'base64url');
+}
+
 module.exports = {
 	baseConvert,
 	chars,
@@ -198,4 +439,12 @@ module.exports = {
 	sequentialUUID,
 	randomUUID,
 	UUID: randomUUID,
+	hash, md5, sha1, sha256, sha512,
+	hmac, sha1Hmac, sha256Hmac,
+	encrypt, decrypt,
+	encryptStatic, decryptStatic,
+	hashPassword, verifyPassword,
+	baseEncode, baseDecode,
+	base64Encode, base64UrlEncode,
+	base64Decode, base64UrlDecode,
 };

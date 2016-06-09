@@ -1,6 +1,6 @@
 'use strict';
 
-var NUMERALS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz$_';
+var NUMERALS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_!#$%&()*+,./:;<=>?@[]^`{|}~';
 
 /**
  * convert arbitary long integer from one base to another
