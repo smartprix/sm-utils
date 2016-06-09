@@ -2,7 +2,7 @@
 
 var _ = require('lodash');
 
-config = {};
+var config = {};
 
 function cfg(key, default_value) {
     if (key in config) return config[key];

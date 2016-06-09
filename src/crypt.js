@@ -313,8 +313,8 @@ function baseDecode(string, encoding = 'base64url', out_encoding = 'binary') {
  * Optionally specify encoding in which you want to get the output
 */
 function encrypt(string, key, encoding = 'base64url') {
-	if(string.length < 7) {
-		string = _.padEnd(string, 7, "\v");
+	if(string.length < 6) {
+		string = _.padEnd(string, 6, "\v");
 	}
 
 	if(key.length != 32) {
@@ -351,8 +351,8 @@ function decrypt(string, key, encoding = 'base64url') {
  * for same string and key.
 */
 function encryptStatic(string, key, encoding = 'base64url') {
-	if(string.length < 7) {
-		//string = _.padEnd(string, 7, "\v");
+	if(string.length < 6) {
+		string = _.padEnd(string, 6, "\v");
 	}
 
 	var cipher = crypto.createCipher('AES-256-CFB', key);
