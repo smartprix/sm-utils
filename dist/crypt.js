@@ -328,8 +328,8 @@ function baseDecode(string) {
 function encrypt(string, key) {
 	var encoding = arguments.length <= 2 || arguments[2] === undefined ? 'base64url' : arguments[2];
 
-	if (string.length < 7) {
-		string = _.padEnd(string, 7, "\v");
+	if (string.length < 6) {
+		string = _.padEnd(string, 6, "\v");
 	}
 
 	if (key.length != 32) {
@@ -370,8 +370,8 @@ function decrypt(string, key) {
 function encryptStatic(string, key) {
 	var encoding = arguments.length <= 2 || arguments[2] === undefined ? 'base64url' : arguments[2];
 
-	if (string.length < 7) {
-		//string = _.padEnd(string, 7, "\v");
+	if (string.length < 6) {
+		string = _.padEnd(string, 6, "\v");
 	}
 
 	var cipher = crypto.createCipher('AES-256-CFB', key);
