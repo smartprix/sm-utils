@@ -1,8 +1,6 @@
-'use strict';
-
-require("babel-polyfill");
 require('./lodash_utils');
 
+/* eslint-disable global-require */
 module.exports = {
 	file: require('./file'),
 	system: require('./system'),

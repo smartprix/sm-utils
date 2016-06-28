@@ -1,6 +1,6 @@
 {
   "name": "sm-utils",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Uilities for NodeJS",
   "main": "dist/index.js",
   "repository": {
@@ -11,37 +11,44 @@
     "test": "test"
   },
   "scripts": {
-    "start": "nodemon src/index.js --exec babel-node --presets es2015,stage-0",
-    "test": "mocha --compilers js:babel-register test/*.test.js",
+    "start": "nodemon src/index.js --exec babel-node --presets stage-0",
+    "test": "npm run lint && npm run test-only",
     "check-coverage": "true",
-    "build": "babel src --out-dir dist"
+    "build": "babel src --out-dir dist",
+    "lint": "eslint src",
+    "test-only": "mocha --compilers js:babel-register test/*.test.js"
   },
   "author": "Hitesh Khandelwal <hitesh@smartprix.com> (http://www.smartprix.com/)",
   "license": "ISC",
   "dependencies": {
-    "babel-polyfill": "6.9.0",
     "chmodr": "1.0.2",
     "chownr": "1.0.1",
+    "eslint": "2.13.1",
     "etc-passwd": "0.1.1",
-    "glob": "7.0.3",
+    "ghooks": "1.2.4",
+    "glob": "7.0.5",
     "lodash": "4.13.1",
+    "microtime": "2.1.1",
     "mkdirp": "0.5.1",
     "rimraf": "2.5.2",
     "thenify-all": "1.6.0"
   },
   "devDependencies": {
-    "babel-cli": "6.9.0",
-    "babel-preset-es2015": "6.9.0",
+    "babel-cli": "6.10.1",
+    "babel-eslint": "6.1.0",
     "babel-preset-stage-0": "6.5.0",
     "babel-register": "6.9.0",
     "chai": "3.5.0",
-    "ghooks": "1.2.1",
+    "eslint": "2.13.1",
+    "eslint-plugin-babel": "3.3.0",
+    "eslint-plugin-import": "1.9.2",
+    "eslint-config-smartprix": "1.1.2",
+    "ghooks": "1.2.4",
     "isparta": "4.0.0",
     "mocha": "2.5.3"
   },
   "babel": {
     "presets": [
-      "es2015",
       "stage-0"
     ]
   },

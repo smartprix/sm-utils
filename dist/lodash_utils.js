@@ -1,12 +1,10 @@
-'use strict';
-
-var _ = require('lodash');
+const _ = require('lodash');
 
 _.invertCase = function (str) {
-	var output = '';
-	var code = '';
+	let output = '';
+	let code = '';
 
-	for (var i = 0, len = str.length - 1; i <= len; i++) {
+	for (let i = 0, len = str.length - 1; i <= len; i++) {
 		code = str.charCodeAt(i);
 		if (code >= 65 && code <= 90) {
 			output += str.charAt(i).toLowerCase();
