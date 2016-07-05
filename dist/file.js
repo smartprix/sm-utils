@@ -149,103 +149,87 @@ class File {
 		})();
 	}
 
-	unlink() {
+	mv(newName) {
 		var _this13 = this;
 
 		return _asyncToGenerator(function* () {
-			return yield fs.unlink(_this13.path);
+			return yield _this13.rename(_this13.path, newName);
+		})();
+	}
+
+	unlink() {
+		var _this14 = this;
+
+		return _asyncToGenerator(function* () {
+			return yield fs.unlink(_this14.path);
 		})();
 	}
 
 	rm() {
-		var _this14 = this;
+		var _this15 = this;
 
 		return _asyncToGenerator(function* () {
-			return yield _this14.unlink();
+			return yield _this15.unlink();
 		})();
 	}
 
 	rmdir() {
-		var _this15 = this;
+		var _this16 = this;
 
 		return _asyncToGenerator(function* () {
-			return yield fs.rmdir(_this15.path);
+			return yield fs.rmdir(_this16.path);
 		})();
 	}
 
 	rmrf() {
-		var _this16 = this;
+		var _this17 = this;
 
 		return _asyncToGenerator(function* () {
-			return yield _rimraf(_this16.path);
+			return yield _rimraf(_this17.path);
 		})();
 	}
 
 	mkdir(mode = 0o755) {
-		var _this17 = this;
+		var _this18 = this;
 
 		return _asyncToGenerator(function* () {
-			return yield fs.mkdir(_this17.path, mode);
+			return yield fs.mkdir(_this18.path, mode);
 		})();
 	}
 
 	mkdirp(mode = 0o755) {
-		var _this18 = this;
+		var _this19 = this;
 
 		return _asyncToGenerator(function* () {
-			return yield _mkdirp(_this18.path, mode);
+			return yield _mkdirp(_this19.path, mode);
 		})();
 	}
 
 	glob() {
-		var _this19 = this;
+		var _this20 = this;
 
 		return _asyncToGenerator(function* () {
-			return yield _glob(_this19.path);
+			return yield _glob(_this20.path);
 		})();
 	}
 
 	read() {
-		var _this20 = this;
+		var _this21 = this;
 
 		return _asyncToGenerator(function* () {
-			return yield fs.readFile(_this20.path, 'utf8');
+			return yield fs.readFile(_this21.path, 'utf8');
 		})();
 	}
 
 	mkdirpPath(mode = 0o755) {
-		var _this21 = this;
+		var _this22 = this;
 
 		return _asyncToGenerator(function* () {
-			return yield _mkdirp(_path.dirname(_this21.path), mode);
+			return yield _mkdirp(_path.dirname(_this22.path), mode);
 		})();
 	}
 
 	write(contents, options = {}) {
-		var _this22 = this;
-
-		return _asyncToGenerator(function* () {
-			const opts = _.assign({
-				fileMode: 0o644,
-				dirMode: 0o755,
-				retries: 0
-			}, options);
-
-			if (!opts.retries) {
-				yield _this22.mkdirpPath(opts.dirMode);
-				return yield fs.writeFile(_this22.path, contents, { encoding: 'utf8', mode: opts.fileMode });
-			}
-
-			try {
-				return _this22.write(contents, _.assign(opts, { retries: 0 }));
-			} catch (e) {
-				opts.retries--;
-				return _this22.write(contents, opts);
-			}
-		})();
-	}
-
-	append(contents, options = {}) {
 		var _this23 = this;
 
 		return _asyncToGenerator(function* () {
@@ -257,23 +241,47 @@ class File {
 
 			if (!opts.retries) {
 				yield _this23.mkdirpPath(opts.dirMode);
-				return yield fs.appendFile(_this23.path, contents, { encoding: 'utf8', mode: opts.fileMode });
+				return yield fs.writeFile(_this23.path, contents, { encoding: 'utf8', mode: opts.fileMode });
 			}
 
 			try {
-				return _this23.append(contents, _.assign(opts, { retries: 0 }));
+				return _this23.write(contents, _.assign(opts, { retries: 0 }));
 			} catch (e) {
 				opts.retries--;
-				return _this23.append(contents, opts);
+				return _this23.write(contents, opts);
+			}
+		})();
+	}
+
+	append(contents, options = {}) {
+		var _this24 = this;
+
+		return _asyncToGenerator(function* () {
+			const opts = _.assign({
+				fileMode: 0o644,
+				dirMode: 0o755,
+				retries: 0
+			}, options);
+
+			if (!opts.retries) {
+				yield _this24.mkdirpPath(opts.dirMode);
+				return yield fs.appendFile(_this24.path, contents, { encoding: 'utf8', mode: opts.fileMode });
+			}
+
+			try {
+				return _this24.append(contents, _.assign(opts, { retries: 0 }));
+			} catch (e) {
+				opts.retries--;
+				return _this24.append(contents, opts);
 			}
 		})();
 	}
 
 	realpath() {
-		var _this24 = this;
+		var _this25 = this;
 
 		return _asyncToGenerator(function* () {
-			return yield fs.realpath(_this24.path);
+			return yield fs.realpath(_this25.path);
 		})();
 	}
 }
