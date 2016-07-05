@@ -139,6 +139,23 @@ function nanotime() {
 	return hrtimeDelta + hrtimeFloat;
 }
 
+// Sleep for a specified time (in milliseconds)
+// Example: await system.sleep(2000);
+function sleep(timeout) {
+	return new Promise((resolve) => {
+		setTimeout(resolve, timeout);
+	});
+}
+
+// wait till the next event loop cycle
+// this function is useful if we are running a long blocking task
+// and need to make sure that other callbacks can complete.
+function tick() {
+	return new Promise((resolve) => {
+		setImmediate(resolve);
+	});
+}
+
 // exit and kill the process
 // code can be an exit code or a message (string)
 // if a message is given then it will be logged to console before exiting
@@ -165,5 +182,7 @@ module.exports = {
 	millitime,
 	microtime,
 	nanotime,
+	sleep,
+	tick,
 	exit,
 };

@@ -107,6 +107,10 @@ class File
 		return await fs.rename(this.path, newName);
 	}
 
+	async mv(newName) {
+		return await this.rename(this.path, newName);
+	}
+
 	async unlink() {
 		return await fs.unlink(this.path);
 	}

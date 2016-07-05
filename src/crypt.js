@@ -26,7 +26,7 @@ const data = {};
  * This is basically floor(log($number, 2))
  * But avoids float precision issues
  *
- * @param int $number The number to count
+ * @param number
  * @return int The number of bits
  */
 function countBits(number) {
@@ -45,7 +45,7 @@ function countBits(number) {
  * if options is an integer it will treated as length
  * by default, length is 20 and charset is ALPHA_NUMERIC
  *
- * @param object|int options
+ * @param options
  * @return string random string
  */
 function randomString(options) {
