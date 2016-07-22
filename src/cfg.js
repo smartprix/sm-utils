@@ -32,4 +32,12 @@ cfg.delete = function (key) {
 	delete config[key];
 };
 
+cfg.is_production = function () {
+	return process.env.NODE_ENV === 'production';
+};
+
+cfg.is_dev = function () {
+	return !cfg.is_production();
+};
+
 module.exports = cfg;

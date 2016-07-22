@@ -11,7 +11,7 @@
     "test": "test"
   },
   "scripts": {
-    "start": "nodemon src/index.js --exec babel-node --presets stage-0",
+    "start": "nodemon src/index.js --exec babel-node",
     "test": "npm run lint && npm run test-only",
     "check-coverage": "true",
     "build": "babel src --out-dir dist",
@@ -21,43 +21,45 @@
   "author": "Hitesh Khandelwal <hitesh@smartprix.com> (http://www.smartprix.com/)",
   "license": "ISC",
   "dependencies": {
+    "chalk": "1.1.3",
     "chmodr": "1.0.2",
     "chownr": "1.0.1",
     "continuation-local-storage": "3.1.7",
-    "eslint": "2.13.1",
+    "eslint": "3.0.1",
     "etc-passwd": "0.1.1",
-    "ghooks": "1.2.4",
     "glob": "7.0.5",
     "lodash": "4.13.1",
+    "longjohn": "0.2.11",
+    "lru-cache": "4.0.1",
     "microtime": "2.1.1",
     "mkdirp": "0.5.1",
-    "nodedump": "0.0.8",
-    "rimraf": "2.5.2",
+    "rimraf": "2.5.3",
+    "stack-trace": "0.0.9",
     "thenify-all": "1.6.0"
   },
   "devDependencies": {
     "babel-cli": "6.10.1",
-    "babel-eslint": "6.1.0",
+    "babel-eslint": "6.1.2",
     "babel-preset-stage-0": "6.5.0",
     "babel-register": "6.9.0",
     "chai": "3.5.0",
-    "eslint": "2.13.1",
+    "eslint": "3.0.1",
     "eslint-plugin-babel": "3.3.0",
-    "eslint-plugin-import": "1.9.2",
+    "eslint-plugin-import": "1.10.2",
     "eslint-config-smartprix": "1.1.2",
-    "ghooks": "1.2.4",
+    "ghooks": "1.3.2",
     "isparta": "4.0.0",
     "mocha": "2.5.3"
   },
   "eslintConfig": {
     "extends": "smartprix",
-    "rules": {
-    }
+    "rules": {}
   },
   "babel": {
     "presets": [
       "stage-0"
-    ]
+    ],
+    "sourceMaps": true
   },
   "config": {
     "ghooks": {

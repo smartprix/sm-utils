@@ -3,12 +3,12 @@
 // execute a command and return its output
 
 let execOut = (() => {
-	var ref = _asyncToGenerator(function* (...args) {
+	var _ref = _asyncToGenerator(function* (...args) {
 		return (yield exec.apply(this, args)).stdout.toString();
 	});
 
 	return function execOut(_x) {
-		return ref.apply(this, arguments);
+		return _ref.apply(this, arguments);
 	};
 })();
 
@@ -16,12 +16,12 @@ let execOut = (() => {
 
 
 let execFileOut = (() => {
-	var ref = _asyncToGenerator(function* (...args) {
+	var _ref2 = _asyncToGenerator(function* (...args) {
 		return (yield execFile.apply(this, args)).stdout.toString();
 	});
 
 	return function execFileOut(_x2) {
-		return ref.apply(this, arguments);
+		return _ref2.apply(this, arguments);
 	};
 })();
 
@@ -53,8 +53,8 @@ function execWrapper(method, args) {
 			} else {
 				resolve({
 					childProcess: cp,
-					stdout: stdout,
-					stderr: stderr
+					stdout,
+					stderr
 				});
 			}
 		});

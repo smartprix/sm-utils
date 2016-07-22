@@ -21,8 +21,8 @@ function execWrapper(method, args) {
 			else {
 				resolve({
 					childProcess: cp,
-					stdout: stdout,
-					stderr: stderr,
+					stdout,
+					stderr,
 				});
 			}
 		});
