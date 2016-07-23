@@ -1,5 +1,5 @@
 /* eslint-disable no-console, no-shadow */
-require('./source_map_support');
+require('./longjohn');
 Error.stackTraceLimit = Infinity;
 
 const stackTrace = require('./stack_trace');

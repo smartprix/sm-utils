@@ -34,6 +34,7 @@
     "microtime": "2.1.1",
     "mkdirp": "0.5.1",
     "rimraf": "2.5.3",
+    "source-map-support": "0.4.2",
     "stack-trace": "0.0.9",
     "thenify-all": "1.6.0"
   },
