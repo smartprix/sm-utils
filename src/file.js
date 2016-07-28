@@ -1,6 +1,7 @@
 const _ = require('lodash');
 const promisify = require('thenify-all');
-const fs = promisify(require('fs'));
+const _fs = require('fs');
+const fs = promisify(_fs);
 const _path = require('path');
 const _rimraf = promisify(require('rimraf'));
 const _mkdirp = promisify(require('mkdirp'));
@@ -18,6 +19,16 @@ class File
 	async exists() {
 		try {
 			await fs.lstat(this.path);
+			return true;
+		}
+		catch (e) {
+			return false;
+		}
+	}
+
+	existsSync() {
+		try {
+			_fs.lstatSync(this.path);
 			return true;
 		}
 		catch (e) {
@@ -191,6 +202,10 @@ class File
 
 	async realpath() {
 		return await fs.realpath(this.path);
+	}
+
+	realpathSync() {
+		return _fs.realpathSync(this.path);
 	}
 }
 

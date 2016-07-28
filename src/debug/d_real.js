@@ -55,7 +55,10 @@ function d(...args) {
 		)
 	);
 
-	dump(args);
+	args.forEach((arg) => {
+		dumpSingle(arg);
+	});
+
 	const lineSep = _.repeat('⁻', process.stdout.columns);
 	console.log(chalk.blue(lineSep));
 }
