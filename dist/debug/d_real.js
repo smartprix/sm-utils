@@ -40,7 +40,10 @@ function d(...args) {
 
 	console.log(chalk.bgBlue(' ' + chalk.white(chalk.bold(fileName) + ' at ' + chalk.bold(lineNumber) + ':' + columnNumber + ' in ' + chalk.bold(functionName)) + '\n ' + chalk.yellow.bold(line)));
 
-	dump(args);
+	args.forEach(arg => {
+		dumpSingle(arg);
+	});
+
 	const lineSep = _.repeat('⁻', process.stdout.columns);
 	console.log(chalk.blue(lineSep));
 }

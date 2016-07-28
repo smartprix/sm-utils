@@ -1,7 +1,6 @@
 
 
 // execute a command and return its output
-
 let execOut = (() => {
 	var _ref = _asyncToGenerator(function* (...args) {
 		return (yield exec.apply(this, args)).stdout.toString();

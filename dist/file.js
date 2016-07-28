@@ -2,7 +2,8 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
 const _ = require('lodash');
 const promisify = require('thenify-all');
-const fs = promisify(require('fs'));
+const _fs = require('fs');
+const fs = promisify(_fs);
 const _path = require('path');
 const _rimraf = promisify(require('rimraf'));
 const _mkdirp = promisify(require('mkdirp'));
@@ -27,6 +28,15 @@ class File {
 				return false;
 			}
 		})();
+	}
+
+	existsSync() {
+		try {
+			_fs.lstatSync(this.path);
+			return true;
+		} catch (e) {
+			return false;
+		}
 	}
 
 	isFile() {
@@ -283,6 +293,10 @@ class File {
 		return _asyncToGenerator(function* () {
 			return yield fs.realpath(_this25.path);
 		})();
+	}
+
+	realpathSync() {
+		return _fs.realpathSync(this.path);
 	}
 }
 
