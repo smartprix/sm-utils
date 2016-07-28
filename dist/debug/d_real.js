@@ -1,6 +1,6 @@
 /* eslint-disable no-console, no-shadow */
 require('./longjohn');
-Error.stackTraceLimit = Infinity;
+Error.stackTraceLimit = 30;
 
 const stackTrace = require('./stack_trace');
 const nodeUtil = require('./node_util_copy');
