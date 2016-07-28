@@ -3,7 +3,13 @@
 
 const uv = process.binding('uv');
 const Buffer = require('buffer').Buffer;
-const internalUtil = require('internal/util');
+let internalUtil;
+try {
+  internalUtil = require('/usr/lib/nodejs/internal/util');
+} catch (e) {
+  internalUtil = require('internal/util');
+}
+
 const binding = process.binding('util');
 
 const isError = internalUtil.isError;
