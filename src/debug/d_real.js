@@ -36,7 +36,7 @@ function d(...args) {
 	const lineNumber = frame.getLineNumber();
 	const columnNumber = frame.getColumnNumber();
 	const functionName = frame.getFunctionNameSanitized() || 'module';
-	const line = _.trim(frame.getContext().line, ' ;');
+	const line = _.trim(frame.getContext().line, ' \t\n;');
 
 	console.log(
 		chalk.bgBlue(
