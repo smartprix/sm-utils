@@ -17,3 +17,13 @@ _.invertCase = function (str) {
 
 	return output;
 };
+
+_.parseJSON = function (str) {
+	try {
+		return JSON.parse(str);
+	} catch (e) {
+		return null;
+	}
+};
+
+JSON.parseSafe = _.parseJSON;
