@@ -1,5 +1,7 @@
 /* eslint-disable no-console, no-shadow */
 require('./longjohn');
+
+// increase error stack trace limit
 Error.stackTraceLimit = 30;
 
 const stackTrace = require('./stack_trace');

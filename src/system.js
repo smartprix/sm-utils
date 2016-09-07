@@ -27,7 +27,7 @@ function execWrapper(method, args) {
 			}
 		});
 
-		cp = childProcess[method].apply(childProcess, args);
+		cp = childProcess[method](...args);
 	});
 }
 

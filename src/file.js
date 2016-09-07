@@ -1,7 +1,5 @@
 const _ = require('lodash');
 const promisify = require('thenify-all');
-const _fs = require('fs');
-const fs = promisify(_fs);
 const _path = require('path');
 const _rimraf = promisify(require('rimraf'));
 const _mkdirp = promisify(require('mkdirp'));
@@ -9,6 +7,9 @@ const _glob = promisify(require('glob'));
 const _chmodr = promisify(require('chmodr'));
 const _chownr = promisify(require('chownr'));
 const system = require('./system');
+const _fs = require('fs');
+
+const fs = promisify(_fs);
 
 class File
 {
