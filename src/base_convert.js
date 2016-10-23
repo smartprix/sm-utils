@@ -28,7 +28,7 @@ function baseConvert(str, baseIn = 10, baseOut = 62) {
 		}
 	}
 
-	const result = arr.reverse().map((k) => NUMERALS[k]).join('');
+	const result = arr.reverse().map(k => NUMERALS[k]).join('');
 	if (baseOut <= 36 && baseOut > 10) {
 		return result.toLowerCase();
 	}

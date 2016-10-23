@@ -1,6 +1,5 @@
 const childProcess = require('child_process');
 const passwd = require('etc-passwd');
-const microtimeDouble = require('microtime').nowDouble;
 
 let oldUmask = -1;
 let hrtimeDelta;
@@ -126,17 +125,17 @@ function millitime() {
 	return (Date.now() / 1000);
 }
 
-// get current time in microseconds (as double)
-function microtime() {
-	return microtimeDouble();
-}
-
 // get current time in nanoseconds (as double)
 function nanotime() {
 	const hrtime = process.hrtime();
 	const hrtimeFloat = Number(hrtime[0] + '.' + hrtime[1]);
-	hrtimeDelta = hrtimeDelta || (microtime() - hrtimeFloat);
+	hrtimeDelta = hrtimeDelta || (millitime() - hrtimeFloat);
 	return hrtimeDelta + hrtimeFloat;
+}
+
+// get current time in microseconds (as double)
+function microtime() {
+	return nanotime();
 }
 
 // Sleep for a specified time (in milliseconds)
