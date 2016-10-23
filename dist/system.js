@@ -28,11 +28,10 @@ let execFileOut = (() => {
 // returns the old umask
 
 
-function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { return step("next", value); }, function (err) { return step("throw", err); }); } } return step("next"); }); }; }
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
 
 const childProcess = require('child_process');
 const passwd = require('etc-passwd');
-const microtimeDouble = require('microtime').nowDouble;
 
 let oldUmask = -1;
 let hrtimeDelta;
@@ -141,17 +140,17 @@ function millitime() {
 	return Date.now() / 1000;
 }
 
-// get current time in microseconds (as double)
-function microtime() {
-	return microtimeDouble();
-}
-
 // get current time in nanoseconds (as double)
 function nanotime() {
 	const hrtime = process.hrtime();
 	const hrtimeFloat = Number(hrtime[0] + '.' + hrtime[1]);
-	hrtimeDelta = hrtimeDelta || microtime() - hrtimeFloat;
+	hrtimeDelta = hrtimeDelta || millitime() - hrtimeFloat;
 	return hrtimeDelta + hrtimeFloat;
+}
+
+// get current time in microseconds (as double)
+function microtime() {
+	return nanotime();
 }
 
 // Sleep for a specified time (in milliseconds)
