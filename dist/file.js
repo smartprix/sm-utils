@@ -116,7 +116,7 @@ class File {
 		var _this8 = this;
 
 		return _asyncToGenerator(function* () {
-			return yield fs.chmod(_this8.path, mode);
+			return fs.chmod(_this8.path, mode);
 		})();
 	}
 
@@ -124,7 +124,7 @@ class File {
 		var _this9 = this;
 
 		return _asyncToGenerator(function* () {
-			return yield _chmodr(_this9.path, mode);
+			return _chmodr(_this9.path, mode);
 		})();
 	}
 
@@ -133,10 +133,10 @@ class File {
 
 		return _asyncToGenerator(function* () {
 			if (Number.isInteger(user) && Number.isInteger(group)) {
-				return yield fs.chown(_this10.path, user, group);
+				return fs.chown(_this10.path, user, group);
 			}
 
-			return yield system.execOut(`chown ${ user }:${ group } ${ _this10.path }`);
+			return system.execOut(`chown ${ user }:${ group } ${ _this10.path }`);
 		})();
 	}
 
@@ -145,10 +145,10 @@ class File {
 
 		return _asyncToGenerator(function* () {
 			if (Number.isInteger(user) && Number.isInteger(group)) {
-				return yield _chownr(_this11.path, user, group);
+				return _chownr(_this11.path, user, group);
 			}
 
-			return yield system.execOut(`chown -R ${ user }:${ group } ${ _this11.path }`);
+			return system.execOut(`chown -R ${ user }:${ group } ${ _this11.path }`);
 		})();
 	}
 
@@ -156,7 +156,7 @@ class File {
 		var _this12 = this;
 
 		return _asyncToGenerator(function* () {
-			return yield fs.rename(_this12.path, newName);
+			return fs.rename(_this12.path, newName);
 		})();
 	}
 
@@ -164,7 +164,7 @@ class File {
 		var _this13 = this;
 
 		return _asyncToGenerator(function* () {
-			return yield _this13.rename(_this13.path, newName);
+			return _this13.rename(_this13.path, newName);
 		})();
 	}
 
@@ -172,7 +172,7 @@ class File {
 		var _this14 = this;
 
 		return _asyncToGenerator(function* () {
-			return yield fs.unlink(_this14.path);
+			return fs.unlink(_this14.path);
 		})();
 	}
 
@@ -180,7 +180,7 @@ class File {
 		var _this15 = this;
 
 		return _asyncToGenerator(function* () {
-			return yield _this15.unlink();
+			return _this15.unlink();
 		})();
 	}
 
@@ -188,7 +188,7 @@ class File {
 		var _this16 = this;
 
 		return _asyncToGenerator(function* () {
-			return yield fs.rmdir(_this16.path);
+			return fs.rmdir(_this16.path);
 		})();
 	}
 
@@ -196,7 +196,7 @@ class File {
 		var _this17 = this;
 
 		return _asyncToGenerator(function* () {
-			return yield _rimraf(_this17.path);
+			return _rimraf(_this17.path);
 		})();
 	}
 
@@ -204,7 +204,7 @@ class File {
 		var _this18 = this;
 
 		return _asyncToGenerator(function* () {
-			return yield fs.mkdir(_this18.path, mode);
+			return fs.mkdir(_this18.path, mode);
 		})();
 	}
 
@@ -212,7 +212,7 @@ class File {
 		var _this19 = this;
 
 		return _asyncToGenerator(function* () {
-			return yield _mkdirp(_this19.path, mode);
+			return _mkdirp(_this19.path, mode);
 		})();
 	}
 
@@ -220,7 +220,7 @@ class File {
 		var _this20 = this;
 
 		return _asyncToGenerator(function* () {
-			return yield _glob(_this20.path);
+			return _glob(_this20.path);
 		})();
 	}
 
@@ -228,7 +228,7 @@ class File {
 		var _this21 = this;
 
 		return _asyncToGenerator(function* () {
-			return yield fs.readFile(_this21.path, 'utf8');
+			return fs.readFile(_this21.path, 'utf8');
 		})();
 	}
 
@@ -236,7 +236,7 @@ class File {
 		var _this22 = this;
 
 		return _asyncToGenerator(function* () {
-			return yield _mkdirp(_path.dirname(_this22.path), mode);
+			return _mkdirp(_path.dirname(_this22.path), mode);
 		})();
 	}
 
@@ -252,7 +252,7 @@ class File {
 
 			if (!opts.retries) {
 				yield _this23.mkdirpPath(opts.dirMode);
-				return yield fs.writeFile(_this23.path, contents, { encoding: 'utf8', mode: opts.fileMode });
+				return fs.writeFile(_this23.path, contents, { encoding: 'utf8', mode: opts.fileMode });
 			}
 
 			try {
@@ -276,7 +276,7 @@ class File {
 
 			if (!opts.retries) {
 				yield _this24.mkdirpPath(opts.dirMode);
-				return yield fs.appendFile(_this24.path, contents, { encoding: 'utf8', mode: opts.fileMode });
+				return fs.appendFile(_this24.path, contents, { encoding: 'utf8', mode: opts.fileMode });
 			}
 
 			try {
@@ -292,7 +292,7 @@ class File {
 		var _this25 = this;
 
 		return _asyncToGenerator(function* () {
-			return yield fs.realpath(_this25.path);
+			return fs.realpath(_this25.path);
 		})();
 	}
 
