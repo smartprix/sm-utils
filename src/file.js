@@ -92,71 +92,71 @@ class File
 	}
 
 	async chmod(mode) {
-		return await fs.chmod(this.path, mode);
+		return fs.chmod(this.path, mode);
 	}
 
 	async chmodr(mode) {
-		return await _chmodr(this.path, mode);
+		return _chmodr(this.path, mode);
 	}
 
 	async chown(user, group) {
 		if (Number.isInteger(user) && Number.isInteger(group)) {
-			return await fs.chown(this.path, user, group);
+			return fs.chown(this.path, user, group);
 		}
 
-		return await system.execOut(`chown ${user}:${group} ${this.path}`);
+		return system.execOut(`chown ${user}:${group} ${this.path}`);
 	}
 
 	async chownr(user, group) {
 		if (Number.isInteger(user) && Number.isInteger(group)) {
-			return await _chownr(this.path, user, group);
+			return _chownr(this.path, user, group);
 		}
 
-		return await system.execOut(`chown -R ${user}:${group} ${this.path}`);
+		return system.execOut(`chown -R ${user}:${group} ${this.path}`);
 	}
 
 	async rename(newName) {
-		return await fs.rename(this.path, newName);
+		return fs.rename(this.path, newName);
 	}
 
 	async mv(newName) {
-		return await this.rename(this.path, newName);
+		return this.rename(this.path, newName);
 	}
 
 	async unlink() {
-		return await fs.unlink(this.path);
+		return fs.unlink(this.path);
 	}
 
 	async rm() {
-		return await this.unlink();
+		return this.unlink();
 	}
 
 	async rmdir() {
-		return await fs.rmdir(this.path);
+		return fs.rmdir(this.path);
 	}
 
 	async rmrf() {
-		return await _rimraf(this.path);
+		return _rimraf(this.path);
 	}
 
 	async mkdir(mode = 0o755) {
-		return await fs.mkdir(this.path, mode);
+		return fs.mkdir(this.path, mode);
 	}
 
 	async mkdirp(mode = 0o755) {
-		return await _mkdirp(this.path, mode);
+		return _mkdirp(this.path, mode);
 	}
 
 	async glob() {
-		return await _glob(this.path);
+		return _glob(this.path);
 	}
 
 	async read() {
-		return await fs.readFile(this.path, 'utf8');
+		return fs.readFile(this.path, 'utf8');
 	}
 
 	async mkdirpPath(mode = 0o755) {
-		return await _mkdirp(_path.dirname(this.path), mode);
+		return _mkdirp(_path.dirname(this.path), mode);
 	}
 
 	async write(contents, options = {}) {
@@ -168,7 +168,7 @@ class File
 
 		if (!opts.retries) {
 			await this.mkdirpPath(opts.dirMode);
-			return await fs.writeFile(this.path, contents, {encoding: 'utf8', mode: opts.fileMode});
+			return fs.writeFile(this.path, contents, {encoding: 'utf8', mode: opts.fileMode});
 		}
 
 		try {
@@ -189,7 +189,7 @@ class File
 
 		if (!opts.retries) {
 			await this.mkdirpPath(opts.dirMode);
-			return await fs.appendFile(this.path, contents, {encoding: 'utf8', mode: opts.fileMode});
+			return fs.appendFile(this.path, contents, {encoding: 'utf8', mode: opts.fileMode});
 		}
 
 		try {
@@ -202,7 +202,7 @@ class File
 	}
 
 	async realpath() {
-		return await fs.realpath(this.path);
+		return fs.realpath(this.path);
 	}
 
 	realpathSync() {
