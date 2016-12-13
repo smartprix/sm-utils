@@ -6,7 +6,7 @@ let execOut = (() => {
 		return (yield exec.apply(this, args)).stdout.toString();
 	});
 
-	return function execOut(_x) {
+	return function execOut() {
 		return _ref.apply(this, arguments);
 	};
 })();
@@ -19,7 +19,7 @@ let execFileOut = (() => {
 		return (yield execFile.apply(this, args)).stdout.toString();
 	});
 
-	return function execFileOut(_x2) {
+	return function execFileOut() {
 		return _ref2.apply(this, arguments);
 	};
 })();
