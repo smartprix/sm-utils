@@ -360,10 +360,8 @@ function decryptStatic(string, key, { encoding = 'base64url' }) {
  * Hash a given password using cryptographically strong hash function
  * Returns a 50 character long hash
 */
-function hashPassword(password, { salt }) {
-	if (salt === undefined) {
-		salt = crypto.randomBytes(12);
-	}
+function hashPassword(password, opts = {}) {
+	const salt = opts.salt || crypto.randomBytes(12);
 
 	const hashed = crypto.pbkdf2Sync(password, salt, 1000, 25, 'sha256');
 	const passHash = '1' + baseEncode(Buffer.concat([salt, hashed]), 'base64url');
