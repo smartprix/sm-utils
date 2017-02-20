@@ -401,7 +401,7 @@ function formatValue(ctx, value, recurseTimes) {
     // Fast path for ArrayBuffer.  Can't do the same for DataView because it
     // has a non-primitive .buffer property that we need to recurse for.
     if (binding.isArrayBuffer(value)) {
-      return `${ getConstructorOf(value).name }` + ` { byteLength: ${ formatNumber(ctx, value.byteLength) } }`;
+      return `${getConstructorOf(value).name}` + ` { byteLength: ${formatNumber(ctx, value.byteLength)} }`;
     }
   }
 
@@ -607,7 +607,7 @@ function formatArray(ctx, value, recurseTimes, visibleKeys, keys) {
     }
   }
   if (remaining > 0) {
-    output.push(`... ${ remaining } more item${ remaining > 1 ? 's' : '' }`);
+    output.push(`... ${remaining} more item${remaining > 1 ? 's' : ''}`);
   }
   keys.forEach(function (key) {
     if (typeof key === 'symbol' || !key.match(/^\d+$/)) {
@@ -623,7 +623,7 @@ function formatTypedArray(ctx, value, recurseTimes, visibleKeys, keys) {
   var output = new Array(maxLength);
   for (var i = 0; i < maxLength; ++i) output[i] = formatNumber(ctx, value[i]);
   if (remaining > 0) {
-    output.push(`... ${ remaining } more item${ remaining > 1 ? 's' : '' }`);
+    output.push(`... ${remaining} more item${remaining > 1 ? 's' : ''}`);
   }
   for (const key of keys) {
     if (typeof key === 'symbol' || !key.match(/^\d+$/)) {

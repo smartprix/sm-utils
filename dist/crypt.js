@@ -249,46 +249,54 @@ function sha256Hmac(string, key, { encoding = 'hex' }) {
 /**
  * Encode the string/buffer using a given encoding
 */
-function baseEncode(string, { encoding = 'base64url', inEncoding = 'binary' }) {
-	const buffer = string instanceof Buffer ? string : Buffer.from(string, inEncoding);
+function baseEncode(string, opts) {
+	if (_.isString(opts)) {
+		opts = {
+			toEncoding: opts,
+			fromEncoding: 'binary'
+		};
+	}
 
-	encoding = encoding.toLowerCase();
+	let fromEncoding = opts.fromEncoding || 'binary';
+	let toEncoding = opts.toEncoding || 'base64url';
 
-	if (encoding === 'buffer') {
+	if (fromEncoding === 'base64url') fromEncoding = 'base64';
+
+	const buffer = string instanceof Buffer ? string : Buffer.from(string, fromEncoding);
+
+	toEncoding = toEncoding.toLowerCase();
+
+	if (toEncoding === 'buffer') {
 		return buffer;
 	}
 
-	if (['ascii', 'utf8', 'utf16le', 'ucs2', 'base64', 'binary', 'hex'].indexOf(encoding) > -1) {
-		return buffer.toString(encoding);
+	if (['ascii', 'utf8', 'utf16le', 'ucs2', 'base64', 'binary', 'hex'].indexOf(toEncoding) > -1) {
+		return buffer.toString(toEncoding);
 	}
 
-	if (encoding === 'base64url') {
+	if (toEncoding === 'base64url') {
 		return buffer.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 	}
 
 	return string;
 }
 
-/**
- * Decode the string encoded using a given encoding
- * You can give out_encoding to en
-*/
-function baseDecode(string, { encoding = 'base64url', outEncoding = 'binary' }) {
-	encoding = encoding.toLowerCase();
-
-	if (encoding === 'buffer') {
-		return Buffer.from(string);
+function baseDecode(string, opts) {
+	if (_.isString(opts)) {
+		opts = {
+			fromEncoding: opts,
+			toEncoding: 'binary'
+		};
 	}
 
-	if (['ascii', 'utf8', 'utf16le', 'ucs2', 'base64', 'binary', 'hex'].indexOf(encoding) > -1) {
-		return baseEncode(Buffer.from(string, encoding), outEncoding);
-	}
+	return baseEncode(string, opts);
+}
 
-	if (encoding === 'base64url') {
-		return baseEncode(Buffer.from(string, 'base64'), outEncoding);
-	}
-
-	return string;
+function baseDecodeToBuffer(string, fromEncoding) {
+	return baseEncode(string, {
+		fromEncoding,
+		toEncoding: 'buffer'
+	});
 }
 
 /**
@@ -321,7 +329,7 @@ function decrypt(string, key, { encoding = 'base64url' }) {
 	}
 
 	const version = string.substring(0, 1); // eslint-disable-line
-	const decoded = baseDecode(string.substring(1), encoding, 'buffer');
+	const decoded = baseDecodeToBuffer(string.substring(1), encoding);
 
 	const decipher = crypto.createDecipheriv('AES-256-CFB', key, decoded.slice(0, 16));
 	const decrypted = Buffer.concat([decipher.update(decoded.slice(16)), decipher.final()]);
@@ -349,7 +357,7 @@ function encryptStatic(string, key, { encoding = 'base64url' }) {
 */
 function decryptStatic(string, key, { encoding = 'base64url' }) {
 	const version = string.substring(0, 1); // eslint-disable-line
-	const decoded = baseDecode(string.substring(1), encoding, 'buffer');
+	const decoded = baseDecodeToBuffer(string.substring(1), encoding);
 
 	const decipher = crypto.createDecipher('AES-256-CFB', key);
 	const decrypted = Buffer.concat([decipher.update(decoded), decipher.final()]);
@@ -374,12 +382,12 @@ function hashPassword(password, opts = {}) {
 */
 function verifyPassword(password, hashed) {
 	const version = hashed.substring(0, 1); // eslint-disable-line
-	const salt = baseDecode(hashed.substring(1), 'base64url', 'buffer').slice(0, 12);
+	const salt = baseDecodeToBuffer(hashed.substring(1), 'base64url').slice(0, 12);
 
-	if (hashed === hashPassword(password, salt)) return true;
-	if (hashed === hashPassword(password.trim(), salt)) return true;
-	if (hashed === hashPassword(_.upperFirst(password), salt)) return true;
-	if (hashed === hashPassword(_.invertCase(password), salt)) return true;
+	if (hashed === hashPassword(password, { salt })) return true;
+	if (hashed === hashPassword(password.trim(), { salt })) return true;
+	if (hashed === hashPassword(_.upperFirst(password), { salt })) return true;
+	if (hashed === hashPassword(_.invertCase(password), { salt })) return true;
 
 	return false;
 }
@@ -387,29 +395,41 @@ function verifyPassword(password, hashed) {
 /**
  * Base64 Encode
 */
-function base64Encode(string) {
-	return baseEncode(string, 'base64');
+function base64Encode(string, fromEncoding = 'binary') {
+	return baseEncode(string, {
+		fromEncoding,
+		toEncoding: 'base64'
+	});
 }
 
 /**
  * URL Safe Base64 Encode
 */
-function base64UrlEncode(string) {
-	return baseEncode(string, 'base64url');
+function base64UrlEncode(string, fromEncoding = 'binary') {
+	return baseEncode(string, {
+		fromEncoding,
+		toEncoding: 'base64url'
+	});
 }
 
 /**
  * Base64 Decode
 */
-function base64Decode(string) {
-	return baseDecode(string, 'base64');
+function base64Decode(string, toEncoding = 'binary') {
+	return baseEncode(string, {
+		fromEncoding: 'base64',
+		toEncoding
+	});
 }
 
 /**
  * URL Safe Base64 Decode
 */
-function base64UrlDecode(string) {
-	return baseDecode(string, 'base64url');
+function base64UrlDecode(string, toEncoding = 'binary') {
+	return baseEncode(string, {
+		fromEncoding: 'base64url',
+		toEncoding
+	});
 }
 
 module.exports = {
@@ -448,6 +468,7 @@ module.exports = {
 
 	baseEncode,
 	baseDecode,
+	baseDecodeToBuffer,
 	base64Encode,
 	base64UrlEncode,
 	base64Decode,

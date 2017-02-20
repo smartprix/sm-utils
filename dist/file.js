@@ -136,7 +136,7 @@ class File {
 				return fs.chown(_this10.path, user, group);
 			}
 
-			return system.execOut(`chown ${ user }:${ group } ${ _this10.path }`);
+			return system.execOut(`chown ${user}:${group} ${_this10.path}`);
 		})();
 	}
 
@@ -148,7 +148,7 @@ class File {
 				return _chownr(_this11.path, user, group);
 			}
 
-			return system.execOut(`chown -R ${ user }:${ group } ${ _this11.path }`);
+			return system.execOut(`chown -R ${user}:${group} ${_this11.path}`);
 		})();
 	}
 

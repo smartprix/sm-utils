@@ -11,8 +11,7 @@ const _fs = require('fs');
 
 const fs = promisify(_fs);
 
-class File
-{
+class File {
 	constructor(path) {
 		this.path = path;
 	}

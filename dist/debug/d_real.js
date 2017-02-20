@@ -113,7 +113,7 @@ function trace(error = '') {
 			}
 		}
 
-		const header = ` ${ fileName } at ${ lineNumber }:${ columnNumber } in ${ functionName }`;
+		const header = ` ${fileName} at ${lineNumber}:${columnNumber} in ${functionName}`;
 		const headerSpace = _.repeat(' ', process.stdout.columns - header.length);
 
 		const marker = _.repeat(' ', columnNumber - 1) + '^';
