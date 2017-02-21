@@ -218,47 +218,6 @@ function randomUUID() {
 }
 
 /**
- * Compute hash of a string using given algorithm
- * encoding can be 'hex', 'binary', 'ascii', 'base64', 'base64url', 'utf8', 'buffer'
-*/
-function hash(algo, string, {encoding = 'hex'}) {
-	if (encoding === 'buffer') encoding = undefined;
-	return crypto.createHash(algo).update(string).digest(encoding);
-}
-
-function md5(string, {encoding = 'hex'}) {
-	return hash('md5', string, encoding);
-}
-
-function sha1(string, {encoding = 'hex'}) {
-	return hash('sha1', string, encoding);
-}
-
-function sha256(string, {encoding = 'hex'}) {
-	return hash('sha256', string, encoding);
-}
-
-function sha512(string, {encoding = 'hex'}) {
-	return hash('sha512', string, encoding);
-}
-
-/**
- * Create cryptographic HMAC digests
-*/
-function hmac(algo, string, key, {encoding = 'hex'}) {
-	if (encoding === 'buffer') encoding = undefined;
-	return crypto.createHmac(algo, key).update(string).digest(encoding);
-}
-
-function sha1Hmac(string, key, {encoding = 'hex'}) {
-	return hmac('sha1', key, string, encoding);
-}
-
-function sha256Hmac(string, key, {encoding = 'hex'}) {
-	return hmac('sha256', key, string, encoding);
-}
-
-/**
  * Encode the string/buffer using a given encoding
 */
 function baseEncode(string, opts) {
@@ -315,17 +274,72 @@ function baseDecodeToBuffer(string, fromEncoding) {
 }
 
 /**
+ * Compute hash of a string using given algorithm
+ * encoding can be 'hex', 'binary', 'ascii', 'base64', 'base64url', 'utf8', 'buffer'
+*/
+function hash(algo, string, {encoding = 'hex'} = {}) {
+	const hashed = crypto.createHash(algo).update(string);
+
+	if (['latin1', 'base64', 'hex'].indexOf(encoding) > -1) {
+		return hashed.digest(encoding);
+	}
+
+	return baseEncode(hashed.digest(), encoding);
+}
+
+function md5(string, {encoding = 'hex'} = {}) {
+	return hash('md5', string, {encoding});
+}
+
+function sha1(string, {encoding = 'hex'} = {}) {
+	return hash('sha1', string, {encoding});
+}
+
+function sha256(string, {encoding = 'hex'} = {}) {
+	return hash('sha256', string, {encoding});
+}
+
+function sha384(string, {encoding = 'hex'} = {}) {
+	return hash('sha384', string, {encoding});
+}
+
+function sha512(string, {encoding = 'hex'} = {}) {
+	return hash('sha512', string, {encoding});
+}
+
+/**
+ * Create cryptographic HMAC digests
+*/
+function hmac(algo, string, key, {encoding = 'hex'} = {}) {
+	const hashed = crypto.createHmac(algo, key).update(string);
+
+	if (['latin1', 'base64', 'hex'].indexOf(encoding) > -1) {
+		return hashed.digest(encoding);
+	}
+
+	return baseEncode(hashed.digest(), encoding);
+}
+
+function sha1Hmac(string, key, {encoding = 'hex'} = {}) {
+	return hmac('sha1', key, string, {encoding});
+}
+
+function sha256Hmac(string, key, {encoding = 'hex'} = {}) {
+	return hmac('sha256', key, string, {encoding});
+}
+
+/**
  * Encrypt the given string with the given key using AES 256
  * Calling encrypt on the same string multiple times will return different encrypted strings
  * Optionally specify encoding in which you want to get the output
 */
-function encrypt(string, key, {encoding = 'base64url'}) {
+function encrypt(string, key, {encoding = 'base64url'} = {}) {
 	if (string.length < 6) {
 		string = _.padEnd(string, 6, '\v');
 	}
 
 	if (key.length !== 32) {
-		key = sha256(key, 'buffer');
+		key = sha256(key, {encoding: 'buffer'});
 	}
 
 	const iv = crypto.randomBytes(16);
@@ -338,9 +352,9 @@ function encrypt(string, key, {encoding = 'base64url'}) {
 /**
  * Decrypt the given string with the given key encrypted using encrypt
 */
-function decrypt(string, key, {encoding = 'base64url'}) {
+function decrypt(string, key, {encoding = 'base64url'} = {}) {
 	if (key.length !== 32) {
-		key = sha256(key, 'buffer');
+		key = sha256(key, {encoding: 'buffer'});
 	}
 
 	const version = string.substring(0, 1);  // eslint-disable-line
@@ -357,7 +371,7 @@ function decrypt(string, key, {encoding = 'base64url'}) {
  * this encryption is weaker than Encrypt but has the benefit of returing same encypted string
  * for same string and key.
 */
-function encryptStatic(string, key, {encoding = 'base64url'}) {
+function encryptStatic(string, key, {encoding = 'base64url'} = {}) {
 	if (string.length < 6) {
 		string = _.padEnd(string, 6, '\v');
 	}
@@ -370,7 +384,7 @@ function encryptStatic(string, key, {encoding = 'base64url'}) {
 /**
  * Decrypt the given string with the given key encrypted using encryptStatic
 */
-function decryptStatic(string, key, {encoding = 'base64url'}) {
+function decryptStatic(string, key, {encoding = 'base64url'} = {}) {
 	const version = string.substring(0, 1);  // eslint-disable-line
 	const decoded = baseDecodeToBuffer(string.substring(1), encoding);
 
@@ -467,6 +481,7 @@ module.exports = {
 	md5,
 	sha1,
 	sha256,
+	sha384,
 	sha512,
 
 	hmac,
