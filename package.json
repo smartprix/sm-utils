@@ -1,6 +1,6 @@
 {
   "name": "sm-utils",
-  "version": "2.4.1",
+  "version": "2.4.2",
   "description": "Uilities for NodeJS",
   "main": "dist/index.js",
   "repository": {
