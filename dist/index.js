@@ -1,4 +1,10 @@
+var _Connect = require('./Connect');
+
+var _Connect2 = _interopRequireDefault(_Connect);
+
 require('./lodash_utils');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 /* eslint-disable global-require */
 module.exports = {
@@ -8,5 +14,5 @@ module.exports = {
 	view: require('./view'),
 	cfg: require('./cfg'),
 	baseConvert: require('./base_convert'),
-	Connect: require('./Connect')
+	Connect: _Connect2.default
 };

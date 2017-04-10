@@ -11,6 +11,16 @@ const _ = require('lodash');
 
 function errorFrameToString(frame, background = 'magenta', foreground = 'white') {
 	const fileName = frame.getRelativeFileName();
+
+	if (!fileName) {
+		return chalk.bgYellow(
+			' ' +
+			chalk.black.bold(
+				_.repeat('-', process.stdout.columns - 2)
+			)
+		);
+	}
+
 	const lineNumber = frame.getLineNumber();
 	const columnNumber = frame.getColumnNumber();
 	const functionName = frame.getFunctionNameSanitized() || 'module';
