@@ -1,8 +1,30 @@
-import _ from 'lodash';
-import request from 'request';
-import FileCookieStore from 'tough-cookie-file-store';
-import SocksHTTPAgent from 'socks5-http-client/lib/Agent';
-import SocksHTTPSAgent from 'socks5-https-client/lib/Agent';
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _lodash = require('lodash');
+
+var _lodash2 = _interopRequireDefault(_lodash);
+
+var _request = require('request');
+
+var _request2 = _interopRequireDefault(_request);
+
+var _toughCookieFileStore = require('tough-cookie-file-store');
+
+var _toughCookieFileStore2 = _interopRequireDefault(_toughCookieFileStore);
+
+var _Agent = require('socks5-http-client/lib/Agent');
+
+var _Agent2 = _interopRequireDefault(_Agent);
+
+var _Agent3 = require('socks5-https-client/lib/Agent');
+
+var _Agent4 = _interopRequireDefault(_Agent3);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 const userAgents = {
 	chrome: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
@@ -68,7 +90,7 @@ class Connect {
 	}
 
 	static newCookieJar(...args) {
-		return request.jar(...args);
+		return _request2.default.jar(...args);
 	}
 
 	followRedirect(shouldFollowRedirect) {
@@ -80,19 +102,19 @@ class Connect {
 		if (typeof headerName === 'string') {
 			this.options.headers[headerName] = headerValue;
 		} else {
-			_.assign(this.options.headers, headerName);
+			_lodash2.default.assign(this.options.headers, headerName);
 		}
 
 		return this;
 	}
 
 	headers(headers) {
-		_.assign(this.options.headers, headers);
+		_lodash2.default.assign(this.options.headers, headers);
 		return this;
 	}
 
 	body(body, contentType = null) {
-		if (_.isPlainObject(body)) {
+		if (_lodash2.default.isPlainObject(body)) {
 			body = JSON.stringify(body);
 			contentType = 'json';
 		}
@@ -132,7 +154,7 @@ class Connect {
 		if (typeof cookieName === 'string') {
 			this.options.cookies[cookieName] = cookieValue;
 		} else {
-			_.assign(this.options.cookies, cookieName);
+			_lodash2.default.assign(this.options.cookies, cookieName);
 		}
 
 		return this;
@@ -142,7 +164,7 @@ class Connect {
 		if (cookies === true) {
 			this.globalCookies();
 		} else {
-			_.assign(this.options.cookies, cookies);
+			_lodash2.default.assign(this.options.cookies, cookies);
 		}
 
 		return this;
@@ -154,7 +176,7 @@ class Connect {
 	}
 
 	cookieFile(fileName) {
-		const cookieJar = request.jar(new FileCookieStore(fileName));
+		const cookieJar = _request2.default.jar(new _toughCookieFileStore2.default(fileName));
 		this.options.jar = cookieJar;
 		return this;
 	}
@@ -178,14 +200,14 @@ class Connect {
 		if (typeof fieldName === 'string') {
 			this.options.fields[fieldName] = fieldValue;
 		} else {
-			_.assign(this.options.fields, fieldName);
+			_lodash2.default.assign(this.options.fields, fieldName);
 		}
 
 		return this;
 	}
 
 	fields(fields) {
-		_.assign(this.options.fields, fields);
+		_lodash2.default.assign(this.options.fields, fields);
 		return this;
 	}
 
@@ -205,7 +227,7 @@ class Connect {
 		// this is because we need the url (http or https) to add the proxy
 		// and url might be added after this method
 		if (typeof proxy === 'string') {
-			_.assign(this.options.proxy, {
+			_lodash2.default.assign(this.options.proxy, {
 				address: proxy,
 				port: null,
 				type: 'http'
@@ -218,7 +240,7 @@ class Connect {
 	}
 
 	httpProxy(proxyAddress, proxyPort) {
-		_.assign(this.options.proxy, {
+		_lodash2.default.assign(this.options.proxy, {
 			address: proxyAddress,
 			port: proxyPort,
 			type: 'http'
@@ -228,7 +250,7 @@ class Connect {
 	}
 
 	socksProxy(proxyAddress, proxyPort) {
-		_.assign(this.options.proxy, {
+		_lodash2.default.assign(this.options.proxy, {
 			address: proxyAddress,
 			port: proxyPort,
 			type: 'socks'
@@ -271,10 +293,10 @@ class Connect {
 		if (proxyType === 'http' || proxyType === 'https') {
 			this.options.proxy = makeProxyUrl(proxy);
 		} else if (proxyType === 'socks' || proxyType === 'socks5') {
-			if (_.startsWith(this.options.url, 'https://')) {
-				this.options.agentClass = SocksHTTPSAgent;
+			if (_lodash2.default.startsWith(this.options.url, 'https://')) {
+				this.options.agentClass = _Agent4.default;
 			} else {
-				this.options.agentClass = SocksHTTPAgent;
+				this.options.agentClass = _Agent2.default;
 			}
 
 			const agentOptions = {};
@@ -291,7 +313,7 @@ class Connect {
 
 	_addFields() {
 		if (!this.options.fields) return;
-		if (_.isEmpty(this.options.fields)) return;
+		if (_lodash2.default.isEmpty(this.options.fields)) return;
 
 		const method = this.options.method;
 		if (method === 'POST' || method === 'PUT') {
@@ -302,7 +324,7 @@ class Connect {
 			}
 		} else {
 			this.options.qs = this.options.qs || {};
-			_.assign(this.options.qs, this.options.fields);
+			_lodash2.default.assign(this.options.qs, this.options.fields);
 		}
 	}
 
@@ -310,7 +332,7 @@ class Connect {
 		if (!this.options.cookies) return;
 
 		const cookies = [];
-		_.forEach(this.options.cookies, (value, key) => {
+		_lodash2.default.forEach(this.options.cookies, (value, key) => {
 			cookies.push(`${key}=${value}`);
 		});
 
@@ -328,7 +350,7 @@ class Connect {
 
 		this.promise = new Promise((resolve, reject) => {
 			const startTime = Date.now();
-			request(this.options, (error, response, body) => {
+			(0, _request2.default)(this.options, (error, response, body) => {
 				if (error) {
 					error.timeTaken = Date.now() - startTime;
 					reject(error);
@@ -360,4 +382,4 @@ class Connect {
 	}
 }
 
-export default Connect;
+exports.default = Connect;

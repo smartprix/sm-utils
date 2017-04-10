@@ -1,3 +1,5 @@
+'use strict';
+
 const crypto = require('crypto');
 const _ = require('lodash');
 require('./lodash_utils');

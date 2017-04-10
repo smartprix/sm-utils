@@ -1,3 +1,5 @@
+'use strict';
+
 /* eslint-disable */
 // We copied longjohn (https://github.com/mattinsler/longjohn)
 // To fix the support of sourcemaps in longjohn
@@ -358,4 +360,4 @@
   if (process.env.NODE_ENV === 'production') {
     console.warn('NOTICE: Longjohn is known to cause CPU usage due to its extensive data collection during runtime.\nIt generally should not be used in production applications.');
   }
-}).call(this);
+}).call(undefined);
