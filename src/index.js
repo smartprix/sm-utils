@@ -8,4 +8,5 @@ module.exports = {
 	view: require('./view'),
 	cfg: require('./cfg'),
 	baseConvert: require('./base_convert'),
+	Connect: require('./Connect'),
 };

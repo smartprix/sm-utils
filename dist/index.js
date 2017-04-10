@@ -7,5 +7,6 @@ module.exports = {
 	crypt: require('./crypt'),
 	view: require('./view'),
 	cfg: require('./cfg'),
-	baseConvert: require('./base_convert')
+	baseConvert: require('./base_convert'),
+	Connect: require('./Connect')
 };

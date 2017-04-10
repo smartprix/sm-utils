@@ -1,1 +1,3 @@
-module.exports = require('./dist/debug/d');
+var d = require('./dist/debug/d');
+global.d = d;
+module.exports = d;

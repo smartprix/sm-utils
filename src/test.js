@@ -1,4 +1,5 @@
 const crypt = require('./crypt');
+const d = require('./debug/d_real');
 
 /* eslint-disable no-console */
 console.log(crypt.sequentialId(15));
@@ -34,3 +35,5 @@ console.log(crypt.decryptStatic(crypted, 'This is really really cool'));
 const hashed = crypt.hashPassword('yoman');
 console.log(hashed);
 console.log(crypt.verifyPassword('yoman', hashed));
+
+d(new Error('hello'));
