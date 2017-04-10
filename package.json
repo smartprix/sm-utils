@@ -1,6 +1,6 @@
 {
   "name": "sm-utils",
-  "version": "2.4.0",
+  "version": "2.4.1",
   "description": "Uilities for NodeJS",
   "main": "dist/index.js",
   "repository": {
@@ -60,7 +60,12 @@
       "stage-0"
     ],
     "plugins": [
-      ["transform-es2015-modules-commonjs", {"strictMode": false}]
+      [
+        "transform-es2015-modules-commonjs",
+        {
+          "strictMode": false
+        }
+      ]
     ],
     "sourceMaps": true
   },
