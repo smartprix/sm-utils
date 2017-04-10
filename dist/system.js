@@ -1,4 +1,4 @@
-'use strict';
+
 
 // execute a command and return its output
 let execOut = (() => {

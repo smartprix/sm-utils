@@ -1,5 +1,3 @@
-'use strict';
-
 /* eslint-disable no-useless-escape, no-bitwise */
 const stackTrace = require('stack-trace');
 const path = require('path');

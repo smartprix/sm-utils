@@ -1,5 +1,3 @@
-'use strict';
-
 /* eslint-disable global-require */
 const cfg = require('./../cfg');
 

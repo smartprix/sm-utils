@@ -1,5 +1,3 @@
-'use strict';
-
 const crypt = require('./crypt');
 const d = require('./debug/d_real');
 

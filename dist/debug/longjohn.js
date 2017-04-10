@@ -1,5 +1,3 @@
-'use strict';
-
 /* eslint-disable */
 // We copied longjohn (https://github.com/mattinsler/longjohn)
 // To fix the support of sourcemaps in longjohn
@@ -215,7 +213,7 @@
       return stack;
     };
     trace_error = new Error();
-    Error.captureStackTrace(trace_error, arguments.callee);
+    Error.captureStackTrace(trace_error, wrap_callback);
     trace_error.__stack__ = trace_error.stack;
     Error.prepareStackTrace = orig;
     trace_error.id = ERROR_ID++;

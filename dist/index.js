@@ -1,5 +1,3 @@
-'use strict';
-
 require('./lodash_utils');
 
 /* eslint-disable global-require */
