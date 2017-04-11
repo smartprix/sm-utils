@@ -62,7 +62,7 @@ class Connect {
 	}
 
 	static url(url) {
-		const connect = new Connect();
+		const connect = new this();
 		connect.url(url);
 		return connect;
 	}

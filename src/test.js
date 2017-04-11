@@ -1,5 +1,9 @@
+import _ from 'lodash';
+import Connect from './Connect';
+
 const crypt = require('./crypt');
 const d = require('./debug/d_real');
+
 
 /* eslint-disable no-console */
 console.log(crypt.sequentialId(15));
@@ -37,3 +41,9 @@ console.log(hashed);
 console.log(crypt.verifyPassword('yoman', hashed));
 
 d(new Error('hello'));
+
+async function main() {
+	d(_.pick(await Connect.url('http://www.smartprix.com/ip.php'), ['body', 'statusCode', 'url', 'timeTaken']));
+}
+
+main().then(() => process.exit());
