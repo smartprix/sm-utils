@@ -35,6 +35,7 @@ function makeProxyUrl(proxy) {
 
 class Connect {
 	constructor() {
+		this.timeout = 120 * 1000;
 		this.options = {
 			url: null,
 			method: 'GET',
@@ -48,7 +49,7 @@ class Connect {
 			followRedirect: true,
 			maxRedirects: 6,
 			gzip: true,
-			timeout: 120 * 1000,
+			// timeout: 120 * 1000,
 			strictSSL: false,
 			proxy: {},
 			// tunnel: true,
@@ -168,12 +169,12 @@ class Connect {
 	}
 
 	timeout(timeout) {
-		this.options.timeout = timeout * 1000;
+		this.timeout = timeout * 1000;
 		return this;
 	}
 
 	timeoutMilli(timeoutInMs) {
-		this.options.timeout = timeoutInMs;
+		this.timeout = timeoutInMs;
 		return this;
 	}
 
@@ -335,9 +336,19 @@ class Connect {
 		this._addFields();
 		this._addCookies();
 
+		if (this.timeoutTimer) {
+			clearTimeout(this.timeoutTimer);
+			this.timeoutTimer = null;
+		}
+
 		this.promise = new Promise((resolve, reject) => {
 			const startTime = Date.now();
-			request(this.options, (error, response, body) => {
+			const req = request(this.options, (error, response, body) => {
+				if (this.timeoutTimer) {
+					clearTimeout(this.timeoutTimer);
+					this.timeoutTimer = null;
+				}
+
 				if (error) {
 					error.timeTaken = Date.now() - startTime;
 					reject(error);
@@ -356,6 +367,25 @@ class Connect {
 				response.timeTaken = Date.now() - startTime;
 				resolve(response);
 			});
+
+			if (this.timeout) {
+				this.timeoutTimer = setTimeout(() => {
+					try {
+						req.abort();
+
+						const e = new Error('Request Timed Out');
+						e.code = 'ETIMEDOUT';
+						e.timeTaken = Date.now() - startTime;
+						reject(e);
+					}
+					catch (err) {
+						const e = new Error('Request Timed Out');
+						e.code = 'ETIMEDOUT';
+						e.timeTaken = Date.now() - startTime;
+						reject(e);
+					}
+				}, this.timeout);
+			}
 		});
 
 		return this.promise;
