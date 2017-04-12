@@ -55,7 +55,7 @@ function makeProxyUrl(proxy) {
 
 class Connect {
 	constructor() {
-		this.timeout = 120 * 1000;
+		this.requestTimeout = 120 * 1000;
 		this.options = {
 			url: null,
 			method: 'GET',
@@ -186,12 +186,12 @@ class Connect {
 	}
 
 	timeout(timeout) {
-		this.timeout = timeout * 1000;
+		this.requestTimeout = timeout * 1000;
 		return this;
 	}
 
 	timeoutMilli(timeoutInMs) {
-		this.timeout = timeoutInMs;
+		this.requestTimeout = timeoutInMs;
 		return this;
 	}
 
@@ -378,7 +378,7 @@ class Connect {
 				resolve(response);
 			});
 
-			if (this.timeout) {
+			if (this.requestTimeout) {
 				this.timeoutTimer = setTimeout(() => {
 					try {
 						req.abort();
@@ -393,7 +393,7 @@ class Connect {
 						e.timeTaken = Date.now() - startTime;
 						reject(e);
 					}
-				}, this.timeout);
+				}, this.requestTimeout);
 			}
 		});
 
