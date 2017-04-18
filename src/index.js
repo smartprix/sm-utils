@@ -1,4 +1,5 @@
 import Connect from './Connect';
+import Cache from './Cache';
 import './lodash_utils';
 
 /* eslint-disable global-require */
@@ -10,4 +11,5 @@ module.exports = {
 	cfg: require('./cfg'),
 	baseConvert: require('./base_convert'),
 	Connect,
+	Cache,
 };
