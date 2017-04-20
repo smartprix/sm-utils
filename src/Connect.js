@@ -1,8 +1,11 @@
+import path from 'path';
 import _ from 'lodash';
 import request from 'request';
 import FileCookieStore from 'tough-cookie-file-store';
 import SocksHTTPAgent from 'socks5-http-client/lib/Agent';
 import SocksHTTPSAgent from 'socks5-https-client/lib/Agent';
+import file from './file';
+import crypt from './crypt';
 
 const userAgents = {
 	chrome: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
@@ -196,6 +199,7 @@ class Connect {
 
 	method(method) {
 		this.options.method = method.toUpperCase();
+		return this;
 	}
 
 	httpAuth(username, password) {
@@ -254,14 +258,27 @@ class Connect {
 
 	get() {
 		this.method('GET');
+		return this;
 	}
 
 	post() {
 		this.method('POST');
+		return this;
 	}
 
 	put() {
 		this.method('PUT');
+		return this;
+	}
+
+	cacheDir(dir) {
+		this.resposeCacheDir = dir;
+		return this;
+	}
+
+	save(filePath) {
+		this.saveFilePath = filePath;
+		return this;
 	}
 
 	_addProxy() {
@@ -329,12 +346,77 @@ class Connect {
 		}
 	}
 
-	fetch() {
-		if (this.promise) return this.promise;
-
+	_makeFetchPromise(resolve, reject, cacheFilePath) {
 		this._addProxy();
 		this._addFields();
 		this._addCookies();
+
+		const startTime = Date.now();
+		const req = request(this.options, (error, response, body) => {
+			if (this.timeoutTimer) {
+				clearTimeout(this.timeoutTimer);
+				this.timeoutTimer = null;
+			}
+
+			if (error) {
+				error.timeTaken = Date.now() - startTime;
+				reject(error);
+				return;
+			}
+			else if (response.statusCode === 407) {
+				const e = new Error('407 Proxy Authentication Required');
+				e.code = 'EPROXYAUTH';
+				e.timeTaken = Date.now() - startTime;
+				reject(e);
+				return;
+			}
+
+			response.body = body;
+			response.url = response.request.uri.href || this.options.url;
+			response.timeTaken = Date.now() - startTime;
+			response.cached = false;
+
+			const promises = [];
+
+			if (this.saveFilePath) {
+				promises.push(file(this.saveFilePath).write(response.body));
+			}
+			if (cacheFilePath && response.statusCode === 200) {
+				promises.push(file(cacheFilePath).write(response.body));
+			}
+
+			if (promises.length) {
+				Promise.all(promises)
+				.then(() => { resolve(response) })
+				.catch(() => { resolve(response) });
+			}
+			else {
+				resolve(response);
+			}
+		});
+
+		if (this.requestTimeout) {
+			this.timeoutTimer = setTimeout(() => {
+				try {
+					req.abort();
+
+					const e = new Error('Request Timed Out');
+					e.code = 'ETIMEDOUT';
+					e.timeTaken = Date.now() - startTime;
+					reject(e);
+				}
+				catch (err) {
+					const e = new Error('Request Timed Out');
+					e.code = 'ETIMEDOUT';
+					e.timeTaken = Date.now() - startTime;
+					reject(e);
+				}
+			}, this.requestTimeout);
+		}
+	}
+
+	fetch() {
+		if (this.promise) return this.promise;
 
 		if (this.timeoutTimer) {
 			clearTimeout(this.timeoutTimer);
@@ -342,49 +424,31 @@ class Connect {
 		}
 
 		this.promise = new Promise((resolve, reject) => {
-			const startTime = Date.now();
-			const req = request(this.options, (error, response, body) => {
-				if (this.timeoutTimer) {
-					clearTimeout(this.timeoutTimer);
-					this.timeoutTimer = null;
-				}
+			let cacheFilePath = null;
 
-				if (error) {
-					error.timeTaken = Date.now() - startTime;
-					reject(error);
-					return;
-				}
-				else if (response.statusCode === 407) {
-					const e = new Error('407 Proxy Authentication Required');
-					e.code = 'EPROXYAUTH';
-					e.timeTaken = Date.now() - startTime;
-					reject(e);
-					return;
-				}
+			if (this.resposeCacheDir) {
+				const cacheKey = crypt.md5(
+					JSON.stringify(_.pick(this.options, ['url', 'method', 'fields']))
+				);
 
-				response.body = body;
-				response.url = response.request.uri.href || this.options.url;
-				response.timeTaken = Date.now() - startTime;
-				resolve(response);
-			});
+				cacheFilePath = path.join(this.resposeCacheDir, cacheKey);
+				file(cacheFilePath).read().then((cachedContents) => {
+					const response = {
+						body: cachedContents,
+						statusCode: 200,
+						url: this.options.url,
+						timeTaken: 0,
+						cached: true,
+					};
 
-			if (this.requestTimeout) {
-				this.timeoutTimer = setTimeout(() => {
-					try {
-						req.abort();
-
-						const e = new Error('Request Timed Out');
-						e.code = 'ETIMEDOUT';
-						e.timeTaken = Date.now() - startTime;
-						reject(e);
-					}
-					catch (err) {
-						const e = new Error('Request Timed Out');
-						e.code = 'ETIMEDOUT';
-						e.timeTaken = Date.now() - startTime;
-						reject(e);
-					}
-				}, this.requestTimeout);
+					resolve(response);
+				}).catch(() => {
+					// Ignore Errors
+					this._makeFetchPromise(resolve, reject, cacheFilePath);
+				});
+			}
+			else {
+				this._makeFetchPromise(resolve, reject, cacheFilePath);
 			}
 		});
 

@@ -43,7 +43,7 @@ console.log(crypt.verifyPassword('yoman', hashed));
 d(new Error('hello'));
 
 async function main() {
-	d(_.pick(await Connect.url('http://www.smartprix.com/ip.php'), ['body', 'statusCode', 'url', 'timeTaken']));
+	d(_.pick(await Connect.url('http://www.smartprix.com/ip.php').cacheDir('garbage/cache').save('yo.txt'), ['body', 'statusCode', 'url', 'timeTaken', 'cached']));
 }
 
 main().then(() => process.exit());
