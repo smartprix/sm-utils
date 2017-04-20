@@ -459,7 +459,7 @@ class Connect {
 					};
 
 					resolve(response);
-				}).catch(e => {
+				}).catch(() => {
 					// Ignore Errors
 					this._makeFetchPromise(resolve, reject, cacheFilePath);
 				});
