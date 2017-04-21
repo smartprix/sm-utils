@@ -223,7 +223,7 @@ class Connect {
 	}
 
 	method(method) {
-		this.options.method = method.toUpperCase();
+		this.options.method = (method || 'GET').toUpperCase();
 		return this;
 	}
 
