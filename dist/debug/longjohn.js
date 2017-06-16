@@ -213,7 +213,7 @@
       return stack;
     };
     trace_error = new Error();
-    Error.captureStackTrace(trace_error, arguments.callee);
+    Error.captureStackTrace(trace_error, wrap_callback);
     trace_error.__stack__ = trace_error.stack;
     Error.prepareStackTrace = orig;
     trace_error.id = ERROR_ID++;
@@ -358,4 +358,4 @@
   if (process.env.NODE_ENV === 'production') {
     console.warn('NOTICE: Longjohn is known to cause CPU usage due to its extensive data collection during runtime.\nIt generally should not be used in production applications.');
   }
-}).call(this);
+}).call(undefined);

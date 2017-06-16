@@ -223,7 +223,7 @@
       return stack;
     };
     trace_error = new Error();
-    Error.captureStackTrace(trace_error, arguments.callee);
+    Error.captureStackTrace(trace_error, wrap_callback);
     trace_error.__stack__ = trace_error.stack;
     Error.prepareStackTrace = orig;
     trace_error.id = ERROR_ID++;
