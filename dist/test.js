@@ -18,12 +18,12 @@ var _Connect2 = _interopRequireDefault(_Connect);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; } /* eslint-disable */
+
 
 const crypt = require('./crypt');
 const d = require('./debug/d_real');
 
-/* eslint-disable no-console */
 console.log(crypt.sequentialId(15));
 console.log(crypt.sequentialId({ length: 18, lowercase: true }));
 console.log(crypt.sequentialUUID());
@@ -57,6 +57,13 @@ console.log(crypt.decryptStatic(crypted, 'This is really really cool'));
 const hashed = crypt.hashPassword('yoman');
 console.log(hashed);
 console.log(crypt.verifyPassword('yoman', hashed));
+
+const array = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+const shuffled1 = crypt.shuffle(array, { seed: 10 });
+const shuffled2 = crypt.shuffle(array, { seed: 20 });
+const shuffled3 = crypt.shuffle(array, { seed: 10 });
+const shuffled4 = crypt.shuffle(array);
+console.log(shuffled1, shuffled2, shuffled3, shuffled4, _lodash2.default.isEqual(shuffled1, shuffled2), _lodash2.default.isEqual(shuffled1, shuffled3), _lodash2.default.isEqual(shuffled1, shuffled4), _lodash2.default.isEqual(shuffled2, shuffled4));
 
 d(new Error('hello'));
 

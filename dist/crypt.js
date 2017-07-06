@@ -93,6 +93,50 @@ function randomString(options) {
 }
 
 /**
+ * shuffle an array or a string
+ * you can optionally give a seed in the options to do a consitant shuffle
+ * @return {array|string} shuffled item
+ * @param {array|string} itemToShuffle item which you want to shuffle
+ * @param {object} options object of {seed}
+ */
+function shuffle(itemToShuffle, options = {}) {
+	let array;
+	if (typeof itemToShuffle === 'string') {
+		array = itemToShuffle.split();
+	} else {
+		array = itemToShuffle.slice();
+	}
+
+	if (!Array.isArray(array)) {
+		throw new Error('Array expected');
+	}
+
+	let random;
+	if (options.seed) {
+		let seed = options.seed;
+		random = function () {
+			const x = Math.sin(seed++) * 10000;
+			return x - Math.floor(x);
+		};
+	} else {
+		random = Math.random;
+	}
+
+	for (let i = array.length - 1; i > 0; i--) {
+		const j = Math.floor(random() * (i + 1));
+		const temp = array[i];
+		array[i] = array[j];
+		array[j] = temp;
+	}
+
+	if (typeof itemToShuffle === 'string') {
+		return array.join();
+	}
+
+	return array;
+}
+
+/**
  * get nanoseconds in base62 format (return 7 (or 8 if lowercase) chars long string)
 */
 function nanoSecondsAlpha(base36 = false) {
@@ -459,6 +503,8 @@ module.exports = {
 	sequentialUUID,
 	randomUUID,
 	uuid: randomUUID,
+
+	shuffle,
 
 	nanoSecondsAlpha,
 

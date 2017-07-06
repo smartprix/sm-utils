@@ -1,11 +1,10 @@
+/* eslint-disable */
 import _ from 'lodash';
 import Connect from './Connect';
 
 const crypt = require('./crypt');
 const d = require('./debug/d_real');
 
-
-/* eslint-disable no-console */
 console.log(crypt.sequentialId(15));
 console.log(crypt.sequentialId({length: 18, lowercase: true}));
 console.log(crypt.sequentialUUID());
@@ -39,6 +38,18 @@ console.log(crypt.decryptStatic(crypted, 'This is really really cool'));
 const hashed = crypt.hashPassword('yoman');
 console.log(hashed);
 console.log(crypt.verifyPassword('yoman', hashed));
+
+const array = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+const shuffled1 = crypt.shuffle(array, {seed: 10});
+const shuffled2 = crypt.shuffle(array, {seed: 20});
+const shuffled3 = crypt.shuffle(array, {seed: 10});
+const shuffled4 = crypt.shuffle(array);
+console.log(shuffled1, shuffled2, shuffled3, shuffled4,
+	_.isEqual(shuffled1, shuffled2),
+	_.isEqual(shuffled1, shuffled3),
+	_.isEqual(shuffled1, shuffled4),
+	_.isEqual(shuffled2, shuffled4)
+);
 
 d(new Error('hello'));
 
