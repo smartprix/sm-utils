@@ -12,50 +12,60 @@
   }
 
   source_map = require('source-map-support');
+  source_map.install();
+
+  //  // This is the only thing we added (fix source-map-support for babel)
+  //  // . (debug) .. (src) .. (sm-utils) .. (node-modules) babel/node_modules/babel-register/lib/cache
+  //  // . (debug) .. (src) .. (sm-utils) .. (node-modules) babel-register/lib/cache
+  //  const file = require('../file');
+  //  let babelRegisterCache;
+  //  const paths = [
+  // '../../../babel-cli/node_modules/babel-register/lib/cache.js',
+  // '../../../babel-register/lib/cache.js',
+  // '../../node_modules/babel-cli/node_modules/babel-register/lib/cache.js',
+  // '../../node_modules/babel-register/lib/cache.js'
+  //  ];
+
+  //  for (let path of paths) {
+  // const abs_path = require('path').resolve(__dirname, path);
+  // if(file(abs_path).existsSync()) {
+  // 	babelRegisterCache = require(abs_path);
+  // 	break;
+  // }
+  //  }
+
+  //  if (babelRegisterCache) {
+  // source_map.install({
+  // 	  overrideRetrieveSourceMap: true,
+  // 	  retrieveSourceMap(file) {
+  // 		  const cache = babelRegisterCache.get();
+  // 		  let sourceMap = null;
+
+  // 		  Object.keys(cache).some((hash) => {
+  // 			  const fileCache = cache[hash];
+  // 			  if (
+  // 				  typeof fileCache === 'undefined' ||
+  // 				  typeof fileCache.options === 'undefined' ||
+  // 				  fileCache.options.filename !== file
+  // 			  ) {
+  // 				  return false;
+  // 			  }
+
+  // 			  sourceMap = {
+  // 				  url: file,
+  // 				  map: fileCache.map,
+  // 			  };
+
+  // 			  return true;
+  // 		  });
+
+  // 		  return sourceMap;
+  // 	  },
+  //   });
+  //  }
+  //  else {
   // source_map.install();
-
-  // This is the only thing we added (fix source-map-support for babel)
-  // . (debug) .. (src) .. (sm-utils) .. (node-modules) babel/node_modules/babel-register/lib/cache
-  // . (debug) .. (src) .. (sm-utils) .. (node-modules) babel-register/lib/cache
-  const file = require('../file');
-  let babelRegisterCache;
-  const paths = ['../../../babel-cli/node_modules/babel-register/lib/cache.js', '../../../babel-register/lib/cache.js', '../../node_modules/babel-cli/node_modules/babel-register/lib/cache.js', '../../node_modules/babel-register/lib/cache.js'];
-
-  for (let path of paths) {
-    const abs_path = require('path').resolve(__dirname, path);
-    if (file(abs_path).existsSync()) {
-      babelRegisterCache = require(abs_path);
-      break;
-    }
-  }
-
-  if (babelRegisterCache) {
-    source_map.install({
-      overrideRetrieveSourceMap: true,
-      retrieveSourceMap(file) {
-        const cache = babelRegisterCache.get();
-        let sourceMap = null;
-
-        Object.keys(cache).some(hash => {
-          const fileCache = cache[hash];
-          if (typeof fileCache === 'undefined' || typeof fileCache.options === 'undefined' || fileCache.options.filename !== file) {
-            return false;
-          }
-
-          sourceMap = {
-            url: file,
-            map: fileCache.map
-          };
-
-          return true;
-        });
-
-        return sourceMap;
-      }
-    });
-  } else {
-    source_map.install();
-  }
+  //  }
 
   filename = __filename;
 

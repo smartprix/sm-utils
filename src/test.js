@@ -2,8 +2,8 @@
 import _ from 'lodash';
 import Connect from './Connect';
 
-const crypt = require('./crypt');
-const d = require('./debug/d_real');
+import crypt from './crypt';
+import d from './debug/d_real';
 
 console.log(crypt.sequentialId(15));
 console.log(crypt.sequentialId({length: 18, lowercase: true}));

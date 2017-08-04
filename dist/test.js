@@ -1,6 +1,6 @@
 let main = (() => {
 	var _ref = _asyncToGenerator(function* () {
-		d(_lodash2.default.pick((yield _Connect2.default.url('http://www.smartprix.com/ip.php').cacheDir('garbage/cache').save('yo.txt')), ['body', 'statusCode', 'url', 'timeTaken', 'cached']));
+		(0, _d_real2.default)(_lodash2.default.pick((yield _Connect2.default.url('http://www.smartprix.com/ip.php').cacheDir('garbage/cache').save('yo.txt')), ['body', 'statusCode', 'url', 'timeTaken', 'cached']));
 	});
 
 	return function main() {
@@ -16,55 +16,60 @@ var _Connect = require('./Connect');
 
 var _Connect2 = _interopRequireDefault(_Connect);
 
+var _crypt = require('./crypt');
+
+var _crypt2 = _interopRequireDefault(_crypt);
+
+var _d_real = require('./debug/d_real');
+
+var _d_real2 = _interopRequireDefault(_d_real);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; } /* eslint-disable */
 
 
-const crypt = require('./crypt');
-const d = require('./debug/d_real');
+console.log(_crypt2.default.sequentialId(15));
+console.log(_crypt2.default.sequentialId({ length: 18, lowercase: true }));
+console.log(_crypt2.default.sequentialUUID());
 
-console.log(crypt.sequentialId(15));
-console.log(crypt.sequentialId({ length: 18, lowercase: true }));
-console.log(crypt.sequentialUUID());
+console.log(_crypt2.default.randomId(15));
+console.log(_crypt2.default.randomId({ length: 15, charset: _crypt2.default.chars.NUMERIC }));
+console.log(_crypt2.default.randomId({ length: 15, charset: _crypt2.default.chars.HEX }));
+console.log(_crypt2.default.randomId({ length: 15, charset: _crypt2.default.chars.BASE_36 }));
+console.log(_crypt2.default.randomId({ length: 15, charset: _crypt2.default.chars.BASE_64 }));
+console.log(_crypt2.default.randomId({ length: 15, charset: _crypt2.default.chars.PRINTABLE }));
+console.log(_crypt2.default.uuid());
 
-console.log(crypt.randomId(15));
-console.log(crypt.randomId({ length: 15, charset: crypt.chars.NUMERIC }));
-console.log(crypt.randomId({ length: 15, charset: crypt.chars.HEX }));
-console.log(crypt.randomId({ length: 15, charset: crypt.chars.BASE_36 }));
-console.log(crypt.randomId({ length: 15, charset: crypt.chars.BASE_64 }));
-console.log(crypt.randomId({ length: 15, charset: crypt.chars.PRINTABLE }));
-console.log(crypt.uuid());
+console.log(_crypt2.default.md5('Hello', 'base64'));
+console.log(_crypt2.default.sha1('Hello'));
+console.log(_crypt2.default.sha256('Hello'));
+console.log(_crypt2.default.sha512('Hello'));
 
-console.log(crypt.md5('Hello', 'base64'));
-console.log(crypt.sha1('Hello'));
-console.log(crypt.sha256('Hello'));
-console.log(crypt.sha512('Hello'));
+console.log(_crypt2.default.base64Encode('Hello'));
+console.log(_crypt2.default.base64UrlEncode('Hello'));
+console.log(_crypt2.default.base64Decode(_crypt2.default.base64Encode('Hello')));
+console.log(_crypt2.default.base64UrlDecode(_crypt2.default.base64UrlEncode('Hello')));
 
-console.log(crypt.base64Encode('Hello'));
-console.log(crypt.base64UrlEncode('Hello'));
-console.log(crypt.base64Decode(crypt.base64Encode('Hello')));
-console.log(crypt.base64UrlDecode(crypt.base64UrlEncode('Hello')));
-
-let crypted = crypt.encrypt('This is really really cool', 'Hello');
+let crypted = _crypt2.default.encrypt('This is really really cool', 'Hello');
 console.log(crypted);
-console.log(crypt.decrypt(crypted, 'Hello'));
+console.log(_crypt2.default.decrypt(crypted, 'Hello'));
 
-crypted = crypt.encryptStatic('asdf', 'This is really really cool');
+crypted = _crypt2.default.encryptStatic('asdf', 'This is really really cool');
 console.log(crypted);
-console.log(crypt.decryptStatic(crypted, 'This is really really cool'));
+console.log(_crypt2.default.decryptStatic(crypted, 'This is really really cool'));
 
-const hashed = crypt.hashPassword('yoman');
+const hashed = _crypt2.default.hashPassword('yoman');
 console.log(hashed);
-console.log(crypt.verifyPassword('yoman', hashed));
+console.log(_crypt2.default.verifyPassword('yoman', hashed));
 
 const array = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-const shuffled1 = crypt.shuffle(array, { seed: 10 });
-const shuffled2 = crypt.shuffle(array, { seed: 20 });
-const shuffled3 = crypt.shuffle(array, { seed: 10 });
-const shuffled4 = crypt.shuffle(array);
+const shuffled1 = _crypt2.default.shuffle(array, { seed: 10 });
+const shuffled2 = _crypt2.default.shuffle(array, { seed: 20 });
+const shuffled3 = _crypt2.default.shuffle(array, { seed: 10 });
+const shuffled4 = _crypt2.default.shuffle(array);
 console.log(shuffled1, shuffled2, shuffled3, shuffled4, _lodash2.default.isEqual(shuffled1, shuffled2), _lodash2.default.isEqual(shuffled1, shuffled3), _lodash2.default.isEqual(shuffled1, shuffled4), _lodash2.default.isEqual(shuffled2, shuffled4));
 
-d(new Error('hello'));
+(0, _d_real2.default)(new Error('hello'));
 
 main().then(() => process.exit());
