@@ -1,6 +1,9 @@
 let main = (() => {
 	var _ref = _asyncToGenerator(function* () {
 		(0, _d_real2.default)(_lodash2.default.pick((yield _Connect2.default.url('http://www.smartprix.com/ip.php').cacheDir('garbage/cache').save('yo.txt')), ['body', 'statusCode', 'url', 'timeTaken', 'cached']));
+
+		const obj = { a: 'b' };
+		(0, _d_real2.default)(obj);
 	});
 
 	return function main() {

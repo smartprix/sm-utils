@@ -111,7 +111,11 @@ function d(...args) {
 	const functionName = frame.getFunctionNameSanitized() || 'module';
 	const line = _.trim(frame.getContext().line, ' \t\n;');
 
-	console.log(chalk.bgBlue(' ' + chalk.white(chalk.bold(fileName) + ' at ' + chalk.bold(lineNumber) + ':' + columnNumber + ' in ' + chalk.bold(functionName)) + '\n ' + chalk.yellow.bold(line)));
+	const upperLine = `${fileName} at ${lineNumber}:${columnNumber} in ${functionName}`;
+	const upperExtraSpace = _.repeat(' ', Math.max(0, process.stdout.columns - upperLine.length - 1));
+	const lowerExtraSpace = _.repeat(' ', Math.max(0, process.stdout.columns - line.length - 1));
+
+	console.log(chalk.bgBlue(' ' + chalk.white(chalk.bold(fileName) + ' at ' + chalk.bold(lineNumber) + ':' + columnNumber + ' in ' + chalk.bold(functionName)) + upperExtraSpace + '\n ' + chalk.yellow.bold(line) + lowerExtraSpace));
 
 	args.forEach(arg => {
 		dumpSingle(arg);
