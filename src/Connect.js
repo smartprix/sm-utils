@@ -276,7 +276,15 @@ class Connect {
 		return this;
 	}
 
+	asBuffer(returnAsBuffer = true) {
+		this.options.encoding = returnAsBuffer ? null : undefined;
+		return this;
+	}
+
+
 	save(filePath) {
+		// get response as buffer
+		this.asBuffer();
 		this.saveFilePath = filePath;
 		return this;
 	}
@@ -387,8 +395,8 @@ class Connect {
 
 			if (promises.length) {
 				Promise.all(promises)
-				.then(() => { resolve(response) })
-				.catch(() => { resolve(response) });
+					.then(() => { resolve(response) })
+					.catch(() => { resolve(response) });
 			}
 			else {
 				resolve(response);

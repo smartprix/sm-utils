@@ -300,7 +300,14 @@ class Connect {
 		return this;
 	}
 
+	asBuffer(returnAsBuffer = true) {
+		this.options.encoding = returnAsBuffer ? null : undefined;
+		return this;
+	}
+
 	save(filePath) {
+		// get response as buffer
+		this.asBuffer();
 		this.saveFilePath = filePath;
 		return this;
 	}
