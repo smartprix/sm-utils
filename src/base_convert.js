@@ -1,5 +1,5 @@
 // eslint-disable-next-line
-const NUMERALS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_!#$%&()*+,./:;<=>?@[]^`{|}~';
+const NUMERALS = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_!#$%&()*+,./:;<=>?@[]^`{|}~';
 
 /**
  * convert arbitary long integer from one base to another
@@ -7,6 +7,10 @@ const NUMERALS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
 */
 function baseConvert(str, baseIn = 10, baseOut = 62) {
 	str = String(str);
+	if (baseIn > 10 && baseIn <= 36) {
+		str = str.toLowerCase();
+	}
+
 	let j;
 	const arr = [0];
 	let arrL;
@@ -28,11 +32,7 @@ function baseConvert(str, baseIn = 10, baseOut = 62) {
 		}
 	}
 
-	const result = arr.reverse().map(k => NUMERALS[k]).join('');
-	if (baseOut <= 36 && baseOut > 10) {
-		return result.toLowerCase();
-	}
-	return result;
+	return arr.reverse().map(k => NUMERALS[k]).join('');
 }
 
 module.exports = baseConvert;

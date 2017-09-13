@@ -138,7 +138,7 @@ function shuffle(itemToShuffle, options = {}) {
 
 /**
  * get nanoseconds in base62 format (return 7 (or 8 if lowercase) chars long string)
-*/
+ */
 function nanoSecondsAlpha(base36 = false) {
 	const hrtime = process.hrtime();
 
@@ -159,7 +159,7 @@ function nanoSecondsAlpha(base36 = false) {
  * get sequential number that resets every millisecond
  * multiple call within the same millisecond will return 1, 2, 3 so on..
  * the counter will reset on next millisecond
-*/
+ */
 function msCounter(currentTime) {
 	currentTime = currentTime || Date.now();
 	if (currentTime !== data.currentMillis) {
@@ -230,28 +230,28 @@ function sequentialID(options) {
  * v4 UUID = xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
  * where x is any hexadecimal digit and y is one of 8, 9, a, or b
  * eg. f47ac10b-58cc-4372-a567-0e02b2c3d479
-*/
+ */
 function addDashesForUUID(str) {
 	return str.substring(0, 8) + '-' + str.substring(8, 12) + '-' + '4' + str.substring(12, 15) + '-' + 'a' + str.substring(15, 18) + '-' + str.substring(18, 30);
 }
 
 /**
  * get sequential ID in v4 UUID format
-*/
+ */
 function sequentialUUID() {
 	return addDashesForUUID(baseConvert(sequentialID(21), 62, 16));
 }
 
 /**
  * get random ID in v4 UUID format
-*/
+ */
 function randomUUID() {
 	return addDashesForUUID(randomString({ length: 30, charset: chars.HEX }));
 }
 
 /**
  * Encode the string/buffer using a given encoding
-*/
+ */
 function baseEncode(string, opts) {
 	if (_.isString(opts)) {
 		opts = {
@@ -305,7 +305,7 @@ function baseDecodeToBuffer(string, fromEncoding) {
 /**
  * Compute hash of a string using given algorithm
  * encoding can be 'hex', 'binary', 'ascii', 'base64', 'base64url', 'utf8', 'buffer'
-*/
+ */
 function hash(algo, string, { encoding = 'hex' } = {}) {
 	const hashed = crypto.createHash(algo).update(string);
 
@@ -338,7 +338,7 @@ function sha512(string, { encoding = 'hex' } = {}) {
 
 /**
  * Create cryptographic HMAC digests
-*/
+ */
 function hmac(algo, string, key, { encoding = 'hex' } = {}) {
 	const hashed = crypto.createHmac(algo, key).update(string);
 
@@ -361,7 +361,7 @@ function sha256Hmac(string, key, { encoding = 'hex' } = {}) {
  * Encrypt the given string with the given key using AES 256
  * Calling encrypt on the same string multiple times will return different encrypted strings
  * Optionally specify encoding in which you want to get the output
-*/
+ */
 function encrypt(string, key, { encoding = 'base64url' } = {}) {
 	if (string.length < 6) {
 		string = _.padEnd(string, 6, '\v');
@@ -380,7 +380,7 @@ function encrypt(string, key, { encoding = 'base64url' } = {}) {
 
 /**
  * Decrypt the given string with the given key encrypted using encrypt
-*/
+ */
 function decrypt(string, key, { encoding = 'base64url' } = {}) {
 	if (key.length !== 32) {
 		key = sha256(key, { encoding: 'buffer' });
@@ -399,7 +399,7 @@ function decrypt(string, key, { encoding = 'base64url' } = {}) {
  * Calling EncryptStatic on the same string multiple times will return same encrypted strings
  * this encryption is weaker than Encrypt but has the benefit of returing same encypted string
  * for same string and key.
-*/
+ */
 function encryptStatic(string, key, { encoding = 'base64url' } = {}) {
 	if (string.length < 6) {
 		string = _.padEnd(string, 6, '\v');
@@ -412,7 +412,7 @@ function encryptStatic(string, key, { encoding = 'base64url' } = {}) {
 
 /**
  * Decrypt the given string with the given key encrypted using encryptStatic
-*/
+ */
 function decryptStatic(string, key, { encoding = 'base64url' } = {}) {
 	const version = string.substring(0, 1); // eslint-disable-line
 	const decoded = baseDecodeToBuffer(string.substring(1), encoding);
@@ -425,7 +425,7 @@ function decryptStatic(string, key, { encoding = 'base64url' } = {}) {
 /**
  * Hash a given password using cryptographically strong hash function
  * Returns a 50 character long hash
-*/
+ */
 function hashPassword(password, opts = {}) {
 	const salt = opts.salt || crypto.randomBytes(12);
 
@@ -437,7 +437,7 @@ function hashPassword(password, opts = {}) {
 
 /**
  * Verify that given password and hashed password are same or not
-*/
+ */
 function verifyPassword(password, hashed) {
 	const version = hashed.substring(0, 1); // eslint-disable-line
 	const salt = baseDecodeToBuffer(hashed.substring(1), 'base64url').slice(0, 12);
@@ -452,7 +452,7 @@ function verifyPassword(password, hashed) {
 
 /**
  * Base64 Encode
-*/
+ */
 function base64Encode(string, fromEncoding = 'binary') {
 	return baseEncode(string, {
 		fromEncoding,
@@ -462,7 +462,7 @@ function base64Encode(string, fromEncoding = 'binary') {
 
 /**
  * URL Safe Base64 Encode
-*/
+ */
 function base64UrlEncode(string, fromEncoding = 'binary') {
 	return baseEncode(string, {
 		fromEncoding,
@@ -472,7 +472,7 @@ function base64UrlEncode(string, fromEncoding = 'binary') {
 
 /**
  * Base64 Decode
-*/
+ */
 function base64Decode(string, toEncoding = 'binary') {
 	return baseEncode(string, {
 		fromEncoding: 'base64',
@@ -482,12 +482,26 @@ function base64Decode(string, toEncoding = 'binary') {
 
 /**
  * URL Safe Base64 Decode
-*/
+ */
 function base64UrlDecode(string, toEncoding = 'binary') {
 	return baseEncode(string, {
 		fromEncoding: 'base64url',
 		toEncoding
 	});
+}
+
+/**
+ * Pack many numbers into a single string
+ */
+function packNumbers(numbers) {
+	return baseConvert(numbers.join('a').replace(/-/g, 'b').replace(/\./g, 'c'), 13, 62);
+}
+
+/**
+ * Unpack a string packed with packNumbers
+ */
+function unpackNumbers(str) {
+	return baseConvert(str, 62, 13).replace(/b/g, '-').replace(/c/g, '.').split('a').map(Number);
 }
 
 module.exports = {
@@ -533,5 +547,8 @@ module.exports = {
 	base64Encode,
 	base64UrlEncode,
 	base64Decode,
-	base64UrlDecode
+	base64UrlDecode,
+
+	packNumbers,
+	unpackNumbers
 };
