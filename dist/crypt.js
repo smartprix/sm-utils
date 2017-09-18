@@ -504,6 +504,32 @@ function unpackNumbers(str) {
 	return baseConvert(str, 62, 13).replace(/b/g, '-').replace(/c/g, '.').split('a').map(Number);
 }
 
+/**
+ * Generate a random encrypted string that contains a timestamp
+ *
+ * @return {string} id
+ * @param {int|object} options length of the id or object of {length: int}
+ */
+function encryptedTimestampedId(options, key) {
+	const length = options.length || options;
+
+	if (length < 10) {
+		throw new Error('Timestamped ID should be of minimum 15 length');
+	}
+
+	let time = options.time || Math.floor(Date.now() / 1000);
+	time = baseConvert(time, 10, 62);
+
+	const encrypted = encryptStatic(randomString(3) + time, key);
+	const remaining = length - encrypted.length - 1;
+	let random = '';
+	if (remaining) {
+		random = randomString(remaining);
+	}
+
+	return encrypted + '.' + random;
+}
+
 module.exports = {
 	baseConvert,
 	chars,
@@ -550,5 +576,7 @@ module.exports = {
 	base64UrlDecode,
 
 	packNumbers,
-	unpackNumbers
+	unpackNumbers,
+
+	encryptedTimestampedId
 };

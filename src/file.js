@@ -90,6 +90,23 @@ class File {
 		}
 	}
 
+	async lstat() {
+		return fs.lstat(this.path);
+	}
+
+	async stat() {
+		return fs.stat(this.path);
+	}
+
+	async size() {
+		try {
+			return (await fs.lstat(this.path)).size;
+		}
+		catch (e) {
+			return 0;
+		}
+	}
+
 	async chmod(mode) {
 		return fs.chmod(this.path, mode);
 	}
@@ -198,6 +215,18 @@ class File {
 			opts.retries--;
 			return this.append(contents, opts);
 		}
+	}
+
+	async copy(destination, options = {}) {
+		const opts = _.assign({
+			overwrite: true,
+		}, options);
+
+		if (opts.overwrite) {
+			return fs.copyFile(this.path, destination);
+		}
+
+		return fs.copyFile(this.path, destination, fs.constants.COPYFILE_EXCL);
 	}
 
 	async realpath() {
