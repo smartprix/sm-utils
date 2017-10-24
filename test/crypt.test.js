@@ -38,10 +38,11 @@ describe('crypt library', () => {
 
 	it('should correctly sign and verify messages', () => {
 		const message = 'hello there';
-		const sign = Crypt.sign(message, privateKey);
-		const verified = Crypt.verify(message, sign, publicKey);
-		const wrong = Crypt.verify(message + 'a', sign, publicKey);
-		expect(sign.length).to.be.within(138, 146);
+		const sign = Crypt.sign(message, privateKey, {encoding: 'base64url'});
+		const verified = Crypt.verify(message, sign, publicKey, {encoding: 'base64url'});
+		const wrong = Crypt.verify(message + 'a', sign, publicKey, {encoding: 'base64url'});
+		// console.log(sign);
+		expect(sign.length).to.be.within(90, 100);
 		expect(verified).to.be.true;
 		expect(wrong).to.be.false;
 	});
