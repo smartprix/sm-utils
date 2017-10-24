@@ -5,7 +5,7 @@ import FileCookieStore from 'tough-cookie-file-store';
 import SocksHTTPAgent from 'socks5-http-client/lib/Agent';
 import SocksHTTPSAgent from 'socks5-https-client/lib/Agent';
 import file from './file';
-import crypt from './crypt';
+import Crypt from './Crypt';
 
 const userAgents = {
 	chrome: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
@@ -435,7 +435,7 @@ class Connect {
 			let cacheFilePath = null;
 
 			if (this.resposeCacheDir) {
-				const cacheKey = crypt.md5(
+				const cacheKey = Crypt.md5(
 					JSON.stringify(_.pick(this.options, ['url', 'method', 'fields']))
 				);
 

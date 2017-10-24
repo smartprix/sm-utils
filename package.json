@@ -16,7 +16,7 @@
     "check-coverage": "true",
     "build": "babel src --out-dir dist",
     "lint": "eslint src",
-    "test-only": "mocha --compilers js:babel-register test/*.test.js"
+    "test-only": "mocha --slow 0 --compilers js:babel-register test/*.test.js"
   },
   "author": "Hitesh Khandelwal <hitesh@smartprix.com> (http://www.smartprix.com/)",
   "license": "ISC",

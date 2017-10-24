@@ -30,9 +30,9 @@ var _file = require('./file');
 
 var _file2 = _interopRequireDefault(_file);
 
-var _crypt = require('./crypt');
+var _Crypt = require('./Crypt');
 
-var _crypt2 = _interopRequireDefault(_crypt);
+var _Crypt2 = _interopRequireDefault(_Crypt);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -453,7 +453,7 @@ class Connect {
 			let cacheFilePath = null;
 
 			if (this.resposeCacheDir) {
-				const cacheKey = _crypt2.default.md5(JSON.stringify(_lodash2.default.pick(this.options, ['url', 'method', 'fields'])));
+				const cacheKey = _Crypt2.default.md5(JSON.stringify(_lodash2.default.pick(this.options, ['url', 'method', 'fields'])));
 
 				cacheFilePath = _path2.default.join(this.resposeCacheDir, cacheKey);
 				(0, _file2.default)(cacheFilePath).read().then(cachedContents => {

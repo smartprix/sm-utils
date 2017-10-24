@@ -2,9 +2,9 @@ var _file = require('./file');
 
 var _file2 = _interopRequireDefault(_file);
 
-var _crypt = require('./crypt');
+var _Crypt = require('./Crypt');
 
-var _crypt2 = _interopRequireDefault(_crypt);
+var _Crypt2 = _interopRequireDefault(_Crypt);
 
 var _Connect = require('./Connect');
 
@@ -14,9 +14,9 @@ var _Cache = require('./Cache');
 
 var _Cache2 = _interopRequireDefault(_Cache);
 
-var _system = require('./system');
+var _System = require('./System');
 
-var _system2 = _interopRequireDefault(_system);
+var _System2 = _interopRequireDefault(_System);
 
 var _base_convert = require('./base_convert');
 
@@ -37,14 +37,14 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 /* eslint-disable global-require */
 module.exports = {
 	file: _file2.default,
-	system: _system2.default,
-	crypt: _crypt2.default,
+	system: _System2.default,
+	crypt: _Crypt2.default,
 	view: _view2.default,
 	cfg: _cfg2.default,
 	baseConvert: _base_convert2.default,
 	File: _file2.default,
-	Crypt: _crypt2.default,
+	Crypt: _Crypt2.default,
 	Connect: _Connect2.default,
 	Cache: _Cache2.default,
-	System: _system2.default
+	System: _System2.default
 };

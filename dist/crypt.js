@@ -97,7 +97,7 @@ function randomString(options) {
  * you can optionally give a seed in the options to do a consitant shuffle
  * @return {array|string} shuffled item
  * @param {array|string} itemToShuffle item which you want to shuffle
- * @param {object} options object of {seed}
+ * @param {object} options object of {seed: number}
  */
 function shuffle(itemToShuffle, options = {}) {
 	let array;
@@ -251,6 +251,9 @@ function randomUUID() {
 
 /**
  * Encode the string/buffer using a given encoding
+ * Supported Encodings:
+ *   'hex', 'binary' ('latin1'), 'ascii', 'base64', 'base64url',
+ *   'utf8', 'buffer', 'utf16le' ('ucs2')
  */
 function baseEncode(string, opts) {
 	if (_.isString(opts)) {
@@ -304,11 +307,12 @@ function baseDecodeToBuffer(string, fromEncoding) {
 
 /**
  * Compute hash of a string using given algorithm
- * encoding can be 'hex', 'binary', 'ascii', 'base64', 'base64url', 'utf8', 'buffer'
+ * encoding can be 'hex', 'binary' ('latin1'), 'ascii', 'base64', 'base64url', 'utf8', 'buffer'
  */
 function hash(algo, string, { encoding = 'hex' } = {}) {
 	const hashed = crypto.createHash(algo).update(string);
 
+	if (encoding === 'binary') encoding = 'latin1';
 	if (['latin1', 'base64', 'hex'].indexOf(encoding) > -1) {
 		return hashed.digest(encoding);
 	}
@@ -342,6 +346,7 @@ function sha512(string, { encoding = 'hex' } = {}) {
 function hmac(algo, string, key, { encoding = 'hex' } = {}) {
 	const hashed = crypto.createHmac(algo, key).update(string);
 
+	if (encoding === 'binary') encoding = 'latin1';
 	if (['latin1', 'base64', 'hex'].indexOf(encoding) > -1) {
 		return hashed.digest(encoding);
 	}
@@ -355,6 +360,49 @@ function sha1Hmac(string, key, { encoding = 'hex' } = {}) {
 
 function sha256Hmac(string, key, { encoding = 'hex' } = {}) {
 	return hmac('sha256', key, string, { encoding });
+}
+
+/**
+ * Sign a message using a private key
+ * opts can have {encoding (default 'hex'), pass (default none)}
+ * NOTE: Generate a key pair using:
+ *   openssl ecparam -genkey -name secp256k1 | openssl ec -aes128 -out private.pem
+ *   openssl ec -in private.pem -pubout -out public.pem
+ */
+function sign(message, privateKey, opts = {}) {
+	let encoding = opts.encoding || 'hex';
+	const signed = crypto.createSign('SHA256').update(message);
+
+	if (encoding === 'binary') encoding = 'latin1';
+	if (['latin1', 'base64', 'hex'].indexOf(encoding) > -1) {
+		return signed.sign(privateKey, encoding);
+	}
+
+	return baseEncode(signed.sign(privateKey), encoding);
+}
+
+/**
+ * Verify a message using a public key
+ * opts can have {encoding (default 'hex')}
+ * NOTE: Generate a key pair using:
+ *   openssl ecparam -genkey -name secp256k1 | openssl ec -aes128 -out private.pem
+ *   openssl ec -in private.pem -pubout -out public.pem
+ */
+function verify(message, signature, publicKey, opts = {}) {
+	let encoding = opts.encoding || 'hex';
+	const verified = crypto.createVerify('SHA256').update(message);
+
+	if (encoding === 'binary') encoding = 'latin1';
+	if (['latin1', 'base64', 'hex'].indexOf(encoding) > -1) {
+		return verified.verify(publicKey, signature, encoding);
+	}
+
+	if (encoding === 'buffer') {
+		return verified.verify(publicKey, signature);
+	}
+
+	const signBuffer = baseDecodeToBuffer(signature, encoding);
+	return verified.verify(publicKey, signBuffer);
 }
 
 /**
@@ -558,6 +606,9 @@ module.exports = {
 	hmac,
 	sha1Hmac,
 	sha256Hmac,
+
+	sign,
+	verify,
 
 	encrypt,
 	decrypt,

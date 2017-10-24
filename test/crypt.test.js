@@ -1,5 +1,10 @@
+import fs from 'fs';
 import {expect} from 'chai';
 import {Crypt} from '../src/index';
+
+const privateKeyString = fs.readFileSync(`${__dirname}/private.pem`);
+const privateKey = {key: privateKeyString, passphrase: 'smutils'};
+const publicKey = fs.readFileSync(`${__dirname}/public.pem`);
 
 describe('crypt library', () => {
 	it('should correctly verify password', () => {
@@ -29,6 +34,16 @@ describe('crypt library', () => {
 		const unpacked = Crypt.unpackNumbers(packed);
 		expect(packed).to.match(/^[a-zA-Z0-9]+$/);
 		expect(unpacked).to.deep.equal(numbers);
+	});
+
+	it('should correctly sign and verify messages', () => {
+		const message = 'hello there';
+		const sign = Crypt.sign(message, privateKey);
+		const verified = Crypt.verify(message, sign, publicKey);
+		const wrong = Crypt.verify(message + 'a', sign, publicKey);
+		expect(sign.length).to.be.within(138, 146);
+		expect(verified).to.be.true;
+		expect(wrong).to.be.false;
 	});
 });
 

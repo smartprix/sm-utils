@@ -6,7 +6,7 @@ const _mkdirp = promisify(require('mkdirp'));
 const _glob = promisify(require('glob'));
 const _chmodr = promisify(require('chmodr'));
 const _chownr = promisify(require('chownr'));
-const system = require('./system');
+const System = require('./System');
 const _fs = require('fs');
 
 const fs = promisify(_fs);
@@ -120,7 +120,7 @@ class File {
 			return fs.chown(this.path, user, group);
 		}
 
-		return system.execOut(`chown ${user}:${group} ${this.path}`);
+		return System.execOut(`chown ${user}:${group} ${this.path}`);
 	}
 
 	async chownr(user, group) {
@@ -128,7 +128,7 @@ class File {
 			return _chownr(this.path, user, group);
 		}
 
-		return system.execOut(`chown -R ${user}:${group} ${this.path}`);
+		return System.execOut(`chown -R ${user}:${group} ${this.path}`);
 	}
 
 	async rename(newName) {
