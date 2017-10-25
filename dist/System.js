@@ -154,7 +154,7 @@ function microtime() {
 }
 
 // Sleep for a specified time (in milliseconds)
-// Example: await system.sleep(2000);
+// Example: await System.sleep(2000);
 function sleep(timeout) {
 	return new Promise(resolve => {
 		setTimeout(resolve, timeout);
