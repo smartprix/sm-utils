@@ -41,10 +41,19 @@ describe('crypt library', () => {
 		const sign = Crypt.sign(message, privateKey, {encoding: 'base64url'});
 		const verified = Crypt.verify(message, sign, publicKey, {encoding: 'base64url'});
 		const wrong = Crypt.verify(message + 'a', sign, publicKey, {encoding: 'base64url'});
-		// console.log(sign);
+		// console.log(sign, sign.length);
 		expect(sign.length).to.be.within(90, 100);
 		expect(verified).to.be.true;
 		expect(wrong).to.be.false;
+	});
+
+	it('should correctly signAndEncrypt messages', () => {
+		const message = {a: 'bcd', b: true};
+		const token = Crypt.signAndEncrypt(message, privateKey, publicKey);
+		// console.log(token, token.length);
+		const messageDecoded = Crypt.verifyAndDecrypt(token, publicKey);
+		expect(token).to.match(/^[a-zA-Z0-9_.-]+$/);
+		expect(messageDecoded).to.deep.equal(message);
 	});
 });
 

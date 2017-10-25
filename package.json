@@ -16,13 +16,13 @@
     "check-coverage": "true",
     "build": "babel src --out-dir dist",
     "lint": "eslint src",
-    "test-only": "mocha --slow 0 --compilers js:babel-register test/*.test.js"
+    "test-only": "NODE_ENV=test mocha --slow 0 --require babel-register test/*.test.js"
   },
   "author": "Hitesh Khandelwal <hitesh@smartprix.com> (http://www.smartprix.com/)",
   "license": "ISC",
   "dependencies": {
-    "babel-plugin-transform-es2015-modules-commonjs": "^6.24.1",
-    "chalk": "2.0.1",
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.26.0",
+    "chalk": "2.3.0",
     "chmodr": "1.0.2",
     "chownr": "1.0.1",
     "continuation-local-storage": "3.2.0",
@@ -32,24 +32,24 @@
     "longjohn": "^0.2.12",
     "lru-cache": "4.1.1",
     "mkdirp": "0.5.1",
-    "request": "^2.81.0",
-    "rimraf": "2.6.1",
+    "request": "^2.83.0",
+    "rimraf": "2.6.2",
     "socks5-http-client": "^1.0.2",
     "socks5-https-client": "^1.2.1",
-    "source-map-support": "0.4.15",
+    "source-map-support": "0.5.0",
     "stack-trace": "0.0.10",
     "thenify-all": "1.6.0",
-    "tough-cookie-file-store": "^1.1.1"
+    "tough-cookie-file-store": "^1.2.0"
   },
   "devDependencies": {
-    "babel-cli": "6.24.1",
+    "babel-cli": "6.26.0",
     "babel-preset-stage-0": "6.24.1",
-    "chai": "4.1.0",
-    "eslint": "4.3.0",
-    "eslint-config-smartprix": "3.2.5",
+    "chai": "4.1.2",
+    "eslint": "4.9.0",
+    "eslint-config-smartprix": "3.3.1",
     "ghooks": "2.0.0",
     "isparta": "4.0.0",
-    "mocha": "3.5.0"
+    "mocha": "4.0.1"
   },
   "eslintConfig": {
     "extends": "smartprix",
