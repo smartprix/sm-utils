@@ -1,7 +1,71 @@
-const crypto = require('crypto');
-const _ = require('lodash');
+
+
+/**
+ * legacy obfuscation method
+ */
+let javaObfuscate = (() => {
+	var _ref = _asyncToGenerator(function* (str) {
+		if (!str) return '';
+		try {
+			return base64Encode((yield gzdeflate(Buffer.from(rot47(str), 'latin1'))));
+		} catch (e) {
+			return '';
+		}
+	});
+
+	return function javaObfuscate(_x) {
+		return _ref.apply(this, arguments);
+	};
+})();
+
+/**
+ * legacy unobfuscation method (obfuscated by javaObfuscate)
+ */
+
+
+let javaUnobfuscate = (() => {
+	var _ref2 = _asyncToGenerator(function* (str) {
+		str = str.trim();
+		if (!str) return '';
+
+		try {
+			return rot47((yield gzinflate(base64Decode(str, 'buffer'))).toString('latin1'));
+		} catch (e) {
+			return '';
+		}
+	});
+
+	return function javaUnobfuscate(_x2) {
+		return _ref2.apply(this, arguments);
+	};
+})();
+
+var _crypto = require('crypto');
+
+var _crypto2 = _interopRequireDefault(_crypto);
+
+var _zlib = require('zlib');
+
+var _zlib2 = _interopRequireDefault(_zlib);
+
+var _util = require('util');
+
+var _lodash = require('lodash');
+
+var _lodash2 = _interopRequireDefault(_lodash);
+
 require('./lodash_utils');
-const baseConvert = require('./base_convert');
+
+var _base_convert = require('./base_convert');
+
+var _base_convert2 = _interopRequireDefault(_base_convert);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
+
+const gzinflate = (0, _util.promisify)(_zlib2.default.inflateRaw);
+const gzdeflate = (0, _util.promisify)(_zlib2.default.deflateRaw);
 
 const chars = {};
 chars.NUMERIC = '0123456789';
@@ -78,7 +142,7 @@ function randomString(options) {
 
 		let randomBuffer;
 		try {
-			randomBuffer = crypto.randomBytes(bytes);
+			randomBuffer = _crypto2.default.randomBytes(bytes);
 		} catch (e) {
 			continue;
 		}
@@ -148,11 +212,11 @@ function nanoSecondsAlpha(base36 = false) {
 	// hence take mod 3521 from seconds so that overall string length = 7
 	if (base36) {
 		const seconds = String(hrtime[0] % 2821) + ('000000000' + String(hrtime[1])).slice(-9);
-		return ('00000000' + baseConvert(seconds, 10, 36)).slice(-8);
+		return ('00000000' + (0, _base_convert2.default)(seconds, 10, 36)).slice(-8);
 	}
 
 	const seconds = String(hrtime[0] % 3521) + ('000000000' + String(hrtime[1])).slice(-9);
-	return ('0000000' + baseConvert(seconds, 10, 62)).slice(-7);
+	return ('0000000' + (0, _base_convert2.default)(seconds, 10, 62)).slice(-7);
 }
 
 /**
@@ -202,13 +266,13 @@ function sequentialID(options) {
 	if (base36) {
 		// convert current time in milliseconds to base36
 		// This will always return 8 characters till 2058
-		result = baseConvert(currentTime, 10, 36);
-		result += _.padStart(baseConvert(counter, 10, 36), 4, '0');
+		result = (0, _base_convert2.default)(currentTime, 10, 36);
+		result += _lodash2.default.padStart((0, _base_convert2.default)(counter, 10, 36), 4, '0');
 	} else {
 		// convert current time in milliseconds to base62
 		// This will always return 7 characters till 2080
-		result = baseConvert(currentTime, 10, 62);
-		result += _.padStart(baseConvert(counter, 10, 62), 3, '0');
+		result = (0, _base_convert2.default)(currentTime, 10, 62);
+		result += _lodash2.default.padStart((0, _base_convert2.default)(counter, 10, 62), 3, '0');
 	}
 
 	if (length < result.length) {
@@ -239,7 +303,7 @@ function addDashesForUUID(str) {
  * get sequential ID in v4 UUID format
  */
 function sequentialUUID() {
-	return addDashesForUUID(baseConvert(sequentialID(21), 62, 16));
+	return addDashesForUUID((0, _base_convert2.default)(sequentialID(21), 62, 16));
 }
 
 /**
@@ -256,7 +320,7 @@ function randomUUID() {
  *   'utf8', 'buffer', 'utf16le' ('ucs2')
  */
 function baseEncode(string, opts) {
-	if (_.isString(opts)) {
+	if (_lodash2.default.isString(opts)) {
 		opts = {
 			toEncoding: opts,
 			fromEncoding: 'binary'
@@ -288,7 +352,7 @@ function baseEncode(string, opts) {
 }
 
 function baseDecode(string, opts) {
-	if (_.isString(opts)) {
+	if (_lodash2.default.isString(opts)) {
 		opts = {
 			fromEncoding: opts,
 			toEncoding: 'binary'
@@ -310,7 +374,7 @@ function baseDecodeToBuffer(string, fromEncoding) {
  * encoding can be 'hex', 'binary' ('latin1'), 'ascii', 'base64', 'base64url', 'utf8', 'buffer'
  */
 function hash(algo, string, { encoding = 'hex' } = {}) {
-	const hashed = crypto.createHash(algo).update(string);
+	const hashed = _crypto2.default.createHash(algo).update(string);
 
 	if (encoding === 'binary') encoding = 'latin1';
 	if (['latin1', 'base64', 'hex'].indexOf(encoding) > -1) {
@@ -344,7 +408,7 @@ function sha512(string, { encoding = 'hex' } = {}) {
  * Create cryptographic HMAC digests
  */
 function hmac(algo, string, key, { encoding = 'hex' } = {}) {
-	const hashed = crypto.createHmac(algo, key).update(string);
+	const hashed = _crypto2.default.createHmac(algo, key).update(string);
 
 	if (encoding === 'binary') encoding = 'latin1';
 	if (['latin1', 'base64', 'hex'].indexOf(encoding) > -1) {
@@ -371,7 +435,7 @@ function sha256Hmac(string, key, { encoding = 'hex' } = {}) {
  */
 function sign(message, privateKey, opts = {}) {
 	let encoding = opts.encoding || 'hex';
-	const signed = crypto.createSign('SHA256').update(message);
+	const signed = _crypto2.default.createSign('SHA256').update(message);
 
 	if (encoding === 'binary') encoding = 'latin1';
 	if (['latin1', 'base64', 'hex'].indexOf(encoding) > -1) {
@@ -390,7 +454,7 @@ function sign(message, privateKey, opts = {}) {
  */
 function verify(message, signature, publicKey, opts = {}) {
 	let encoding = opts.encoding || 'hex';
-	const verified = crypto.createVerify('SHA256').update(message);
+	const verified = _crypto2.default.createVerify('SHA256').update(message);
 
 	if (encoding === 'binary') encoding = 'latin1';
 	if (['latin1', 'base64', 'hex'].indexOf(encoding) > -1) {
@@ -412,16 +476,16 @@ function verify(message, signature, publicKey, opts = {}) {
  */
 function encrypt(string, key, { encoding = 'base64url' } = {}) {
 	if (string.length < 6) {
-		string = _.padEnd(string, 6, '\v');
+		string = _lodash2.default.padEnd(string, 6, '\v');
 	}
 
 	if (key.length !== 32) {
 		key = sha256(key, { encoding: 'buffer' });
 	}
 
-	const iv = crypto.randomBytes(16);
+	const iv = _crypto2.default.randomBytes(16);
 
-	const cipher = crypto.createCipheriv('AES-256-CFB', key, iv);
+	const cipher = _crypto2.default.createCipheriv('AES-256-CFB', key, iv);
 	const crypted = Buffer.concat([iv, cipher.update(string), cipher.final()]);
 	return '1' + baseEncode(crypted, encoding);
 }
@@ -437,9 +501,9 @@ function decrypt(string, key, { encoding = 'base64url' } = {}) {
 	const version = string.substring(0, 1); // eslint-disable-line
 	const decoded = baseDecodeToBuffer(string.substring(1), encoding);
 
-	const decipher = crypto.createDecipheriv('AES-256-CFB', key, decoded.slice(0, 16));
+	const decipher = _crypto2.default.createDecipheriv('AES-256-CFB', key, decoded.slice(0, 16));
 	const decrypted = Buffer.concat([decipher.update(decoded.slice(16)), decipher.final()]);
-	return _.trimEnd(decrypted, '\v');
+	return _lodash2.default.trimEnd(decrypted, '\v');
 }
 
 /**
@@ -450,10 +514,10 @@ function decrypt(string, key, { encoding = 'base64url' } = {}) {
  */
 function encryptStatic(string, key, { encoding = 'base64url' } = {}) {
 	if (string.length < 6) {
-		string = _.padEnd(string, 6, '\v');
+		string = _lodash2.default.padEnd(string, 6, '\v');
 	}
 
-	const cipher = crypto.createCipher('AES-256-CFB', key);
+	const cipher = _crypto2.default.createCipher('AES-256-CFB', key);
 	const crypted = Buffer.concat([cipher.update(string), cipher.final()]);
 	return '1' + baseEncode(crypted, encoding);
 }
@@ -465,9 +529,9 @@ function decryptStatic(string, key, { encoding = 'base64url' } = {}) {
 	const version = string.substring(0, 1); // eslint-disable-line
 	const decoded = baseDecodeToBuffer(string.substring(1), encoding);
 
-	const decipher = crypto.createDecipher('AES-256-CFB', key);
+	const decipher = _crypto2.default.createDecipher('AES-256-CFB', key);
 	const decrypted = Buffer.concat([decipher.update(decoded), decipher.final()]);
-	return _.trimEnd(decrypted, '\v');
+	return _lodash2.default.trimEnd(decrypted, '\v');
 }
 
 /**
@@ -507,9 +571,9 @@ function verifyAndDecrypt(token, publicKey) {
  * Returns a 50 character long hash
  */
 function hashPassword(password, opts = {}) {
-	const salt = opts.salt || crypto.randomBytes(12);
+	const salt = opts.salt || _crypto2.default.randomBytes(12);
 
-	const hashed = crypto.pbkdf2Sync(password, salt, 1000, 25, 'sha256');
+	const hashed = _crypto2.default.pbkdf2Sync(password, salt, 1000, 25, 'sha256');
 	const passHash = '1' + baseEncode(Buffer.concat([salt, hashed]), 'base64url');
 
 	return passHash.substring(0, 50);
@@ -524,8 +588,8 @@ function verifyPassword(password, hashed) {
 
 	if (hashed === hashPassword(password, { salt })) return true;
 	if (hashed === hashPassword(password.trim(), { salt })) return true;
-	if (hashed === hashPassword(_.upperFirst(password), { salt })) return true;
-	if (hashed === hashPassword(_.invertCase(password), { salt })) return true;
+	if (hashed === hashPassword(_lodash2.default.upperFirst(password), { salt })) return true;
+	if (hashed === hashPassword(_lodash2.default.invertCase(password), { salt })) return true;
 
 	return false;
 }
@@ -574,14 +638,14 @@ function base64UrlDecode(string, toEncoding = 'binary') {
  * Pack many numbers into a single string
  */
 function packNumbers(numbers) {
-	return baseConvert(numbers.join('a').replace(/-/g, 'b').replace(/\./g, 'c'), 13, 62);
+	return (0, _base_convert2.default)(numbers.join('a').replace(/-/g, 'b').replace(/\./g, 'c'), 13, 62);
 }
 
 /**
  * Unpack a string packed with packNumbers
  */
 function unpackNumbers(str) {
-	return baseConvert(str, 62, 13).replace(/b/g, '-').replace(/c/g, '.').split('a').map(Number);
+	return (0, _base_convert2.default)(str, 62, 13).replace(/b/g, '-').replace(/c/g, '.').split('a').map(Number);
 }
 
 /**
@@ -598,7 +662,7 @@ function encryptedTimestampedId(options, key) {
 	}
 
 	let time = options.time || Math.floor(Date.now() / 1000);
-	time = baseConvert(time, 10, 62);
+	time = (0, _base_convert2.default)(time, 10, 62);
 
 	const encrypted = encryptStatic(randomString(3) + time, key);
 	const remaining = length - encrypted.length - 1;
@@ -610,8 +674,28 @@ function encryptedTimestampedId(options, key) {
 	return encrypted + '.' + random;
 }
 
+/**
+ * rotate a string by 47 characters
+ *
+ * @param {string} str
+ * @returns {string} rotated string
+ */
+function rot47(str) {
+	const s = [];
+	for (let i = 0; i < str.length; i++) {
+		const j = str.charCodeAt(i);
+		if (j >= 33 && j <= 126) {
+			s[i] = String.fromCharCode(33 + (j + 14) % 94);
+		} else {
+			s[i] = String.fromCharCode(j);
+		}
+	}
+
+	return s.join('');
+}
+
 module.exports = {
-	baseConvert,
+	baseConvert: _base_convert2.default,
 	chars,
 
 	randomString,
@@ -664,5 +748,9 @@ module.exports = {
 	packNumbers,
 	unpackNumbers,
 
-	encryptedTimestampedId
+	encryptedTimestampedId,
+
+	rot47,
+	javaObfuscate,
+	javaUnobfuscate
 };
