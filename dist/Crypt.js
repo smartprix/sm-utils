@@ -483,7 +483,8 @@ function encrypt(string, key, { encoding = 'base64url' } = {}) {
 		key = sha256(key, { encoding: 'buffer' });
 	}
 
-	const iv = _crypto2.default.randomBytes(16);
+	const ivLength = 16;
+	const iv = _crypto2.default.randomBytes(ivLength);
 
 	const cipher = _crypto2.default.createCipheriv('AES-256-CFB', key, iv);
 	const crypted = Buffer.concat([iv, cipher.update(string), cipher.final()]);
@@ -501,8 +502,9 @@ function decrypt(string, key, { encoding = 'base64url' } = {}) {
 	const version = string.substring(0, 1); // eslint-disable-line
 	const decoded = baseDecodeToBuffer(string.substring(1), encoding);
 
-	const decipher = _crypto2.default.createDecipheriv('AES-256-CFB', key, decoded.slice(0, 16));
-	const decrypted = Buffer.concat([decipher.update(decoded.slice(16)), decipher.final()]);
+	const ivLength = 16;
+	const decipher = _crypto2.default.createDecipheriv('AES-256-CFB', key, decoded.slice(0, ivLength));
+	const decrypted = Buffer.concat([decipher.update(decoded.slice(ivLength)), decipher.final()]);
 	return _lodash2.default.trimEnd(decrypted, '\v');
 }
 
@@ -540,10 +542,11 @@ function decryptStatic(string, key, { encoding = 'base64url' } = {}) {
  * you only need a publicKey to verify and decrypt this token
  */
 function signAndEncrypt(message, privateKey, publicKey) {
+	const version = '1';
 	const stringified = JSON.stringify(message);
 	const signature = sign(stringified, privateKey, { encoding: 'base64url' });
 	const encrypted = encrypt(stringified, publicKey, { encoding: 'base64url' });
-	return encrypted + '.' + signature;
+	return version + encrypted + '.' + signature;
 }
 
 /**
@@ -555,7 +558,8 @@ function verifyAndDecrypt(token, publicKey) {
 		throw new Error('Malformed Token');
 	}
 
-	const message = decrypt(messageEncrypted, publicKey, { encoding: 'base64url' });
+	const version = messageEncrypted[0]; // eslint-disable-line
+	const message = decrypt(messageEncrypted.substring(1), publicKey, { encoding: 'base64url' });
 	if (!message) throw new Error('Malformed Token');
 
 	const verified = verify(message, signature, publicKey, { encoding: 'base64url' });
