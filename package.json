@@ -3,6 +3,9 @@
   "version": "2.9.6",
   "description": "Uilities for NodeJS",
   "main": "dist/index.js",
+  "engines": {
+    "node": ">=8.0.0"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/smartprix/sm-utils"
