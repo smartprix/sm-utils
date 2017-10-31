@@ -1,3 +1,5 @@
+'use strict';
+
 const nodeUtil = require('util');
 
 // http://en.wikipedia.org/wiki/ANSI_escape_code#graphics

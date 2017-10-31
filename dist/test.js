@@ -1,15 +1,4 @@
-let main = (() => {
-	var _ref = _asyncToGenerator(function* () {
-		(0, _d_real2.default)(_lodash2.default.pick((yield _Connect2.default.url('http://www.smartprix.com/ip.php').cacheDir('garbage/cache').save('yo.txt')), ['body', 'statusCode', 'url', 'timeTaken', 'cached']));
-
-		const obj = { a: 'b' };
-		(0, _d_real2.default)(obj);
-	});
-
-	return function main() {
-		return _ref.apply(this, arguments);
-	};
-})();
+'use strict';
 
 var _lodash = require('lodash');
 
@@ -29,9 +18,7 @@ var _d_real2 = _interopRequireDefault(_d_real);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; } /* eslint-disable */
-
-
+/* eslint-disable */
 console.log(_crypt2.default.sequentialId(15));
 console.log(_crypt2.default.sequentialId({ length: 18, lowercase: true }));
 console.log(_crypt2.default.sequentialUUID());
@@ -74,5 +61,12 @@ const shuffled4 = _crypt2.default.shuffle(array);
 console.log(shuffled1, shuffled2, shuffled3, shuffled4, _lodash2.default.isEqual(shuffled1, shuffled2), _lodash2.default.isEqual(shuffled1, shuffled3), _lodash2.default.isEqual(shuffled1, shuffled4), _lodash2.default.isEqual(shuffled2, shuffled4));
 
 (0, _d_real2.default)(new Error('hello'));
+
+async function main() {
+	(0, _d_real2.default)(_lodash2.default.pick((await _Connect2.default.url('http://www.smartprix.com/ip.php').cacheDir('garbage/cache').save('yo.txt')), ['body', 'statusCode', 'url', 'timeTaken', 'cached']));
+
+	const obj = { a: 'b' };
+	(0, _d_real2.default)(obj);
+}
 
 main().then(() => process.exit());

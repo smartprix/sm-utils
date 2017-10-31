@@ -1,44 +1,4 @@
-
-
-/**
- * legacy obfuscation method
- */
-let javaObfuscate = (() => {
-	var _ref = _asyncToGenerator(function* (str) {
-		if (!str) return '';
-		try {
-			return base64Encode((yield gzdeflate(Buffer.from(rot47(str), 'latin1'))));
-		} catch (e) {
-			return '';
-		}
-	});
-
-	return function javaObfuscate(_x) {
-		return _ref.apply(this, arguments);
-	};
-})();
-
-/**
- * legacy unobfuscation method (obfuscated by javaObfuscate)
- */
-
-
-let javaUnobfuscate = (() => {
-	var _ref2 = _asyncToGenerator(function* (str) {
-		str = str.trim();
-		if (!str) return '';
-
-		try {
-			return rot47((yield gzinflate(base64Decode(str, 'buffer'))).toString('latin1'));
-		} catch (e) {
-			return '';
-		}
-	});
-
-	return function javaUnobfuscate(_x2) {
-		return _ref2.apply(this, arguments);
-	};
-})();
+'use strict';
 
 var _crypto = require('crypto');
 
@@ -61,8 +21,6 @@ var _base_convert = require('./base_convert');
 var _base_convert2 = _interopRequireDefault(_base_convert);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
 
 const gzinflate = (0, _util.promisify)(_zlib2.default.inflateRaw);
 const gzdeflate = (0, _util.promisify)(_zlib2.default.deflateRaw);
@@ -692,6 +650,32 @@ function rot47(str) {
 	}
 
 	return s.join('');
+}
+
+/**
+ * legacy obfuscation method
+ */
+async function javaObfuscate(str) {
+	if (!str) return '';
+	try {
+		return base64Encode((await gzdeflate(Buffer.from(rot47(str), 'latin1'))));
+	} catch (e) {
+		return '';
+	}
+}
+
+/**
+ * legacy unobfuscation method (obfuscated by javaObfuscate)
+ */
+async function javaUnobfuscate(str) {
+	str = str.trim();
+	if (!str) return '';
+
+	try {
+		return rot47((await gzinflate(base64Decode(str, 'buffer'))).toString('latin1'));
+	} catch (e) {
+		return '';
+	}
 }
 
 module.exports = {

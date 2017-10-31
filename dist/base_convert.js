@@ -1,3 +1,5 @@
+'use strict';
+
 // eslint-disable-next-line
 const NUMERALS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_!#$%&()*+,./:;<=>?@[]^`{|}~';
 

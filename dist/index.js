@@ -1,3 +1,5 @@
+'use strict';
+
 var _file = require('./file');
 
 var _file2 = _interopRequireDefault(_file);

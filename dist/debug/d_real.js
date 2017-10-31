@@ -1,3 +1,5 @@
+'use strict';
+
 /* eslint-disable no-console, no-shadow */
 require('longjohn');
 

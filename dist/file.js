@@ -1,4 +1,4 @@
-function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
+'use strict';
 
 const _ = require('lodash');
 const promisify = require('thenify-all');
@@ -18,17 +18,13 @@ class File {
 		this.path = path;
 	}
 
-	exists() {
-		var _this = this;
-
-		return _asyncToGenerator(function* () {
-			try {
-				yield fs.lstat(_this.path);
-				return true;
-			} catch (e) {
-				return false;
-			}
-		})();
+	async exists() {
+		try {
+			await fs.lstat(this.path);
+			return true;
+		} catch (e) {
+			return false;
+		}
 	}
 
 	existsSync() {
@@ -40,304 +36,192 @@ class File {
 		}
 	}
 
-	isFile() {
-		var _this2 = this;
-
-		return _asyncToGenerator(function* () {
-			try {
-				return (yield fs.lstat(_this2.path)).isFile();
-			} catch (e) {
-				return false;
-			}
-		})();
+	async isFile() {
+		try {
+			return (await fs.lstat(this.path)).isFile();
+		} catch (e) {
+			return false;
+		}
 	}
 
-	isDir() {
-		var _this3 = this;
-
-		return _asyncToGenerator(function* () {
-			try {
-				return (yield fs.lstat(_this3.path)).isDirectory();
-			} catch (e) {
-				return false;
-			}
-		})();
+	async isDir() {
+		try {
+			return (await fs.lstat(this.path)).isDirectory();
+		} catch (e) {
+			return false;
+		}
 	}
 
-	mtime() {
-		var _this4 = this;
-
-		return _asyncToGenerator(function* () {
-			try {
-				return (yield fs.lstat(_this4.path)).mtime;
-			} catch (e) {
-				return 0;
-			}
-		})();
+	async mtime() {
+		try {
+			return (await fs.lstat(this.path)).mtime;
+		} catch (e) {
+			return 0;
+		}
 	}
 
-	ctime() {
-		var _this5 = this;
-
-		return _asyncToGenerator(function* () {
-			try {
-				return (yield fs.lstat(_this5.path)).ctime;
-			} catch (e) {
-				return 0;
-			}
-		})();
+	async ctime() {
+		try {
+			return (await fs.lstat(this.path)).ctime;
+		} catch (e) {
+			return 0;
+		}
 	}
 
-	atime() {
-		var _this6 = this;
-
-		return _asyncToGenerator(function* () {
-			try {
-				return (yield fs.lstat(_this6.path)).atime;
-			} catch (e) {
-				return 0;
-			}
-		})();
+	async atime() {
+		try {
+			return (await fs.lstat(this.path)).atime;
+		} catch (e) {
+			return 0;
+		}
 	}
 
-	crtime() {
-		var _this7 = this;
-
-		return _asyncToGenerator(function* () {
-			try {
-				return (yield fs.lstat(_this7.path)).birthtime;
-			} catch (e) {
-				return 0;
-			}
-		})();
+	async crtime() {
+		try {
+			return (await fs.lstat(this.path)).birthtime;
+		} catch (e) {
+			return 0;
+		}
 	}
 
-	lstat() {
-		var _this8 = this;
-
-		return _asyncToGenerator(function* () {
-			return fs.lstat(_this8.path);
-		})();
+	async lstat() {
+		return fs.lstat(this.path);
 	}
 
-	stat() {
-		var _this9 = this;
-
-		return _asyncToGenerator(function* () {
-			return fs.stat(_this9.path);
-		})();
+	async stat() {
+		return fs.stat(this.path);
 	}
 
-	size() {
-		var _this10 = this;
-
-		return _asyncToGenerator(function* () {
-			try {
-				return (yield fs.lstat(_this10.path)).size;
-			} catch (e) {
-				return 0;
-			}
-		})();
+	async size() {
+		try {
+			return (await fs.lstat(this.path)).size;
+		} catch (e) {
+			return 0;
+		}
 	}
 
-	chmod(mode) {
-		var _this11 = this;
-
-		return _asyncToGenerator(function* () {
-			return fs.chmod(_this11.path, mode);
-		})();
+	async chmod(mode) {
+		return fs.chmod(this.path, mode);
 	}
 
-	chmodr(mode) {
-		var _this12 = this;
-
-		return _asyncToGenerator(function* () {
-			return _chmodr(_this12.path, mode);
-		})();
+	async chmodr(mode) {
+		return _chmodr(this.path, mode);
 	}
 
-	chown(user, group) {
-		var _this13 = this;
+	async chown(user, group) {
+		if (Number.isInteger(user) && Number.isInteger(group)) {
+			return fs.chown(this.path, user, group);
+		}
 
-		return _asyncToGenerator(function* () {
-			if (Number.isInteger(user) && Number.isInteger(group)) {
-				return fs.chown(_this13.path, user, group);
-			}
-
-			return System.execOut(`chown ${user}:${group} ${_this13.path}`);
-		})();
+		return System.execOut(`chown ${user}:${group} ${this.path}`);
 	}
 
-	chownr(user, group) {
-		var _this14 = this;
+	async chownr(user, group) {
+		if (Number.isInteger(user) && Number.isInteger(group)) {
+			return _chownr(this.path, user, group);
+		}
 
-		return _asyncToGenerator(function* () {
-			if (Number.isInteger(user) && Number.isInteger(group)) {
-				return _chownr(_this14.path, user, group);
-			}
-
-			return System.execOut(`chown -R ${user}:${group} ${_this14.path}`);
-		})();
+		return System.execOut(`chown -R ${user}:${group} ${this.path}`);
 	}
 
-	rename(newName) {
-		var _this15 = this;
-
-		return _asyncToGenerator(function* () {
-			return fs.rename(_this15.path, newName);
-		})();
+	async rename(newName) {
+		return fs.rename(this.path, newName);
 	}
 
-	mv(newName) {
-		var _this16 = this;
-
-		return _asyncToGenerator(function* () {
-			return _this16.rename(_this16.path, newName);
-		})();
+	async mv(newName) {
+		return this.rename(this.path, newName);
 	}
 
-	unlink() {
-		var _this17 = this;
-
-		return _asyncToGenerator(function* () {
-			return fs.unlink(_this17.path);
-		})();
+	async unlink() {
+		return fs.unlink(this.path);
 	}
 
-	rm() {
-		var _this18 = this;
-
-		return _asyncToGenerator(function* () {
-			return _this18.unlink();
-		})();
+	async rm() {
+		return this.unlink();
 	}
 
-	rmdir() {
-		var _this19 = this;
-
-		return _asyncToGenerator(function* () {
-			return fs.rmdir(_this19.path);
-		})();
+	async rmdir() {
+		return fs.rmdir(this.path);
 	}
 
-	rmrf() {
-		var _this20 = this;
-
-		return _asyncToGenerator(function* () {
-			return _rimraf(_this20.path);
-		})();
+	async rmrf() {
+		return _rimraf(this.path);
 	}
 
-	mkdir(mode = 0o755) {
-		var _this21 = this;
-
-		return _asyncToGenerator(function* () {
-			return fs.mkdir(_this21.path, mode);
-		})();
+	async mkdir(mode = 0o755) {
+		return fs.mkdir(this.path, mode);
 	}
 
-	mkdirp(mode = 0o755) {
-		var _this22 = this;
-
-		return _asyncToGenerator(function* () {
-			return _mkdirp(_this22.path, mode);
-		})();
+	async mkdirp(mode = 0o755) {
+		return _mkdirp(this.path, mode);
 	}
 
-	glob() {
-		var _this23 = this;
-
-		return _asyncToGenerator(function* () {
-			return _glob(_this23.path);
-		})();
+	async glob() {
+		return _glob(this.path);
 	}
 
-	read() {
-		var _this24 = this;
-
-		return _asyncToGenerator(function* () {
-			return fs.readFile(_this24.path, 'utf8');
-		})();
+	async read() {
+		return fs.readFile(this.path, 'utf8');
 	}
 
-	mkdirpPath(mode = 0o755) {
-		var _this25 = this;
-
-		return _asyncToGenerator(function* () {
-			return _mkdirp(_path.dirname(_this25.path), mode);
-		})();
+	async mkdirpPath(mode = 0o755) {
+		return _mkdirp(_path.dirname(this.path), mode);
 	}
 
-	write(contents, options = {}) {
-		var _this26 = this;
+	async write(contents, options = {}) {
+		const opts = _.assign({
+			fileMode: 0o644,
+			dirMode: 0o755,
+			retries: 0
+		}, options);
 
-		return _asyncToGenerator(function* () {
-			const opts = _.assign({
-				fileMode: 0o644,
-				dirMode: 0o755,
-				retries: 0
-			}, options);
+		if (!opts.retries) {
+			await this.mkdirpPath(opts.dirMode);
+			return fs.writeFile(this.path, contents, { encoding: 'utf8', mode: opts.fileMode });
+		}
 
-			if (!opts.retries) {
-				yield _this26.mkdirpPath(opts.dirMode);
-				return fs.writeFile(_this26.path, contents, { encoding: 'utf8', mode: opts.fileMode });
-			}
-
-			try {
-				return _this26.write(contents, _.assign(opts, { retries: 0 }));
-			} catch (e) {
-				opts.retries--;
-				return _this26.write(contents, opts);
-			}
-		})();
+		try {
+			return this.write(contents, _.assign(opts, { retries: 0 }));
+		} catch (e) {
+			opts.retries--;
+			return this.write(contents, opts);
+		}
 	}
 
-	append(contents, options = {}) {
-		var _this27 = this;
+	async append(contents, options = {}) {
+		const opts = _.assign({
+			fileMode: 0o644,
+			dirMode: 0o755,
+			retries: 0
+		}, options);
 
-		return _asyncToGenerator(function* () {
-			const opts = _.assign({
-				fileMode: 0o644,
-				dirMode: 0o755,
-				retries: 0
-			}, options);
+		if (!opts.retries) {
+			await this.mkdirpPath(opts.dirMode);
+			return fs.appendFile(this.path, contents, { encoding: 'utf8', mode: opts.fileMode });
+		}
 
-			if (!opts.retries) {
-				yield _this27.mkdirpPath(opts.dirMode);
-				return fs.appendFile(_this27.path, contents, { encoding: 'utf8', mode: opts.fileMode });
-			}
-
-			try {
-				return _this27.append(contents, _.assign(opts, { retries: 0 }));
-			} catch (e) {
-				opts.retries--;
-				return _this27.append(contents, opts);
-			}
-		})();
+		try {
+			return this.append(contents, _.assign(opts, { retries: 0 }));
+		} catch (e) {
+			opts.retries--;
+			return this.append(contents, opts);
+		}
 	}
 
-	copy(destination, options = {}) {
-		var _this28 = this;
+	async copy(destination, options = {}) {
+		const opts = _.assign({
+			overwrite: true
+		}, options);
 
-		return _asyncToGenerator(function* () {
-			const opts = _.assign({
-				overwrite: true
-			}, options);
+		if (opts.overwrite) {
+			return fs.copyFile(this.path, destination);
+		}
 
-			if (opts.overwrite) {
-				return fs.copyFile(_this28.path, destination);
-			}
-
-			return fs.copyFile(_this28.path, destination, fs.constants.COPYFILE_EXCL);
-		})();
+		return fs.copyFile(this.path, destination, fs.constants.COPYFILE_EXCL);
 	}
 
-	realpath() {
-		var _this29 = this;
-
-		return _asyncToGenerator(function* () {
-			return fs.realpath(_this29.path);
-		})();
+	async realpath() {
+		return fs.realpath(this.path);
 	}
 
 	realpathSync() {
