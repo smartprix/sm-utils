@@ -81,12 +81,13 @@ describe('cache library', () => {
 			return sleep(val);
 		};
 
-		cache.getOrSet(key, value);
-		cache.getOrSet(key, value);
-		cache.getOrSet(key, value);
+		const promise1 = cache.getOrSet(key, value);
+		const promise2 = cache.getOrSet(key, value);
+		const promise3 = cache.getOrSet(key, value);
 		expect(await cache.getOrSet(key, value)).to.equal(val);
-		expect(await cache.getOrSet(key, value)).to.equal(val);
-		expect(await cache.getOrSet(key, value)).to.equal(val);
+		expect(await promise1).to.equal(val);
+		expect(await promise2).to.equal(val);
+		expect(await promise3).to.equal(val);
 		expect(counter).to.equal(1);
 	});
 
