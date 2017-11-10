@@ -31,6 +31,7 @@
     "continuation-local-storage": "3.2.0",
     "etc-passwd": "0.1.1",
     "glob": "7.1.2",
+    "ioredis": ">= 3.2.1",
     "lodash": "4.17.4",
     "longjohn": "^0.2.12",
     "lru-cache": "4.1.1",
