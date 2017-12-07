@@ -25,7 +25,6 @@ class File {
 	}
 
 	/**
-	 * @async
 	 * Checks whether a file exists already.
 	 * @return {Boolean} true, if the file exists; false, otherwise
 	 */
@@ -54,7 +53,6 @@ class File {
 	}
 
 	/**
-	 * @async
 	 * Returns whether this File object represents a file.
 	 * @return {Boolean} true, if this object represents a file; false, otherwise
 	 */
