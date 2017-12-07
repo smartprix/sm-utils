@@ -24,6 +24,11 @@ class File {
 		this.path = path;
 	}
 
+	/**
+	 * @async
+	 * Checks whether a file exists already.
+	 * @return {Boolean} true, if the file exists; false, otherwise
+	 */
 	async exists() {
 		try {
 			await fs.lstat(this.path);
@@ -34,6 +39,10 @@ class File {
 		}
 	}
 
+	/**
+	* Checks whether a file exists already.
+	* @return {Boolean} true, if the file exists; false, otherwise
+	 */
 	existsSync() {
 		try {
 			_fs.lstatSync(this.path);
@@ -45,6 +54,7 @@ class File {
 	}
 
 	/**
+	 * @async
 	 * Returns whether this File object represents a file.
 	 * @return {Boolean} true, if this object represents a file; false, otherwise
 	 */
@@ -70,6 +80,10 @@ class File {
 		}
 	}
 
+	/**
+	 * Returns a Date object representing the time when file was last modified.
+	 * @return {Date} Date object, if file exists and its stats are read successfully; 0, otherwise
+	 */
 	async mtime() {
 		try {
 			return (await fs.lstat(this.path)).mtime;
@@ -79,6 +93,10 @@ class File {
 		}
 	}
 
+	/**
+	 * Returns a Date object representing the time when file was last changed.
+	 * @return {Date} Date object, if file exists and its stats are read successfully; 0, otherwise
+	 */
 	async ctime() {
 		try {
 			return (await fs.lstat(this.path)).ctime;
@@ -88,6 +106,10 @@ class File {
 		}
 	}
 
+	/**
+	 * Returns a Date object representing the time when file was last accessed.
+	 * @return {Date} Date object, if file exists and its stats are read successfully; 0, otherwise
+	 */
 	async atime() {
 		try {
 			return (await fs.lstat(this.path)).atime;
@@ -97,6 +119,10 @@ class File {
 		}
 	}
 
+	/**
+	 * Returns a Date object representing the time when file was created.
+	 * @return {Date} Date object, if file exists and its stats are read successfully; 0, otherwise
+	 */
 	async crtime() {
 		try {
 			return (await fs.lstat(this.path)).birthtime;
@@ -106,14 +132,30 @@ class File {
 		}
 	}
 
+	/**
+	 * Returns an object with the stats of the file. If the path for the file
+	 * is a symlink, then stats of the symlink are returned.
+	 * @return {Object} Stats object
+	 */
 	async lstat() {
 		return fs.lstat(this.path);
 	}
 
+	/**
+	 * Returns an object with the stats of the file. If the path for the file
+	 * is a symlink, then stats of the target of the symlink are returned.
+	 * @return {Object} Stats object
+	 */
 	async stat() {
 		return fs.stat(this.path);
 	}
 
+
+	/**
+	 * Returns the size of the file in bytes. If the file is not found
+	 * or can't be read successfully, 0 is returned.
+	 * @return {Number} Size of file (in bytes)
+	 */
 	async size() {
 		try {
 			return (await fs.lstat(this.path)).size;
@@ -123,10 +165,18 @@ class File {
 		}
 	}
 
+	/**
+	 * Change the mode of the file.
+	 * @param  {Number|String}  mode An octal number or a string representing the file mode
+	 */
 	async chmod(mode) {
 		return fs.chmod(this.path, mode);
 	}
 
+	/**
+	 * Change the mode of the file or directory recursively.
+	 * @param  {Number|String}  mode An octal number or a string representing the file mode
+	 */
 	async chmodr(mode) {
 		return _chmodr(this.path, mode);
 	}
