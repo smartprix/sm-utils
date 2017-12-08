@@ -104,7 +104,7 @@
     
 
     
-    <h4 class="name" id="addDashesForUUID"><span class="type-signature"></span>addDashesForUUID<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="addDashesForUUID"><span class="type-signature"></span>addDashesForUUID<span class="signature">(str)</span><span class="type-signature"> &rarr; {String}</span></h4>
     
 
     
@@ -112,7 +112,7 @@
 
 
 <div class="description">
-    add dashes to a hex string to make it like v4 UUID
+    Add dashes to a hex string to make it like v4 UUID.
 v4 UUID = xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
 where x is any hexadecimal digit and y is one of 8, 9, a, or b
 eg. f47ac10b-58cc-4372-a567-0e02b2c3d479
@@ -124,6 +124,55 @@ eg. f47ac10b-58cc-4372-a567-0e02b2c3d479
 
 
 
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>str</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">the hex string</td>
+        </tr>
+
+    
+    </tbody>
+</table>
 
 
 
@@ -159,7 +208,7 @@ eg. f47ac10b-58cc-4372-a567-0e02b2c3d479
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line248">line 248</a>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line259">line 259</a>
     </li></ul></dd>
     
 
@@ -182,6 +231,28 @@ eg. f47ac10b-58cc-4372-a567-0e02b2c3d479
 
 
 
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    the modified string
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">String</span>
+
+
+    </dd>
+</dl>
+
+    
 
 
 
@@ -245,7 +316,7 @@ eg. f47ac10b-58cc-4372-a567-0e02b2c3d479
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line583">line 583</a>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line718">line 718</a>
     </li></ul></dd>
     
 
@@ -331,7 +402,7 @@ eg. f47ac10b-58cc-4372-a567-0e02b2c3d479
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line563">line 563</a>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line698">line 698</a>
     </li></ul></dd>
     
 
@@ -417,7 +488,7 @@ eg. f47ac10b-58cc-4372-a567-0e02b2c3d479
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line593">line 593</a>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line728">line 728</a>
     </li></ul></dd>
     
 
@@ -503,7 +574,7 @@ eg. f47ac10b-58cc-4372-a567-0e02b2c3d479
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line573">line 573</a>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line708">line 708</a>
     </li></ul></dd>
     
 
@@ -537,7 +608,7 @@ eg. f47ac10b-58cc-4372-a567-0e02b2c3d479
     
 
     
-    <h4 class="name" id="baseEncode"><span class="type-signature"></span>baseEncode<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="baseDecode"><span class="type-signature"></span>baseDecode<span class="signature">(string, opts)</span><span class="type-signature"> &rarr; {String}</span></h4>
     
 
     
@@ -545,10 +616,7 @@ eg. f47ac10b-58cc-4372-a567-0e02b2c3d479
 
 
 <div class="description">
-    Encode the string/buffer using a given encoding
-Supported Encodings:
-  'hex', 'binary' ('latin1'), 'ascii', 'base64', 'base64url',
-  'utf8', 'buffer', 'utf16le' ('ucs2')
+    Decode a string encoded using a given encoding.
 </div>
 
 
@@ -557,6 +625,84 @@ Supported Encodings:
 
 
 
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>string</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+|
+
+<span class="param-type">Buffer</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">item to be decoded</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>opts</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+|
+
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">object or string specifying the encoding(s)</td>
+        </tr>
+
+    
+    </tbody>
+</table>
 
 
 
@@ -592,7 +738,7 @@ Supported Encodings:
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line278">line 278</a>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line342">line 342</a>
     </li></ul></dd>
     
 
@@ -615,6 +761,31 @@ Supported Encodings:
 
 
 
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    decoded item
+
+NOTE: If opts is a string, it is considered as the fromEncoding
+(i.e that was used to encode the string).
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">String</span>
+
+
+    </dd>
+</dl>
+
+    
 
 
 
@@ -626,7 +797,385 @@ Supported Encodings:
     
 
     
-    <h4 class="name" id="countBits"><span class="type-signature"></span>countBits<span class="signature">(number)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="baseDecodeToBuffer"><span class="type-signature"></span>baseDecodeToBuffer<span class="signature">(string, fromEncoding)</span><span class="type-signature"> &rarr; {Buffer}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Decode a string encoded using a given encoding to a buffer.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>string</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+|
+
+<span class="param-type">Buffer</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">item to be decoded</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>fromEncoding</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">encoding used to encode the string</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line360">line 360</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    decoded item
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Buffer</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="baseEncode"><span class="type-signature"></span>baseEncode<span class="signature">(string, opts)</span><span class="type-signature"> &rarr; {String|Buffer}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Encode the string/buffer using a given encoding.
+Supported Encodings:
+  'hex', 'binary' ('latin1'), 'ascii', 'base64', 'base64url',
+  'utf8', 'buffer', 'utf16le' ('ucs2')
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>string</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+|
+
+<span class="param-type">Buffer</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">item to be encoded</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>opts</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+|
+
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">object or string specifying the encoding(s)</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line296">line 296</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    encoded item
+
+NOTE: If opts is a string, it is considered as the toEncoding.
+The fromEncoding defaults to binary, while the toEncoding defaults to base64url.
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">String</span>
+|
+
+<span class="param-type">Buffer</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="countBits"><span class="type-signature"></span>countBits<span class="signature">(number)</span><span class="type-signature"> &rarr; {int}</span></h4>
     
 
     
@@ -752,10 +1301,22 @@ But avoids float precision issues
 
         
 <div class="param-desc">
-    int The number of bits
+    The number of bits
 </div>
 
 
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">int</span>
+
+
+    </dd>
+</dl>
 
     
 
@@ -769,7 +1330,7 @@ But avoids float precision issues
     
 
     
-    <h4 class="name" id="decrypt"><span class="type-signature"></span>decrypt<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="decrypt"><span class="type-signature"></span>decrypt<span class="signature">(string, key, {encoding<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {String}</span></h4>
     
 
     
@@ -788,6 +1349,145 @@ But avoids float precision issues
 
 
 
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>string</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">string to be decrypted</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>key</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">key to be used</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>{encoding</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    'base64url'} = {}
+                
+                </td>
+            
+
+            <td class="description last">encoding in the form of an object</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
 
 
 
@@ -821,7 +1521,7 @@ But avoids float precision issues
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line456">line 456</a>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line581">line 581</a>
     </li></ul></dd>
     
 
@@ -844,6 +1544,28 @@ But avoids float precision issues
 
 
 
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    decrypted string
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">String</span>
+
+
+    </dd>
+</dl>
+
+    
 
 
 
@@ -855,7 +1577,7 @@ But avoids float precision issues
     
 
     
-    <h4 class="name" id="decryptStatic"><span class="type-signature"></span>decryptStatic<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="decryptStatic"><span class="type-signature"></span>decryptStatic<span class="signature">(string, key, {encoding<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {String}</span></h4>
     
 
     
@@ -874,6 +1596,145 @@ But avoids float precision issues
 
 
 
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>string</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">string to be decrypted</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>key</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">key to be used</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>{encoding</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    'base64url'} = {}
+                
+                </td>
+            
+
+            <td class="description last">encoding in the form of an object</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
 
 
 
@@ -907,7 +1768,7 @@ But avoids float precision issues
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line489">line 489</a>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line624">line 624</a>
     </li></ul></dd>
     
 
@@ -930,6 +1791,28 @@ But avoids float precision issues
 
 
 
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    decrypted string
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">String</span>
+
+
+    </dd>
+</dl>
+
+    
 
 
 
@@ -941,7 +1824,7 @@ But avoids float precision issues
     
 
     
-    <h4 class="name" id="encrypt"><span class="type-signature"></span>encrypt<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="encrypt"><span class="type-signature"></span>encrypt<span class="signature">(string, key, {encoding<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {String}</span></h4>
     
 
     
@@ -962,6 +1845,145 @@ Optionally specify encoding in which you want to get the output
 
 
 
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>string</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">string to be encrypted</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>key</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">key to be used</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>{encoding</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    'base64url'} = {}
+                
+                </td>
+            
+
+            <td class="description last">encoding in the form of an object</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
 
 
 
@@ -995,7 +2017,7 @@ Optionally specify encoding in which you want to get the output
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line436">line 436</a>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line556">line 556</a>
     </li></ul></dd>
     
 
@@ -1018,6 +2040,28 @@ Optionally specify encoding in which you want to get the output
 
 
 
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    encrypted string
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">String</span>
+
+
+    </dd>
+</dl>
+
+    
 
 
 
@@ -1029,7 +2073,7 @@ Optionally specify encoding in which you want to get the output
     
 
     
-    <h4 class="name" id="encryptedTimestampedId"><span class="type-signature"></span>encryptedTimestampedId<span class="signature">(options)</span><span class="type-signature"> &rarr; {string}</span></h4>
+    <h4 class="name" id="encryptedTimestampedId"><span class="type-signature"></span>encryptedTimestampedId<span class="signature">(options)</span><span class="type-signature"> &rarr; {String}</span></h4>
     
 
     
@@ -1037,7 +2081,7 @@ Optionally specify encoding in which you want to get the output
 
 
 <div class="description">
-    Generate a random encrypted string that contains a timestamp
+    Generate a random encrypted string that contains a timestamp.
 </div>
 
 
@@ -1082,7 +2126,7 @@ Optionally specify encoding in which you want to get the output
 <span class="param-type">int</span>
 |
 
-<span class="param-type">object</span>
+<span class="param-type">Object</span>
 
 
             
@@ -1133,7 +2177,7 @@ Optionally specify encoding in which you want to get the output
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line627">line 627</a>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line768">line 768</a>
     </li></ul></dd>
     
 
@@ -1171,7 +2215,7 @@ Optionally specify encoding in which you want to get the output
     </dt>
     <dd>
         
-<span class="param-type">string</span>
+<span class="param-type">String</span>
 
 
     </dd>
@@ -1189,7 +2233,7 @@ Optionally specify encoding in which you want to get the output
     
 
     
-    <h4 class="name" id="encryptStatic"><span class="type-signature"></span>encryptStatic<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="encryptStatic"><span class="type-signature"></span>encryptStatic<span class="signature">(string, key, {encoding<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {String}</span></h4>
     
 
     
@@ -1199,8 +2243,404 @@ Optionally specify encoding in which you want to get the output
 <div class="description">
     Encrypt the given string with the given key using AES 256
 Calling EncryptStatic on the same string multiple times will return same encrypted strings
-this encryption is weaker than Encrypt but has the benefit of returing same encypted string
+this encryption is weaker than Encrypt but has the benefit of returing same encrypted string
 for same string and key.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>string</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">string to be encrypted</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>key</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">key to be used</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>{encoding</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    'base64url'} = {}
+                
+                </td>
+            
+
+            <td class="description last">encoding in the form of an object</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line606">line 606</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    encrypted string
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">String</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="exec"><span class="type-signature"></span>exec<span class="signature">(&hellip;args)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Execute the given command in a shell.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>args</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                    &lt;repeatable><br>
+                
+                </td>
+            
+
+            
+
+            <td class="description last">first argument is the command itself
+second argument is an options object
+options: {timeout (in ms), cwd, uid, gid, env (object), shell (eg. /bin/sh), encoding}</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="System.js.html">System.js</a>, <a href="System.js.html#line42">line 42</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="execFile"><span class="type-signature"></span>execFile<span class="signature">()</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Similar to exec but instead executes a given file
 </div>
 
 
@@ -1244,7 +2684,7 @@ for same string and key.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line476">line 476</a>
+        <a href="System.js.html">System.js</a>, <a href="System.js.html#line49">line 49</a>
     </li></ul></dd>
     
 
@@ -1278,7 +2718,898 @@ for same string and key.
     
 
     
-    <h4 class="name" id="hash"><span class="type-signature"></span>hash<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="execFileOut"><span class="type-signature">(async) </span>execFileOut<span class="signature">()</span><span class="type-signature"> &rarr; {String}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    execute a file and return its output
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="System.js.html">System.js</a>, <a href="System.js.html#line67">line 67</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    output of the file's execution
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">String</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="execOut"><span class="type-signature">(async) </span>execOut<span class="signature">()</span><span class="type-signature"> &rarr; {String}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    execute a command and return its output
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="System.js.html">System.js</a>, <a href="System.js.html#line58">line 58</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    output of the command's execution
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">String</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="exit"><span class="type-signature"></span>exit<span class="signature">(code)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    exit and kill the process
+code can be an exit code or a message (string)
+if a message is given then it will be logged to console before exiting
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>code</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">int</span>
+|
+
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">exit code or the message to be logged</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="System.js.html">System.js</a>, <a href="System.js.html#line218">line 218</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="file"><span class="type-signature"></span>file<span class="signature">(path)</span><span class="type-signature"> &rarr; {<a href="File.html">File</a>}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Returns a new File object representing the file located at 'path'.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>path</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">path of the file</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="file.js.html">file.js</a>, <a href="file.js.html#line451">line 451</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    File object representing the file located at the path
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="File.html">File</a></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="getAllUsers"><span class="type-signature"></span>getAllUsers<span class="signature">()</span><span class="type-signature"> &rarr; {Object}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    get all users in the system
+currently gets user info from /etc/passwd
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="System.js.html">System.js</a>, <a href="System.js.html#line133">line 133</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    object containing info for all users, as username:info pairs
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="getuid"><span class="type-signature"></span>getuid<span class="signature">()</span><span class="type-signature"> &rarr; {Number}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    get the uid of the user running current process
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="System.js.html">System.js</a>, <a href="System.js.html#line97">line 97</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    uid
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Number</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="getUserInfo"><span class="type-signature"></span>getUserInfo<span class="signature">(user)</span><span class="type-signature"> &rarr; {Object}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    get user info from username or uid
+currently gets user info from /etc/passwd
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>user</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+|
+
+<span class="param-type">Number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">username or uid</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="System.js.html">System.js</a>, <a href="System.js.html#line108">line 108</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    the user's information
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="hash"><span class="type-signature"></span>hash<span class="signature">(algo, string, {encoding<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {String}</span></h4>
     
 
     
@@ -1298,6 +3629,145 @@ encoding can be 'hex', 'binary' ('latin1'), 'ascii', 'base64', 'base64url', 'utf
 
 
 
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>algo</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">algo to be used for hashing</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>string</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">string to be hashed</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>{encoding</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    'hex'} = {}
+                
+                </td>
+            
+
+            <td class="description last">encoding in the form of an object</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
 
 
 
@@ -1331,7 +3801,7 @@ encoding can be 'hex', 'binary' ('latin1'), 'ascii', 'base64', 'base64url', 'utf
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line335">line 335</a>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line376">line 376</a>
     </li></ul></dd>
     
 
@@ -1354,6 +3824,28 @@ encoding can be 'hex', 'binary' ('latin1'), 'ascii', 'base64', 'base64url', 'utf
 
 
 
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    encoded hash value
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">String</span>
+
+
+    </dd>
+</dl>
+
+    
 
 
 
@@ -1418,7 +3910,7 @@ Returns a 50 character long hash
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line536">line 536</a>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line671">line 671</a>
     </li></ul></dd>
     
 
@@ -1452,7 +3944,7 @@ Returns a 50 character long hash
     
 
     
-    <h4 class="name" id="hmac"><span class="type-signature"></span>hmac<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="hmac"><span class="type-signature"></span>hmac<span class="signature">(algo, string, {encoding<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {String}</span></h4>
     
 
     
@@ -1460,7 +3952,7 @@ Returns a 50 character long hash
 
 
 <div class="description">
-    Create cryptographic HMAC digests
+    Create cryptographic HMAC digests using given algo
 </div>
 
 
@@ -1469,6 +3961,145 @@ Returns a 50 character long hash
 
 
 
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>algo</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">algo to be used for hashing</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>string</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">string to be hashed</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>{encoding</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    'hex'} = {}
+                
+                </td>
+            
+
+            <td class="description last">encoding in the form of an object</td>
+        </tr>
+
+    
+    </tbody>
+</table>
 
 
 
@@ -1504,7 +4135,7 @@ Returns a 50 character long hash
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line369">line 369</a>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line455">line 455</a>
     </li></ul></dd>
     
 
@@ -1527,6 +4158,28 @@ Returns a 50 character long hash
 
 
 
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    encoded HMAC digest
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">String</span>
+
+
+    </dd>
+</dl>
+
+    
 
 
 
@@ -1538,7 +4191,7 @@ Returns a 50 character long hash
     
 
     
-    <h4 class="name" id="javaObfuscate"><span class="type-signature">(async) </span>javaObfuscate<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="javaObfuscate"><span class="type-signature">(async) </span>javaObfuscate<span class="signature">(str)</span><span class="type-signature"> &rarr; {String}</span></h4>
     
 
     
@@ -1546,7 +4199,7 @@ Returns a 50 character long hash
 
 
 <div class="description">
-    legacy obfuscation method
+    Legacy obfuscation method
 </div>
 
 
@@ -1555,6 +4208,55 @@ Returns a 50 character long hash
 
 
 
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>str</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">the string to be obfuscted</td>
+        </tr>
+
+    
+    </tbody>
+</table>
 
 
 
@@ -1590,7 +4292,7 @@ Returns a 50 character long hash
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line672">line 672</a>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line816">line 816</a>
     </li></ul></dd>
     
 
@@ -1613,6 +4315,28 @@ Returns a 50 character long hash
 
 
 
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    obfuscated string
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">String</span>
+
+
+    </dd>
+</dl>
+
+    
 
 
 
@@ -1624,7 +4348,7 @@ Returns a 50 character long hash
     
 
     
-    <h4 class="name" id="javaUnobfuscate"><span class="type-signature">(async) </span>javaUnobfuscate<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="javaUnobfuscate"><span class="type-signature">(async) </span>javaUnobfuscate<span class="signature">(str)</span><span class="type-signature"> &rarr; {String}</span></h4>
     
 
     
@@ -1632,7 +4356,7 @@ Returns a 50 character long hash
 
 
 <div class="description">
-    legacy unobfuscation method (obfuscated by javaObfuscate)
+    Legacy unobfuscation method (obfuscated by javaObfuscate)
 </div>
 
 
@@ -1641,6 +4365,55 @@ Returns a 50 character long hash
 
 
 
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>str</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">the obfuscted string</td>
+        </tr>
+
+    
+    </tbody>
+</table>
 
 
 
@@ -1676,7 +4449,7 @@ Returns a 50 character long hash
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line685">line 685</a>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line832">line 832</a>
     </li></ul></dd>
     
 
@@ -1699,6 +4472,28 @@ Returns a 50 character long hash
 
 
 
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    unobfuscated string
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">String</span>
+
+
+    </dd>
+</dl>
+
+    
 
 
 
@@ -1718,7 +4513,7 @@ Returns a 50 character long hash
 
 
 <div class="description">
-    Returns proxy url based on the proxy options
+    Returns proxy url based on the proxy options.
 </div>
 
 
@@ -1811,7 +4606,7 @@ Returns a 50 character long hash
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Connect.js.html">Connect.js</a>, <a href="Connect.js.html#line32">line 32</a>
+        <a href="Connect.js.html">Connect.js</a>, <a href="Connect.js.html#line33">line 33</a>
     </li></ul></dd>
     
 
@@ -1867,7 +4662,7 @@ Returns a 50 character long hash
     
 
     
-    <h4 class="name" id="msCounter"><span class="type-signature"></span>msCounter<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="md5"><span class="type-signature"></span>md5<span class="signature">(string, {encoding<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {String}</span></h4>
     
 
     
@@ -1875,9 +4670,220 @@ Returns a 50 character long hash
 
 
 <div class="description">
-    get sequential number that resets every millisecond
-multiple call within the same millisecond will return 1, 2, 3 so on..
-the counter will reset on next millisecond
+    Compute hash of a string using md5
+encoding can be 'hex', 'binary' ('latin1'), 'ascii', 'base64', 'base64url', 'utf8', 'buffer'
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>string</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">string to be hashed</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>{encoding</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    'hex'} = {}
+                
+                </td>
+            
+
+            <td class="description last">encoding in the form of an object</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line395">line 395</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    encoded hash value
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">String</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="microtime"><span class="type-signature"></span>microtime<span class="signature">()</span><span class="type-signature"> &rarr; {Number}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    get current time in microseconds (as double)
 </div>
 
 
@@ -1921,7 +4927,7 @@ the counter will reset on next millisecond
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line174">line 174</a>
+        <a href="System.js.html">System.js</a>, <a href="System.js.html#line186">line 186</a>
     </li></ul></dd>
     
 
@@ -1944,6 +4950,28 @@ the counter will reset on next millisecond
 
 
 
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    current time in microseconds
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Number</span>
+
+
+    </dd>
+</dl>
+
+    
 
 
 
@@ -1955,7 +4983,7 @@ the counter will reset on next millisecond
     
 
     
-    <h4 class="name" id="nanoSecondsAlpha"><span class="type-signature"></span>nanoSecondsAlpha<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="millitime"><span class="type-signature"></span>millitime<span class="signature">()</span><span class="type-signature"> &rarr; {Number}</span></h4>
     
 
     
@@ -1963,7 +4991,7 @@ the counter will reset on next millisecond
 
 
 <div class="description">
-    get nanoseconds in base62 format (return 7 (or 8 if lowercase) chars long string)
+    get current time in milliseconds (as double)
 </div>
 
 
@@ -2007,7 +5035,549 @@ the counter will reset on next millisecond
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line153">line 153</a>
+        <a href="System.js.html">System.js</a>, <a href="System.js.html#line165">line 165</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    current time in milliseconds
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Number</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="msCounter"><span class="type-signature"></span>msCounter<span class="signature">(currentTime)</span><span class="type-signature"> &rarr; {Number}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Get sequential number that resets every millisecond.
+
+NOTE: Multiple call within the same millisecond will return 1, 2, 3 so on..
+The counter will reset on next millisecond
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>currentTime</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">self-descriptive</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line182">line 182</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    sequential number
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Number</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="nanoSecondsAlpha"><span class="type-signature"></span>nanoSecondsAlpha<span class="signature">(base36)</span><span class="type-signature"> &rarr; {String}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Get nanoseconds in base62 or base36 format.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>base36</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+            
+            </td>
+
+            
+
+            
+                <td class="default">
+                
+                    false
+                
+                </td>
+            
+
+            <td class="description last">use base36 format or not</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line157">line 157</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    nanoseconds
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">String</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="nanotime"><span class="type-signature"></span>nanotime<span class="signature">()</span><span class="type-signature"> &rarr; {Number}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    get current time in nanoseconds (as double)
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="System.js.html">System.js</a>, <a href="System.js.html#line174">line 174</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    current time in nanoseconds
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Number</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="noUmask"><span class="type-signature"></span>noUmask<span class="signature">()</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    turn off umask for the current process
+returns the old umask
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="System.js.html">System.js</a>, <a href="System.js.html#line76">line 76</a>
     </li></ul></dd>
     
 
@@ -2041,7 +5611,7 @@ the counter will reset on next millisecond
     
 
     
-    <h4 class="name" id="packNumbers"><span class="type-signature"></span>packNumbers<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="packNumbers"><span class="type-signature"></span>packNumbers<span class="signature">(numbers)</span><span class="type-signature"> &rarr; {String}</span></h4>
     
 
     
@@ -2060,6 +5630,55 @@ the counter will reset on next millisecond
 
 
 
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>numbers</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">array of numbers to be packed</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
 
 
 
@@ -2093,7 +5712,7 @@ the counter will reset on next millisecond
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line603">line 603</a>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line741">line 741</a>
     </li></ul></dd>
     
 
@@ -2116,6 +5735,28 @@ the counter will reset on next millisecond
 
 
 
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    packed string
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">String</span>
+
+
+    </dd>
+</dl>
+
+    
 
 
 
@@ -2127,7 +5768,7 @@ the counter will reset on next millisecond
     
 
     
-    <h4 class="name" id="randomString"><span class="type-signature"></span>randomString<span class="signature">(options)</span><span class="type-signature"> &rarr; {string}</span></h4>
+    <h4 class="name" id="randomString"><span class="type-signature"></span>randomString<span class="signature">(options)</span><span class="type-signature"> &rarr; {String}</span></h4>
     
 
     
@@ -2135,12 +5776,12 @@ the counter will reset on next millisecond
 
 
 <div class="description">
-    generate a random string based
-It can be treated as a Random UUID
+    Generate a random string based on the options passed.
+It can be treated as a Random UUID.
 
-you can give length and charset in options
-if options is an integer it will treated as length
-by default, length is 20 and charset is ALPHA_NUMERIC
+You can give length and charset in options.
+If options is an integer it will treated as length.
+By default, length is 20 and charset is ALPHA_NUMERIC
 </div>
 
 
@@ -2185,7 +5826,7 @@ by default, length is 20 and charset is ALPHA_NUMERIC
 <span class="param-type">int</span>
 |
 
-<span class="param-type">object</span>
+<span class="param-type">Object</span>
 
 
             
@@ -2274,7 +5915,7 @@ by default, length is 20 and charset is ALPHA_NUMERIC
     </dt>
     <dd>
         
-<span class="param-type">string</span>
+<span class="param-type">String</span>
 
 
     </dd>
@@ -2300,7 +5941,7 @@ by default, length is 20 and charset is ALPHA_NUMERIC
 
 
 <div class="description">
-    get random ID in v4 UUID format
+    Get random ID in v4 UUID format.
 </div>
 
 
@@ -2344,7 +5985,7 @@ by default, length is 20 and charset is ALPHA_NUMERIC
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line268">line 268</a>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line279">line 279</a>
     </li></ul></dd>
     
 
@@ -2378,7 +6019,7 @@ by default, length is 20 and charset is ALPHA_NUMERIC
     
 
     
-    <h4 class="name" id="rot47"><span class="type-signature"></span>rot47<span class="signature">(str)</span><span class="type-signature"> &rarr; {string}</span></h4>
+    <h4 class="name" id="rot47"><span class="type-signature"></span>rot47<span class="signature">(str)</span><span class="type-signature"> &rarr; {String}</span></h4>
     
 
     
@@ -2386,7 +6027,7 @@ by default, length is 20 and charset is ALPHA_NUMERIC
 
 
 <div class="description">
-    rotate a string by 47 characters
+    Rotate a string by 47 characters
 </div>
 
 
@@ -2428,7 +6069,7 @@ by default, length is 20 and charset is ALPHA_NUMERIC
             <td class="type">
             
                 
-<span class="param-type">string</span>
+<span class="param-type">String</span>
 
 
             
@@ -2438,7 +6079,7 @@ by default, length is 20 and charset is ALPHA_NUMERIC
 
             
 
-            <td class="description last"></td>
+            <td class="description last">the string to be rotated</td>
         </tr>
 
     
@@ -2479,7 +6120,7 @@ by default, length is 20 and charset is ALPHA_NUMERIC
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line654">line 654</a>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line795">line 795</a>
     </li></ul></dd>
     
 
@@ -2517,7 +6158,7 @@ by default, length is 20 and charset is ALPHA_NUMERIC
     </dt>
     <dd>
         
-<span class="param-type">string</span>
+<span class="param-type">String</span>
 
 
     </dd>
@@ -2535,7 +6176,7 @@ by default, length is 20 and charset is ALPHA_NUMERIC
     
 
     
-    <h4 class="name" id="sequentialID"><span class="type-signature"></span>sequentialID<span class="signature">(options)</span><span class="type-signature"> &rarr; {string}</span></h4>
+    <h4 class="name" id="sequentialID"><span class="type-signature"></span>sequentialID<span class="signature">(options)</span><span class="type-signature"> &rarr; {String}</span></h4>
     
 
     
@@ -2543,10 +6184,10 @@ by default, length is 20 and charset is ALPHA_NUMERIC
 
 
 <div class="description">
-    generate a sequential id based on current time in millisecond and some randomness
-It can be treated as a Sequential UUID
-Ideal for use as a DB primary key
-For best results use atleast 15 characters in base62 and 18 characters in base36 encoding
+    Generate a sequential id based on current time in millisecond and some randomness.
+It can be treated as a Sequential UUID. Ideal for use as a DB primary key.
+
+NOTE: For best results use atleast 15 characters in base62 and 18 characters in base36 encoding
 </div>
 
 
@@ -2591,7 +6232,7 @@ For best results use atleast 15 characters in base62 and 18 characters in base36
 <span class="param-type">int</span>
 |
 
-<span class="param-type">object</span>
+<span class="param-type">Object</span>
 
 
             
@@ -2642,7 +6283,7 @@ For best results use atleast 15 characters in base62 and 18 characters in base36
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line194">line 194</a>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line202">line 202</a>
     </li></ul></dd>
     
 
@@ -2680,7 +6321,7 @@ For best results use atleast 15 characters in base62 and 18 characters in base36
     </dt>
     <dd>
         
-<span class="param-type">string</span>
+<span class="param-type">String</span>
 
 
     </dd>
@@ -2706,7 +6347,7 @@ For best results use atleast 15 characters in base62 and 18 characters in base36
 
 
 <div class="description">
-    get sequential ID in v4 UUID format
+    Get sequential ID in v4 UUID format.
 </div>
 
 
@@ -2750,7 +6391,7 @@ For best results use atleast 15 characters in base62 and 18 characters in base36
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line261">line 261</a>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line272">line 272</a>
     </li></ul></dd>
     
 
@@ -2784,7 +6425,7 @@ For best results use atleast 15 characters in base62 and 18 characters in base36
     
 
     
-    <h4 class="name" id="shuffle"><span class="type-signature"></span>shuffle<span class="signature">(itemToShuffle, options)</span><span class="type-signature"> &rarr; {array|string}</span></h4>
+    <h4 class="name" id="sha1"><span class="type-signature"></span>sha1<span class="signature">(string, {encoding<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {String}</span></h4>
     
 
     
@@ -2792,8 +6433,8 @@ For best results use atleast 15 characters in base62 and 18 characters in base36
 
 
 <div class="description">
-    shuffle an array or a string
-you can optionally give a seed in the options to do a consitant shuffle
+    Compute hash of a string using sha1
+encoding can be 'hex', 'binary' ('latin1'), 'ascii', 'base64', 'base64url', 'utf8', 'buffer'
 </div>
 
 
@@ -2817,7 +6458,1287 @@ you can optionally give a seed in the options to do a consitant shuffle
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>string</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">string to be hashed</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>{encoding</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    'hex'} = {}
+                
+                </td>
+            
+
+            <td class="description last">encoding in the form of an object</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line407">line 407</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    encoded hash value
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">String</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="sha1Hmac"><span class="type-signature"></span>sha1Hmac<span class="signature">(string, {encoding<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {String}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Create cryptographic HMAC digests using sha1
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>string</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">string to be hashed</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>{encoding</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    'hex'} = {}
+                
+                </td>
+            
+
+            <td class="description last">encoding in the form of an object</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line473">line 473</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    encoded HMAC digest
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">String</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="sha256"><span class="type-signature"></span>sha256<span class="signature">(string, {encoding<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {String}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Compute hash of a string using sha256
+encoding can be 'hex', 'binary' ('latin1'), 'ascii', 'base64', 'base64url', 'utf8', 'buffer'
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>string</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">string to be hashed</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>{encoding</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    'hex'} = {}
+                
+                </td>
+            
+
+            <td class="description last">encoding in the form of an object</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line419">line 419</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    encoded hash value
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">String</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="sha256Hmac"><span class="type-signature"></span>sha256Hmac<span class="signature">(string, {encoding<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {String}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Create cryptographic HMAC digests using sha256
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>string</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">string to be hashed</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>{encoding</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    'hex'} = {}
+                
+                </td>
+            
+
+            <td class="description last">encoding in the form of an object</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line484">line 484</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    encoded HMAC digest
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">String</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="sha384"><span class="type-signature"></span>sha384<span class="signature">(string, {encoding<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {String}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Compute hash of a string using sha384
+encoding can be 'hex', 'binary' ('latin1'), 'ascii', 'base64', 'base64url', 'utf8', 'buffer'
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>string</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">string to be hashed</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>{encoding</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    'hex'} = {}
+                
+                </td>
+            
+
+            <td class="description last">encoding in the form of an object</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line431">line 431</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    encoded hash value
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">String</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="sha512"><span class="type-signature"></span>sha512<span class="signature">(string, {encoding<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {String}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Compute hash of a string using sha512
+encoding can be 'hex', 'binary' ('latin1'), 'ascii', 'base64', 'base64url', 'utf8', 'buffer'
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>string</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">string to be hashed</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>{encoding</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    'hex'} = {}
+                
+                </td>
+            
+
+            <td class="description last">encoding in the form of an object</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line443">line 443</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    encoded hash value
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">String</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="shuffle"><span class="type-signature"></span>shuffle<span class="signature">(itemToShuffle, options<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Array|String}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Shuffle an array or a string.
+You can optionally give a seed in the options to do a constant shuffle
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
         
 
         <th class="last">Description</th>
@@ -2835,17 +7756,29 @@ you can optionally give a seed in the options to do a consitant shuffle
             <td class="type">
             
                 
-<span class="param-type">array</span>
+<span class="param-type">Array</span>
 |
 
-<span class="param-type">string</span>
+<span class="param-type">String</span>
 
 
             
             </td>
 
             
+                <td class="attributes">
+                
 
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
             
 
             <td class="description last">item which you want to shuffle</td>
@@ -2861,14 +7794,30 @@ you can optionally give a seed in the options to do a consitant shuffle
             <td class="type">
             
                 
-<span class="param-type">object</span>
+<span class="param-type">Object</span>
 
 
             
             </td>
 
             
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
 
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    {}
+                
+                </td>
             
 
             <td class="description last">object of {seed: number}</td>
@@ -2912,7 +7861,7 @@ you can optionally give a seed in the options to do a consitant shuffle
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line111">line 111</a>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line112">line 112</a>
     </li></ul></dd>
     
 
@@ -2950,10 +7899,10 @@ you can optionally give a seed in the options to do a consitant shuffle
     </dt>
     <dd>
         
-<span class="param-type">array</span>
+<span class="param-type">Array</span>
 |
 
-<span class="param-type">string</span>
+<span class="param-type">String</span>
 
 
     </dd>
@@ -2971,7 +7920,7 @@ you can optionally give a seed in the options to do a consitant shuffle
     
 
     
-    <h4 class="name" id="sign"><span class="type-signature"></span>sign<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="sign"><span class="type-signature"></span>sign<span class="signature">(message, privateKey, opts)</span><span class="type-signature"> &rarr; {String}</span></h4>
     
 
     
@@ -2979,8 +7928,8 @@ you can optionally give a seed in the options to do a consitant shuffle
 
 
 <div class="description">
-    Sign a message using a private key
-opts can have {encoding (default 'hex'), pass (default none)}
+    Sign a message using a private key.
+
 NOTE: Generate a key pair using:
   openssl ecparam -genkey -name secp256k1 | openssl ec -aes128 -out private.pem
   openssl ec -in private.pem -pubout -out public.pem
@@ -2992,6 +7941,104 @@ NOTE: Generate a key pair using:
 
 
 
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>message</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">the message to be signed</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>privateKey</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+|
+
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">self-descriptive</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>opts</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">opts can have {encoding (default 'hex'), pass (default none)}</td>
+        </tr>
+
+    
+    </tbody>
+</table>
 
 
 
@@ -3027,7 +8074,7 @@ NOTE: Generate a key pair using:
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line395">line 395</a>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line504">line 504</a>
     </li></ul></dd>
     
 
@@ -3050,6 +8097,32 @@ NOTE: Generate a key pair using:
 
 
 
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    signature
+
+NOTE: If privateKey is a string, it is treated as a raw key with no passphrase.
+If privateKey is an object, it must contain the following property:
+  key: <string> - PEM encoded private key (required)
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">String</span>
+
+
+    </dd>
+</dl>
+
+    
 
 
 
@@ -3069,7 +8142,7 @@ NOTE: Generate a key pair using:
 
 
 <div class="description">
-    convert a message into an encrypted token by:
+    Convert a message into an encrypted token by:
 signing it with privateKey + encrypting it with publicKey
 you only need a publicKey to verify and decrypt this token
 </div>
@@ -3115,7 +8188,7 @@ you only need a publicKey to verify and decrypt this token
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line503">line 503</a>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line638">line 638</a>
     </li></ul></dd>
     
 
@@ -3149,7 +8222,7 @@ you only need a publicKey to verify and decrypt this token
     
 
     
-    <h4 class="name" id="unpackNumbers"><span class="type-signature"></span>unpackNumbers<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="sleep"><span class="type-signature"></span>sleep<span class="signature">()</span><span class="type-signature"></span></h4>
     
 
     
@@ -3157,7 +8230,8 @@ you only need a publicKey to verify and decrypt this token
 
 
 <div class="description">
-    Unpack a string packed with packNumbers
+    Sleep for a specified time (in milliseconds)
+  Example: await System.sleep(2000);
 </div>
 
 
@@ -3201,7 +8275,7 @@ you only need a publicKey to verify and decrypt this token
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line613">line 613</a>
+        <a href="System.js.html">System.js</a>, <a href="System.js.html#line194">line 194</a>
     </li></ul></dd>
     
 
@@ -3235,7 +8309,360 @@ you only need a publicKey to verify and decrypt this token
     
 
     
-    <h4 class="name" id="verify"><span class="type-signature"></span>verify<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="tick"><span class="type-signature"></span>tick<span class="signature">()</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    wait till the next event loop cycle
+this function is useful if we are running a long blocking task
+and need to make sure that other callbacks can complete.
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="System.js.html">System.js</a>, <a href="System.js.html#line205">line 205</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="time"><span class="type-signature"></span>time<span class="signature">()</span><span class="type-signature"> &rarr; {Number}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    get current time in seconds
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="System.js.html">System.js</a>, <a href="System.js.html#line156">line 156</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    current time in seconds
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Number</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="unpackNumbers"><span class="type-signature"></span>unpackNumbers<span class="signature">(str)</span><span class="type-signature"> &rarr; {Array}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Unpack a string packed with packNumbers
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>str</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">string to be unpacked</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line754">line 754</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    array of unpacked numbers
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="verify"><span class="type-signature"></span>verify<span class="signature">(message, signature, publicKey, opts<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Boolean}</span></h4>
     
 
     
@@ -3258,6 +8685,183 @@ NOTE: Generate a key pair using:
 
 
 
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>message</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">message to be verified</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>signature</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">self-descriptive</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>publicKey</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+|
+
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">self-descriptive</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>opts</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    {}
+                
+                </td>
+            
+
+            <td class="description last">opts can have {encoding (default 'hex')}</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
 
 
 
@@ -3291,7 +8895,7 @@ NOTE: Generate a key pair using:
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line414">line 414</a>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line529">line 529</a>
     </li></ul></dd>
     
 
@@ -3314,6 +8918,28 @@ NOTE: Generate a key pair using:
 
 
 
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    true or false, depending on the validity of the signature for the data and public key
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Boolean</span>
+
+
+    </dd>
+</dl>
+
+    
 
 
 
@@ -3333,7 +8959,7 @@ NOTE: Generate a key pair using:
 
 
 <div class="description">
-    convert an encrypted token (generated by signAndEncrypt) into a message
+    Convert an encrypted token (generated by signAndEncrypt) into a message
 </div>
 
 
@@ -3377,7 +9003,7 @@ NOTE: Generate a key pair using:
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line514">line 514</a>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line649">line 649</a>
     </li></ul></dd>
     
 
@@ -3463,7 +9089,93 @@ NOTE: Generate a key pair using:
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line548">line 548</a>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line683">line 683</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="yesUmask"><span class="type-signature"></span>yesUmask<span class="signature">()</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    restores (turns on) the previous umask
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="System.js.html">System.js</a>, <a href="System.js.html#line84">line 84</a>
     </li></ul></dd>
     
 
@@ -3507,13 +9219,13 @@ NOTE: Generate a key pair using:
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Connect.html">Connect</a></li><li><a href="File.html">File</a></li></ul><h3>Global</h3><ul><li><a href="global.html#addDashesForUUID">addDashesForUUID</a></li><li><a href="global.html#base64Decode">base64Decode</a></li><li><a href="global.html#base64Encode">base64Encode</a></li><li><a href="global.html#base64UrlDecode">base64UrlDecode</a></li><li><a href="global.html#base64UrlEncode">base64UrlEncode</a></li><li><a href="global.html#baseEncode">baseEncode</a></li><li><a href="global.html#countBits">countBits</a></li><li><a href="global.html#decrypt">decrypt</a></li><li><a href="global.html#decryptStatic">decryptStatic</a></li><li><a href="global.html#encrypt">encrypt</a></li><li><a href="global.html#encryptedTimestampedId">encryptedTimestampedId</a></li><li><a href="global.html#encryptStatic">encryptStatic</a></li><li><a href="global.html#hash">hash</a></li><li><a href="global.html#hashPassword">hashPassword</a></li><li><a href="global.html#hmac">hmac</a></li><li><a href="global.html#javaObfuscate">javaObfuscate</a></li><li><a href="global.html#javaUnobfuscate">javaUnobfuscate</a></li><li><a href="global.html#makeProxyUrl">makeProxyUrl</a></li><li><a href="global.html#msCounter">msCounter</a></li><li><a href="global.html#nanoSecondsAlpha">nanoSecondsAlpha</a></li><li><a href="global.html#packNumbers">packNumbers</a></li><li><a href="global.html#randomString">randomString</a></li><li><a href="global.html#randomUUID">randomUUID</a></li><li><a href="global.html#rot47">rot47</a></li><li><a href="global.html#sequentialID">sequentialID</a></li><li><a href="global.html#sequentialUUID">sequentialUUID</a></li><li><a href="global.html#shuffle">shuffle</a></li><li><a href="global.html#sign">sign</a></li><li><a href="global.html#signAndEncrypt">signAndEncrypt</a></li><li><a href="global.html#unpackNumbers">unpackNumbers</a></li><li><a href="global.html#verify">verify</a></li><li><a href="global.html#verifyAndDecrypt">verifyAndDecrypt</a></li><li><a href="global.html#verifyPassword">verifyPassword</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Connect.html">Connect</a></li><li><a href="File.html">File</a></li></ul><h3>Global</h3><ul><li><a href="global.html#addDashesForUUID">addDashesForUUID</a></li><li><a href="global.html#base64Decode">base64Decode</a></li><li><a href="global.html#base64Encode">base64Encode</a></li><li><a href="global.html#base64UrlDecode">base64UrlDecode</a></li><li><a href="global.html#base64UrlEncode">base64UrlEncode</a></li><li><a href="global.html#baseDecode">baseDecode</a></li><li><a href="global.html#baseDecodeToBuffer">baseDecodeToBuffer</a></li><li><a href="global.html#baseEncode">baseEncode</a></li><li><a href="global.html#countBits">countBits</a></li><li><a href="global.html#decrypt">decrypt</a></li><li><a href="global.html#decryptStatic">decryptStatic</a></li><li><a href="global.html#encrypt">encrypt</a></li><li><a href="global.html#encryptedTimestampedId">encryptedTimestampedId</a></li><li><a href="global.html#encryptStatic">encryptStatic</a></li><li><a href="global.html#exec">exec</a></li><li><a href="global.html#execFile">execFile</a></li><li><a href="global.html#execFileOut">execFileOut</a></li><li><a href="global.html#execOut">execOut</a></li><li><a href="global.html#exit">exit</a></li><li><a href="global.html#file">file</a></li><li><a href="global.html#getAllUsers">getAllUsers</a></li><li><a href="global.html#getuid">getuid</a></li><li><a href="global.html#getUserInfo">getUserInfo</a></li><li><a href="global.html#hash">hash</a></li><li><a href="global.html#hashPassword">hashPassword</a></li><li><a href="global.html#hmac">hmac</a></li><li><a href="global.html#javaObfuscate">javaObfuscate</a></li><li><a href="global.html#javaUnobfuscate">javaUnobfuscate</a></li><li><a href="global.html#makeProxyUrl">makeProxyUrl</a></li><li><a href="global.html#md5">md5</a></li><li><a href="global.html#microtime">microtime</a></li><li><a href="global.html#millitime">millitime</a></li><li><a href="global.html#msCounter">msCounter</a></li><li><a href="global.html#nanoSecondsAlpha">nanoSecondsAlpha</a></li><li><a href="global.html#nanotime">nanotime</a></li><li><a href="global.html#noUmask">noUmask</a></li><li><a href="global.html#packNumbers">packNumbers</a></li><li><a href="global.html#randomString">randomString</a></li><li><a href="global.html#randomUUID">randomUUID</a></li><li><a href="global.html#rot47">rot47</a></li><li><a href="global.html#sequentialID">sequentialID</a></li><li><a href="global.html#sequentialUUID">sequentialUUID</a></li><li><a href="global.html#sha1">sha1</a></li><li><a href="global.html#sha1Hmac">sha1Hmac</a></li><li><a href="global.html#sha256">sha256</a></li><li><a href="global.html#sha256Hmac">sha256Hmac</a></li><li><a href="global.html#sha384">sha384</a></li><li><a href="global.html#sha512">sha512</a></li><li><a href="global.html#shuffle">shuffle</a></li><li><a href="global.html#sign">sign</a></li><li><a href="global.html#signAndEncrypt">signAndEncrypt</a></li><li><a href="global.html#sleep">sleep</a></li><li><a href="global.html#tick">tick</a></li><li><a href="global.html#time">time</a></li><li><a href="global.html#unpackNumbers">unpackNumbers</a></li><li><a href="global.html#verify">verify</a></li><li><a href="global.html#verifyAndDecrypt">verifyAndDecrypt</a></li><li><a href="global.html#verifyPassword">verifyPassword</a></li><li><a href="global.html#yesUmask">yesUmask</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Thu Dec 07 2017 19:53:04 GMT+0530 (IST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Fri Dec 08 2017 19:19:17 GMT+0530 (IST)
 </footer>
 
 <script> prettyPrint(); </script>

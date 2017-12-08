@@ -53,7 +53,8 @@ const userAgents = {
 };
 
 /**
- * Returns proxy url based on the proxy options
+ * Returns proxy url based on the proxy options.
+ *
  * @param  {Object} proxy proxy options
  * @return {String}       proxy url based on the options
  */
@@ -105,6 +106,7 @@ class Connect {
 
 	/**
 	 * Set the url for the connection.
+	 *
 	 * @param  {String} url self-descriptive
 	 * @return {Connect}    self
 	 */
@@ -116,6 +118,7 @@ class Connect {
 	/**
 	 * @static
 	 * Creates and returns a new Connect object with the given url.
+	 *
 	 * @param  {String} url self-descriptive
 	 * @return {Connect}    A new Connect object with url set to the given url
 	 */
@@ -126,9 +129,10 @@ class Connect {
 	}
 
 	/**
+	* @static
 	 * Returns a new cookie jar.
+	 *
 	 * @return {CookieJar} A cookie jar
-	 * @static
 	 */
 	static newCookieJar(...args) {
 		return request.jar(...args);
@@ -136,6 +140,7 @@ class Connect {
 
 	/**
 	 * Set or unset the followRedirect option for the connection.
+	 *
 	 * @param  {Boolean} shouldFollowRedirect boolean representing whether to follow redirect or not
 	 * @return {Connect}                      self
 	 */
@@ -146,6 +151,7 @@ class Connect {
 
 	/**
 	 * Set value of a header parameter for the connection.
+	 *
 	 * @param  {String} headerName name of the header parameter whose value is to be set
 	 * @param  {*} headerValue     value to be set
 	 * @return {Connect}           self
@@ -163,6 +169,7 @@ class Connect {
 
 	/**
 	 * Set value of the headers for the connection.
+	 *
 	 * @param  {Object} headers object representing the headers for the connection
 	 * @return {Connect}        self
 	 */
@@ -173,6 +180,7 @@ class Connect {
 
 	/**
 	 * Set the body of the connection object.
+	 *
 	 * @param  {*} body                    value for body
 	 * @param  {String} [contentType=null] string representing the content type of the body
 	 * @return {Connect}                   self
@@ -196,6 +204,7 @@ class Connect {
 
 	/**
 	 * Set the 'Referer' field in the headers.
+	 *
 	 * @param  {String} referer referer value
 	 */
 	referer(referer) {
@@ -204,6 +213,7 @@ class Connect {
 
 	/**
 	 * Set the 'User-Agent' field in the headers.
+	 *
 	 * @param  {String} userAgent name of the user-agent or its value
 	 * @return {Connect}          self
 	 */
@@ -214,6 +224,7 @@ class Connect {
 
 	/**
 	 * Set the 'Content-Type' field in the headers.
+	 *
 	 * @param  {String} contentType value for content-type
 	 */
 	contentType(contentType) {
@@ -222,6 +233,7 @@ class Connect {
 
 	/**
 	 * Returns whether the content-type is JSON or not
+	 *
 	 * @return {Boolean} true, if content-type is JSON; false, otherwise
 	 */
 	isJSON() {
@@ -234,6 +246,7 @@ class Connect {
 	 * and cookieValue is undefined (or is not passed as an argument).
 	 * Can also be used to set multiple cookies by passing in an object
 	 * representing the cookies and their values as key:value pairs.
+	 *
 	 * @param  {String|Boolean|Object} cookieName  represents the name of the cookie to be set, or the cookies object
 	 * @param  {Object} cookieValue                cookie value to be set
 	 * @return {Connect}                           self
@@ -255,6 +268,7 @@ class Connect {
 	/**
 	 * Sets multiple cookies.
 	 * Can be used to enable global cookies, if cookies is set to true.
+	 *
 	 * @param  {Object|Boolean} cookies object representing the cookies and their values as key:value pairs.
 	 * @return {Connect}                self
 	 */
@@ -271,6 +285,7 @@ class Connect {
 
 	/**
 	 * Enable global cookies.
+	 *
 	 * @param  {Boolean} [enableGlobalCookies=true] self-descriptive
 	 * @return {Connect}                            self
 	 */
@@ -281,6 +296,7 @@ class Connect {
 
 	/**
 	 * Set the value of cookie jar based on a file (cookie store).
+	 *
 	 * @param  {String} fileName name of (or path to) the file
 	 * @return {Connect}         self
 	 */
@@ -292,6 +308,7 @@ class Connect {
 
 	/**
 	 * Set the value of cookie jar.
+	 *
 	 * @param  {CookieJar} cookieJar value to be set
 	 * @return {Connect}             self
 	 */
@@ -302,6 +319,7 @@ class Connect {
 
 	/**
 	 * Set request timeout.
+	 *
 	 * @param  {Number} timeout timeout value in seconds
 	 * @return {Connect}        self
 	 */
@@ -312,6 +330,7 @@ class Connect {
 
 	/**
 	 * Set request timeout.
+	 *
 	 * @param  {Number} timeoutInMs timeout value in milliseconds
 	 * @return {Connect}            self
 	 */
@@ -324,6 +343,7 @@ class Connect {
 	 * Set value of a field in the options.
 	 * Can also be used to set multiple fields by passing in an object
 	 * representing the field-names and their values as key:value pairs.
+	 *
 	 * @param  {String|Object} fieldName name of the field to be set, or the fields object
 	 * @param  {*} fieldValue            value to be set
 	 * @return {Connect}                 self
@@ -341,6 +361,7 @@ class Connect {
 
 	/**
 	 * Set multiple fields.
+	 *
 	 * @param  {Object} fields object representing the field-names and their values as key:value pairs.
 	 * @return {Connect}       self
 	 */
@@ -351,6 +372,7 @@ class Connect {
 
 	/**
 	 * Set the request method for the connection.
+	 *
 	 * @param  {String} method one of the HTTP request methods ('GET', 'PUT', 'POST', etc.)
 	 * @return {Connect}       self
 	 */
@@ -361,6 +383,7 @@ class Connect {
 
 	/**
 	 * Set username and password for authentication.
+	 *
 	 * @param  {String} username self-descriptive
 	 * @param  {String} password self-descriptive
 	 * @return {Connect}         self
@@ -374,6 +397,7 @@ class Connect {
 
 	/**
 	 * Set proxy address (or options).
+	 *
 	 * @param  {String|Object} proxy proxy address, or object representing proxy options
 	 * @return {Connect}             self
 	 */
@@ -397,6 +421,7 @@ class Connect {
 
 	/**
 	 * Set address and port for an http proxy.
+	 *
 	 * @param  {String} proxyAddress self-descriptive
 	 * @param  {Number} proxyPort    self-descriptive
 	 * @return {Connect}             self
@@ -413,6 +438,7 @@ class Connect {
 
 	/**
 	 * Set address and port for a socks proxy.
+	 *
 	 * @param  {String} proxyAddress self-descriptive
 	 * @param  {Number} proxyPort    self-descriptive
 	 * @return {Connect}             self
@@ -429,6 +455,7 @@ class Connect {
 
 	/**
 	 * Set username and password for proxy.
+	 *
 	 * @param  {String} username self-descriptive
 	 * @param  {String} password self-descriptive
 	 * @return {Connect}         self
@@ -444,6 +471,7 @@ class Connect {
 
 	/**
 	 * Set request method to 'GET'.
+	 *
 	 * @return {Connect} self
 	 */
 	get() {
@@ -453,6 +481,7 @@ class Connect {
 
 	/**
 	 * Set request method to 'POST'.
+	 *
 	 * @return {Connect} self
 	 */
 	post() {
@@ -462,6 +491,7 @@ class Connect {
 
 	/**
 	 * Set request method to 'PUT'.
+	 *
 	 * @return {Connect} self
 	 */
 	put() {
@@ -471,6 +501,7 @@ class Connect {
 
 	/**
 	 * Set cache directory for the connection.
+	 *
 	 * @param  {String} dir name or path to the directory
 	 * @return {Connect}    self
 	 */
@@ -481,6 +512,7 @@ class Connect {
 
 	/**
 	 * Set if the body is to be returned as a buffer
+	 *
 	 * @param  {Boolean} [returnAsBuffer=true] self-descriptive
 	 * @return {Connect}                       self
 	 */
@@ -491,6 +523,7 @@ class Connect {
 
 	/**
 	 * Set the path for file for saving the response.
+	 *
 	 * @param  {String} filePath self-descriptive
 	 * @return {Connect}         self
 	 */
@@ -708,13 +741,13 @@ export default Connect;
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Connect.html">Connect</a></li><li><a href="File.html">File</a></li></ul><h3>Global</h3><ul><li><a href="global.html#addDashesForUUID">addDashesForUUID</a></li><li><a href="global.html#base64Decode">base64Decode</a></li><li><a href="global.html#base64Encode">base64Encode</a></li><li><a href="global.html#base64UrlDecode">base64UrlDecode</a></li><li><a href="global.html#base64UrlEncode">base64UrlEncode</a></li><li><a href="global.html#baseEncode">baseEncode</a></li><li><a href="global.html#countBits">countBits</a></li><li><a href="global.html#decrypt">decrypt</a></li><li><a href="global.html#decryptStatic">decryptStatic</a></li><li><a href="global.html#encrypt">encrypt</a></li><li><a href="global.html#encryptedTimestampedId">encryptedTimestampedId</a></li><li><a href="global.html#encryptStatic">encryptStatic</a></li><li><a href="global.html#hash">hash</a></li><li><a href="global.html#hashPassword">hashPassword</a></li><li><a href="global.html#hmac">hmac</a></li><li><a href="global.html#javaObfuscate">javaObfuscate</a></li><li><a href="global.html#javaUnobfuscate">javaUnobfuscate</a></li><li><a href="global.html#makeProxyUrl">makeProxyUrl</a></li><li><a href="global.html#msCounter">msCounter</a></li><li><a href="global.html#nanoSecondsAlpha">nanoSecondsAlpha</a></li><li><a href="global.html#packNumbers">packNumbers</a></li><li><a href="global.html#randomString">randomString</a></li><li><a href="global.html#randomUUID">randomUUID</a></li><li><a href="global.html#rot47">rot47</a></li><li><a href="global.html#sequentialID">sequentialID</a></li><li><a href="global.html#sequentialUUID">sequentialUUID</a></li><li><a href="global.html#shuffle">shuffle</a></li><li><a href="global.html#sign">sign</a></li><li><a href="global.html#signAndEncrypt">signAndEncrypt</a></li><li><a href="global.html#unpackNumbers">unpackNumbers</a></li><li><a href="global.html#verify">verify</a></li><li><a href="global.html#verifyAndDecrypt">verifyAndDecrypt</a></li><li><a href="global.html#verifyPassword">verifyPassword</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Connect.html">Connect</a></li><li><a href="File.html">File</a></li></ul><h3>Global</h3><ul><li><a href="global.html#addDashesForUUID">addDashesForUUID</a></li><li><a href="global.html#base64Decode">base64Decode</a></li><li><a href="global.html#base64Encode">base64Encode</a></li><li><a href="global.html#base64UrlDecode">base64UrlDecode</a></li><li><a href="global.html#base64UrlEncode">base64UrlEncode</a></li><li><a href="global.html#baseDecode">baseDecode</a></li><li><a href="global.html#baseDecodeToBuffer">baseDecodeToBuffer</a></li><li><a href="global.html#baseEncode">baseEncode</a></li><li><a href="global.html#countBits">countBits</a></li><li><a href="global.html#decrypt">decrypt</a></li><li><a href="global.html#decryptStatic">decryptStatic</a></li><li><a href="global.html#encrypt">encrypt</a></li><li><a href="global.html#encryptedTimestampedId">encryptedTimestampedId</a></li><li><a href="global.html#encryptStatic">encryptStatic</a></li><li><a href="global.html#exec">exec</a></li><li><a href="global.html#execFile">execFile</a></li><li><a href="global.html#execFileOut">execFileOut</a></li><li><a href="global.html#execOut">execOut</a></li><li><a href="global.html#exit">exit</a></li><li><a href="global.html#file">file</a></li><li><a href="global.html#getAllUsers">getAllUsers</a></li><li><a href="global.html#getuid">getuid</a></li><li><a href="global.html#getUserInfo">getUserInfo</a></li><li><a href="global.html#hash">hash</a></li><li><a href="global.html#hashPassword">hashPassword</a></li><li><a href="global.html#hmac">hmac</a></li><li><a href="global.html#javaObfuscate">javaObfuscate</a></li><li><a href="global.html#javaUnobfuscate">javaUnobfuscate</a></li><li><a href="global.html#makeProxyUrl">makeProxyUrl</a></li><li><a href="global.html#md5">md5</a></li><li><a href="global.html#microtime">microtime</a></li><li><a href="global.html#millitime">millitime</a></li><li><a href="global.html#msCounter">msCounter</a></li><li><a href="global.html#nanoSecondsAlpha">nanoSecondsAlpha</a></li><li><a href="global.html#nanotime">nanotime</a></li><li><a href="global.html#noUmask">noUmask</a></li><li><a href="global.html#packNumbers">packNumbers</a></li><li><a href="global.html#randomString">randomString</a></li><li><a href="global.html#randomUUID">randomUUID</a></li><li><a href="global.html#rot47">rot47</a></li><li><a href="global.html#sequentialID">sequentialID</a></li><li><a href="global.html#sequentialUUID">sequentialUUID</a></li><li><a href="global.html#sha1">sha1</a></li><li><a href="global.html#sha1Hmac">sha1Hmac</a></li><li><a href="global.html#sha256">sha256</a></li><li><a href="global.html#sha256Hmac">sha256Hmac</a></li><li><a href="global.html#sha384">sha384</a></li><li><a href="global.html#sha512">sha512</a></li><li><a href="global.html#shuffle">shuffle</a></li><li><a href="global.html#sign">sign</a></li><li><a href="global.html#signAndEncrypt">signAndEncrypt</a></li><li><a href="global.html#sleep">sleep</a></li><li><a href="global.html#tick">tick</a></li><li><a href="global.html#time">time</a></li><li><a href="global.html#unpackNumbers">unpackNumbers</a></li><li><a href="global.html#verify">verify</a></li><li><a href="global.html#verifyAndDecrypt">verifyAndDecrypt</a></li><li><a href="global.html#verifyPassword">verifyPassword</a></li><li><a href="global.html#yesUmask">yesUmask</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Thu Dec 07 2017 19:53:04 GMT+0530 (IST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Fri Dec 08 2017 19:19:17 GMT+0530 (IST)
 </footer>
 
 <script> prettyPrint(); </script>

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: System.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: System.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>const childProcess = require('child_process');
+const passwd = require('etc-passwd');
+
+let oldUmask = -1;
+let hrtimeDelta;
+
+function execWrapper(method, args) {
+	return new Promise((resolve, reject) => {
+		let cp;
+
+		// add callback to arguments
+		args.push((err, stdout, stderr) => {
+			if (err) {
+				const commandStr = args[0] + (Array.isArray(args[1]) ? (' ' + args[1].join(' ')) : '');
+				err.message += ' `' + commandStr + '` (exited with error code ' + err.code + ')';
+				err.stdout = stdout;
+				err.stderr = stderr;
+				reject(err);
+			}
+			else {
+				resolve({
+					childProcess: cp,
+					stdout,
+					stderr,
+				});
+			}
+		});
+
+		cp = childProcess[method](...args);
+	});
+}
+
+/**
+ * Execute the given command in a shell.
+ *
+ * @param  {Array} args
+ * first argument is the command itself
+ * second argument is an options object
+ * options: {timeout (in ms), cwd, uid, gid, env (object), shell (eg. /bin/sh), encoding}
+ *
+ */
+function exec(...args) {
+	return execWrapper('exec', args);
+}
+
+/**
+ * Similar to exec but instead executes a given file
+ */
+function execFile(...args) {
+	return execWrapper('execFile', args);
+}
+
+/**
+ * execute a command and return its output
+ *
+ * @return {String} output of the command's execution
+ */
+async function execOut(...args) {
+	return (await exec.apply(this, args)).stdout.toString();
+}
+
+/**
+ * execute a file and return its output
+ *
+ * @return {String} output of the file's execution
+ */
+async function execFileOut(...args) {
+	return (await execFile.apply(this, args)).stdout.toString();
+}
+
+
+/**
+ * turn off umask for the current process
+ * returns the old umask
+ */
+function noUmask() {
+	oldUmask = process.umask(0);
+	return oldUmask;
+}
+
+/**
+ * restores (turns on) the previous umask
+ */
+function yesUmask() {
+	let newUmask = -1;
+	if (oldUmask >= 0) {
+		newUmask = process.umask(oldUmask);
+	}
+	return newUmask;
+}
+
+/**
+ * get the uid of the user running current process
+ *
+ * @return {Number}  uid
+ */
+function getuid() {
+	return process.getuid();
+}
+
+/**
+ * get user info from username or uid
+ * currently gets user info from /etc/passwd
+ *
+ * @param  {String|Number} user username or uid
+ * @return {Object}             the user's information
+ */
+function getUserInfo(user) {
+	user = (user === undefined) ? process.getuid() : user;
+	let opts;
+
+	if (Number.isInteger(user)) {
+		opts = {uid: user};
+	}
+	else {
+		opts = {username: user};
+	}
+
+	return new Promise((resolve, reject) => {
+		passwd.getUser(opts, (err, userObj) => {
+			if (err) reject(err);
+			else resolve(userObj);
+		});
+	});
+}
+
+/**
+ * get all users in the system
+ * currently gets user info from /etc/passwd
+ *
+ * @return {Object}  object containing info for all users, as username:info pairs
+ */
+function getAllUsers() {
+	return new Promise((resolve, reject) => {
+		passwd.getUsers((err, users) => {
+			if (err) {
+				reject(err);
+				return;
+			}
+
+			const usersObj = {};
+			users.forEach((user) => {
+				usersObj[user.username] = user;
+			});
+
+			resolve(usersObj);
+		});
+	});
+}
+
+/**
+ * get current time in seconds
+ *
+ * @return {Number}  current time in seconds
+ */
+function time() {
+	return Math.floor(Date.now() / 1000);
+}
+
+/**
+ * get current time in milliseconds (as double)
+ *
+ * @return {Number}  current time in milliseconds
+ */
+function millitime() {
+	return (Date.now() / 1000);
+}
+
+/**
+ * get current time in nanoseconds (as double)
+ *
+ * @return {Number}  current time in nanoseconds
+ */
+function nanotime() {
+	const hrtime = process.hrtime();
+	const hrtimeFloat = Number(hrtime[0] + '.' + hrtime[1]);
+	hrtimeDelta = hrtimeDelta || (millitime() - hrtimeFloat);
+	return hrtimeDelta + hrtimeFloat;
+}
+
+/**
+ * get current time in microseconds (as double)
+ *
+ * @return {Number}  current time in microseconds
+ */
+function microtime() {
+	return nanotime();
+}
+
+/**
+ * Sleep for a specified time (in milliseconds)
+ *   Example: await System.sleep(2000);
+ */
+function sleep(timeout) {
+	return new Promise((resolve) => {
+		setTimeout(resolve, timeout);
+	});
+}
+
+/**
+ * wait till the next event loop cycle
+ * this function is useful if we are running a long blocking task
+ * and need to make sure that other callbacks can complete.
+ */
+function tick() {
+	return new Promise((resolve) => {
+		setImmediate(resolve);
+	});
+}
+
+/**
+ * exit and kill the process
+ * code can be an exit code or a message (string)
+ * if a message is given then it will be logged to console before exiting
+ *
+ * @param {int|String} code exit code or the message to be logged
+ */
+function exit(code) {
+	if (code === undefined || Number.isInteger(code)) {
+		return process.exit(code);
+	}
+
+	console.log(code);		// eslint-disable-line
+	return process.exit(0);
+}
+
+module.exports = {
+	exec,
+	execFile,
+	execOut,
+	execFileOut,
+	noUmask,
+	yesUmask,
+	getuid,
+	getUserInfo,
+	getAllUsers,
+	time,
+	millitime,
+	microtime,
+	nanotime,
+	sleep,
+	tick,
+	exit,
+};
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Connect.html">Connect</a></li><li><a href="File.html">File</a></li></ul><h3>Global</h3><ul><li><a href="global.html#addDashesForUUID">addDashesForUUID</a></li><li><a href="global.html#base64Decode">base64Decode</a></li><li><a href="global.html#base64Encode">base64Encode</a></li><li><a href="global.html#base64UrlDecode">base64UrlDecode</a></li><li><a href="global.html#base64UrlEncode">base64UrlEncode</a></li><li><a href="global.html#baseDecode">baseDecode</a></li><li><a href="global.html#baseDecodeToBuffer">baseDecodeToBuffer</a></li><li><a href="global.html#baseEncode">baseEncode</a></li><li><a href="global.html#countBits">countBits</a></li><li><a href="global.html#decrypt">decrypt</a></li><li><a href="global.html#decryptStatic">decryptStatic</a></li><li><a href="global.html#encrypt">encrypt</a></li><li><a href="global.html#encryptedTimestampedId">encryptedTimestampedId</a></li><li><a href="global.html#encryptStatic">encryptStatic</a></li><li><a href="global.html#exec">exec</a></li><li><a href="global.html#execFile">execFile</a></li><li><a href="global.html#execFileOut">execFileOut</a></li><li><a href="global.html#execOut">execOut</a></li><li><a href="global.html#exit">exit</a></li><li><a href="global.html#file">file</a></li><li><a href="global.html#getAllUsers">getAllUsers</a></li><li><a href="global.html#getuid">getuid</a></li><li><a href="global.html#getUserInfo">getUserInfo</a></li><li><a href="global.html#hash">hash</a></li><li><a href="global.html#hashPassword">hashPassword</a></li><li><a href="global.html#hmac">hmac</a></li><li><a href="global.html#javaObfuscate">javaObfuscate</a></li><li><a href="global.html#javaUnobfuscate">javaUnobfuscate</a></li><li><a href="global.html#makeProxyUrl">makeProxyUrl</a></li><li><a href="global.html#md5">md5</a></li><li><a href="global.html#microtime">microtime</a></li><li><a href="global.html#millitime">millitime</a></li><li><a href="global.html#msCounter">msCounter</a></li><li><a href="global.html#nanoSecondsAlpha">nanoSecondsAlpha</a></li><li><a href="global.html#nanotime">nanotime</a></li><li><a href="global.html#noUmask">noUmask</a></li><li><a href="global.html#packNumbers">packNumbers</a></li><li><a href="global.html#randomString">randomString</a></li><li><a href="global.html#randomUUID">randomUUID</a></li><li><a href="global.html#rot47">rot47</a></li><li><a href="global.html#sequentialID">sequentialID</a></li><li><a href="global.html#sequentialUUID">sequentialUUID</a></li><li><a href="global.html#sha1">sha1</a></li><li><a href="global.html#sha1Hmac">sha1Hmac</a></li><li><a href="global.html#sha256">sha256</a></li><li><a href="global.html#sha256Hmac">sha256Hmac</a></li><li><a href="global.html#sha384">sha384</a></li><li><a href="global.html#sha512">sha512</a></li><li><a href="global.html#shuffle">shuffle</a></li><li><a href="global.html#sign">sign</a></li><li><a href="global.html#signAndEncrypt">signAndEncrypt</a></li><li><a href="global.html#sleep">sleep</a></li><li><a href="global.html#tick">tick</a></li><li><a href="global.html#time">time</a></li><li><a href="global.html#unpackNumbers">unpackNumbers</a></li><li><a href="global.html#verify">verify</a></li><li><a href="global.html#verifyAndDecrypt">verifyAndDecrypt</a></li><li><a href="global.html#verifyPassword">verifyPassword</a></li><li><a href="global.html#yesUmask">yesUmask</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Fri Dec 08 2017 19:19:17 GMT+0530 (IST)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
