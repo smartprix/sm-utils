@@ -33,7 +33,7 @@ const data = {};
  * But avoids float precision issues
  *
  * @param number
- * @return int The number of bits
+ * @return {int} The number of bits
  */
 function countBits(number) {
 	let log2 = 0;
@@ -44,15 +44,15 @@ function countBits(number) {
 }
 
 /**
- * generate a random string based
- * It can be treated as a Random UUID
+ * Generate a random string based on the options passed.
+ * It can be treated as a Random UUID.
  *
- * you can give length and charset in options
- * if options is an integer it will treated as length
- * by default, length is 20 and charset is ALPHA_NUMERIC
+ * You can give length and charset in options.
+ * If options is an integer it will treated as length.
+ * By default, length is 20 and charset is ALPHA_NUMERIC
  *
- * @return {string} id
- * @param {int|object} options length of the id or object of {length: int, base36: bool}
+ * @param  {int|Object} options length of the id or object of {length: int, base36: bool}
+ * @return {String}             id
  */
 function randomString(options) {
 	let length;
@@ -102,11 +102,12 @@ function randomString(options) {
 }
 
 /**
- * shuffle an array or a string
- * you can optionally give a seed in the options to do a consitant shuffle
- * @return {array|string} shuffled item
- * @param {array|string} itemToShuffle item which you want to shuffle
- * @param {object} options object of {seed: number}
+ * Shuffle an array or a string.
+ * You can optionally give a seed in the options to do a constant shuffle
+ *
+ * @param  {Array|String} itemToShuffle item which you want to shuffle
+ * @param  {Object} [options = {}]      object of {seed: number}
+ * @return {Array|String}               shuffled item
  */
 function shuffle(itemToShuffle, options = {}) {
 	let array;
@@ -148,7 +149,10 @@ function shuffle(itemToShuffle, options = {}) {
 }
 
 /**
- * get nanoseconds in base62 format (return 7 (or 8 if lowercase) chars long string)
+ * Get nanoseconds in base62 or base36 format.
+ *
+ * @param  {Boolean} base36 use base36 format or not
+ * @return {String}         nanoseconds
  */
 function nanoSecondsAlpha(base36 = false) {
 	const hrtime = process.hrtime();
@@ -167,9 +171,13 @@ function nanoSecondsAlpha(base36 = false) {
 }
 
 /**
- * get sequential number that resets every millisecond
- * multiple call within the same millisecond will return 1, 2, 3 so on..
- * the counter will reset on next millisecond
+ * Get sequential number that resets every millisecond.
+ *
+ * NOTE: Multiple call within the same millisecond will return 1, 2, 3 so on..
+ * The counter will reset on next millisecond
+ *
+ * @param  {Number} currentTime self-descriptive
+ * @return {Number}             sequential number
  */
 function msCounter(currentTime) {
 	currentTime = currentTime || Date.now();
@@ -183,13 +191,13 @@ function msCounter(currentTime) {
 }
 
 /**
- * generate a sequential id based on current time in millisecond and some randomness
- * It can be treated as a Sequential UUID
- * Ideal for use as a DB primary key
- * For best results use atleast 15 characters in base62 and 18 characters in base36 encoding
+ * Generate a sequential id based on current time in millisecond and some randomness.
+ * It can be treated as a Sequential UUID. Ideal for use as a DB primary key.
  *
- * @return {string} id
- * @param {int|object} options length of the id or object of {length: int, base36: bool}
+ * NOTE: For best results use atleast 15 characters in base62 and 18 characters in base36 encoding
+ *
+ * @param {int|Object} options length of the id or object of {length: int, base36: bool}
+ * @return {String}            id
  */
 function sequentialID(options) {
 	let length = 20;
@@ -240,10 +248,13 @@ function sequentialID(options) {
 }
 
 /**
- * add dashes to a hex string to make it like v4 UUID
+ * Add dashes to a hex string to make it like v4 UUID.
  * v4 UUID = xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
  * where x is any hexadecimal digit and y is one of 8, 9, a, or b
  * eg. f47ac10b-58cc-4372-a567-0e02b2c3d479
+ *
+ * @param  {String} str the hex string
+ * @return {String}     the modified string
  */
 function addDashesForUUID(str) {
 	return str.substring(0, 8) + '-' +
@@ -256,24 +267,31 @@ function addDashesForUUID(str) {
 }
 
 /**
- * get sequential ID in v4 UUID format
+ * Get sequential ID in v4 UUID format.
  */
 function sequentialUUID() {
 	return addDashesForUUID(baseConvert(sequentialID(21), 62, 16));
 }
 
 /**
- * get random ID in v4 UUID format
+ * Get random ID in v4 UUID format.
  */
 function randomUUID() {
 	return addDashesForUUID(randomString({length: 30, charset: chars.HEX}));
 }
 
 /**
- * Encode the string/buffer using a given encoding
+ * Encode the string/buffer using a given encoding.
  * Supported Encodings:
  *   'hex', 'binary' ('latin1'), 'ascii', 'base64', 'base64url',
  *   'utf8', 'buffer', 'utf16le' ('ucs2')
+ *
+ * @param  {String|Buffer} string item to be encoded
+ * @param  {Object|String} opts   object or string specifying the encoding(s)
+ * @return {String|Buffer}        encoded item
+ *
+ * NOTE: If opts is a string, it is considered as the toEncoding.
+ * The fromEncoding defaults to binary, while the toEncoding defaults to base64url.
  */
 function baseEncode(string, opts) {
 	if (_.isString(opts)) {
@@ -310,6 +328,17 @@ function baseEncode(string, opts) {
 	return string;
 }
 
+
+/**
+ * Decode a string encoded using a given encoding.
+ *
+ * @param  {String|Buffer} string item to be decoded
+ * @param  {Object|String} opts   object or string specifying the encoding(s)
+ * @return {String}        decoded item
+ *
+ * NOTE: If opts is a string, it is considered as the fromEncoding
+ * (i.e that was used to encode the string).
+ */
 function baseDecode(string, opts) {
 	if (_.isString(opts)) {
 		opts = {
@@ -321,6 +350,13 @@ function baseDecode(string, opts) {
 	return baseEncode(string, opts);
 }
 
+/**
+ * Decode a string encoded using a given encoding to a buffer.
+ *
+ * @param  {String|Buffer} string item to be decoded
+ * @param  {String} fromEncoding  encoding used to encode the string
+ * @return {Buffer}        decoded item
+ */
 function baseDecodeToBuffer(string, fromEncoding) {
 	return baseEncode(string, {
 		fromEncoding,
@@ -331,6 +367,11 @@ function baseDecodeToBuffer(string, fromEncoding) {
 /**
  * Compute hash of a string using given algorithm
  * encoding can be 'hex', 'binary' ('latin1'), 'ascii', 'base64', 'base64url', 'utf8', 'buffer'
+ *
+ * @param  {String} algo                      algo to be used for hashing
+ * @param  {String} string                    string to be hashed
+ * @param  {Object} [{encoding = 'hex'} = {}] encoding in the form of an object
+ * @return {String}                           encoded hash value
  */
 function hash(algo, string, {encoding = 'hex'} = {}) {
 	const hashed = crypto.createHash(algo).update(string);
@@ -343,28 +384,73 @@ function hash(algo, string, {encoding = 'hex'} = {}) {
 	return baseEncode(hashed.digest(), encoding);
 }
 
+/**
+ * Compute hash of a string using md5
+ * encoding can be 'hex', 'binary' ('latin1'), 'ascii', 'base64', 'base64url', 'utf8', 'buffer'
+ *
+ * @param  {String} string                    string to be hashed
+ * @param  {Object} [{encoding = 'hex'} = {}] encoding in the form of an object
+ * @return {String}                           encoded hash value
+ */
 function md5(string, {encoding = 'hex'} = {}) {
 	return hash('md5', string, {encoding});
 }
 
+/**
+ * Compute hash of a string using sha1
+ * encoding can be 'hex', 'binary' ('latin1'), 'ascii', 'base64', 'base64url', 'utf8', 'buffer'
+ *
+ * @param  {String} string                    string to be hashed
+ * @param  {Object} [{encoding = 'hex'} = {}] encoding in the form of an object
+ * @return {String}                           encoded hash value
+ */
 function sha1(string, {encoding = 'hex'} = {}) {
 	return hash('sha1', string, {encoding});
 }
 
+/**
+ * Compute hash of a string using sha256
+ * encoding can be 'hex', 'binary' ('latin1'), 'ascii', 'base64', 'base64url', 'utf8', 'buffer'
+ *
+ * @param  {String} string                    string to be hashed
+ * @param  {Object} [{encoding = 'hex'} = {}] encoding in the form of an object
+ * @return {String}                           encoded hash value
+ */
 function sha256(string, {encoding = 'hex'} = {}) {
 	return hash('sha256', string, {encoding});
 }
 
+/**
+ * Compute hash of a string using sha384
+ * encoding can be 'hex', 'binary' ('latin1'), 'ascii', 'base64', 'base64url', 'utf8', 'buffer'
+ *
+ * @param  {String} string                    string to be hashed
+ * @param  {Object} [{encoding = 'hex'} = {}] encoding in the form of an object
+ * @return {String}                           encoded hash value
+ */
 function sha384(string, {encoding = 'hex'} = {}) {
 	return hash('sha384', string, {encoding});
 }
 
+/**
+ * Compute hash of a string using sha512
+ * encoding can be 'hex', 'binary' ('latin1'), 'ascii', 'base64', 'base64url', 'utf8', 'buffer'
+ *
+ * @param  {String} string                    string to be hashed
+ * @param  {Object} [{encoding = 'hex'} = {}] encoding in the form of an object
+ * @return {String}                           encoded hash value
+ */
 function sha512(string, {encoding = 'hex'} = {}) {
 	return hash('sha512', string, {encoding});
 }
 
 /**
- * Create cryptographic HMAC digests
+ * Create cryptographic HMAC digests using given algo
+ *
+ * @param  {String} algo                      algo to be used for hashing
+ * @param  {String} string                    string to be hashed
+ * @param  {Object} [{encoding = 'hex'} = {}] encoding in the form of an object
+ * @return {String}                           encoded HMAC digest
  */
 function hmac(algo, string, key, {encoding = 'hex'} = {}) {
 	const hashed = crypto.createHmac(algo, key).update(string);
@@ -377,20 +463,43 @@ function hmac(algo, string, key, {encoding = 'hex'} = {}) {
 	return baseEncode(hashed.digest(), encoding);
 }
 
+/**
+ * Create cryptographic HMAC digests using sha1
+ *
+ * @param  {String} string                    string to be hashed
+ * @param  {Object} [{encoding = 'hex'} = {}] encoding in the form of an object
+ * @return {String}                           encoded HMAC digest
+ */
 function sha1Hmac(string, key, {encoding = 'hex'} = {}) {
 	return hmac('sha1', key, string, {encoding});
 }
 
+/**
+ * Create cryptographic HMAC digests using sha256
+ *
+ * @param  {String} string                    string to be hashed
+ * @param  {Object} [{encoding = 'hex'} = {}] encoding in the form of an object
+ * @return {String}                           encoded HMAC digest
+ */
 function sha256Hmac(string, key, {encoding = 'hex'} = {}) {
 	return hmac('sha256', key, string, {encoding});
 }
 
 /**
- * Sign a message using a private key
- * opts can have {encoding (default 'hex'), pass (default none)}
+ * Sign a message using a private key.
+ *
  * NOTE: Generate a key pair using:
  *   openssl ecparam -genkey -name secp256k1 | openssl ec -aes128 -out private.pem
  *   openssl ec -in private.pem -pubout -out public.pem
+ *
+ * @param  {String} message           the message to be signed
+ * @param  {String|Object} privateKey self-descriptive
+ * @param  {Object} opts              opts can have {encoding (default 'hex'), pass (default none)}
+ * @return {String}                   signature
+ *
+ * NOTE: If privateKey is a string, it is treated as a raw key with no passphrase.
+ * If privateKey is an object, it must contain the following property:
+ *   key: <string> - PEM encoded private key (required)
  */
 function sign(message, privateKey, opts = {}) {
 	let encoding = opts.encoding || 'hex';
@@ -410,6 +519,12 @@ function sign(message, privateKey, opts = {}) {
  * NOTE: Generate a key pair using:
  *   openssl ecparam -genkey -name secp256k1 | openssl ec -aes128 -out private.pem
  *   openssl ec -in private.pem -pubout -out public.pem
+ *
+ * @param  {String} message          message to be verified
+ * @param  {String} signature        self-descriptive
+ * @param  {String|Object} publicKey self-descriptive
+ * @param  {Object} [opts = {}]      opts can have {encoding (default 'hex')}
+ * @return {Boolean}                 true or false, depending on the validity of the signature for the data and public key
  */
 function verify(message, signature, publicKey, opts = {}) {
 	let encoding = opts.encoding || 'hex';
@@ -432,6 +547,11 @@ function verify(message, signature, publicKey, opts = {}) {
  * Encrypt the given string with the given key using AES 256
  * Calling encrypt on the same string multiple times will return different encrypted strings
  * Optionally specify encoding in which you want to get the output
+ *
+ * @param  {String} string                          string to be encrypted
+ * @param  {String} key                             key to be used
+ * @param  {Object} [{encoding = 'base64url'} = {}] encoding in the form of an object
+ * @return {String}                                 encrypted string
  */
 function encrypt(string, key, {encoding = 'base64url'} = {}) {
 	if (string.length < 6) {
@@ -452,6 +572,11 @@ function encrypt(string, key, {encoding = 'base64url'} = {}) {
 
 /**
  * Decrypt the given string with the given key encrypted using encrypt
+ *
+ * @param  {String} string                          string to be decrypted
+ * @param  {String} key                             key to be used
+ * @param  {Object} [{encoding = 'base64url'} = {}] encoding in the form of an object
+ * @return {String}                                 decrypted string
  */
 function decrypt(string, key, {encoding = 'base64url'} = {}) {
 	if (key.length !== 32) {
@@ -470,8 +595,13 @@ function decrypt(string, key, {encoding = 'base64url'} = {}) {
 /**
  * Encrypt the given string with the given key using AES 256
  * Calling EncryptStatic on the same string multiple times will return same encrypted strings
- * this encryption is weaker than Encrypt but has the benefit of returing same encypted string
+ * this encryption is weaker than Encrypt but has the benefit of returing same encrypted string
  * for same string and key.
+ *
+ * @param  {String} string                          string to be encrypted
+ * @param  {String} key                             key to be used
+ * @param  {Object} [{encoding = 'base64url'} = {}] encoding in the form of an object
+ * @return {String}                                 encrypted string
  */
 function encryptStatic(string, key, {encoding = 'base64url'} = {}) {
 	if (string.length < 6) {
@@ -485,6 +615,11 @@ function encryptStatic(string, key, {encoding = 'base64url'} = {}) {
 
 /**
  * Decrypt the given string with the given key encrypted using encryptStatic
+ *
+ * @param  {String} string                          string to be decrypted
+ * @param  {String} key                             key to be used
+ * @param  {Object} [{encoding = 'base64url'} = {}] encoding in the form of an object
+ * @return {String}                                 decrypted string
  */
 function decryptStatic(string, key, {encoding = 'base64url'} = {}) {
 	const version = string.substring(0, 1);  // eslint-disable-line
@@ -496,7 +631,7 @@ function decryptStatic(string, key, {encoding = 'base64url'} = {}) {
 }
 
 /**
- * convert a message into an encrypted token by:
+ * Convert a message into an encrypted token by:
  * signing it with privateKey + encrypting it with publicKey
  * you only need a publicKey to verify and decrypt this token
  */
@@ -509,7 +644,7 @@ function signAndEncrypt(message, privateKey, publicKey) {
 }
 
 /**
- * convert an encrypted token (generated by signAndEncrypt) into a message
+ * Convert an encrypted token (generated by signAndEncrypt) into a message
  */
 function verifyAndDecrypt(token, publicKey) {
 	const [messageEncrypted, signature] = token.split('.');
@@ -599,6 +734,9 @@ function base64UrlDecode(string, toEncoding = 'binary') {
 
 /**
  * Pack many numbers into a single string
+ *
+ * @param  {Array} numbers array of numbers to be packed
+ * @return {String}        packed string
  */
 function packNumbers(numbers) {
 	return baseConvert(
@@ -609,6 +747,9 @@ function packNumbers(numbers) {
 
 /**
  * Unpack a string packed with packNumbers
+ *
+ * @param  {String} str string to be unpacked
+ * @return {Array}      array of unpacked numbers
  */
 function unpackNumbers(str) {
 	return baseConvert(str, 62, 13)
@@ -619,10 +760,10 @@ function unpackNumbers(str) {
 }
 
 /**
- * Generate a random encrypted string that contains a timestamp
+ * Generate a random encrypted string that contains a timestamp.
  *
- * @return {string} id
- * @param {int|object} options length of the id or object of {length: int}
+ * @param {int|Object} options length of the id or object of {length: int}
+ * @return {String}            id
  */
 function encryptedTimestampedId(options, key) {
 	const length = options.length || options;
@@ -646,10 +787,10 @@ function encryptedTimestampedId(options, key) {
 
 
 /**
- * rotate a string by 47 characters
+ * Rotate a string by 47 characters
  *
- * @param {string} str
- * @returns {string} rotated string
+ * @param {String} str the string to be rotated
+ * @returns {String}   rotated string
  */
 function rot47(str) {
 	const s = [];
@@ -667,7 +808,10 @@ function rot47(str) {
 }
 
 /**
- * legacy obfuscation method
+ * Legacy obfuscation method
+ *
+ * @param  {String} str the string to be obfuscted
+ * @return {String}     obfuscated string
  */
 async function javaObfuscate(str) {
 	if (!str) return '';
@@ -680,7 +824,10 @@ async function javaObfuscate(str) {
 }
 
 /**
- * legacy unobfuscation method (obfuscated by javaObfuscate)
+ * Legacy unobfuscation method (obfuscated by javaObfuscate)
+ *
+ * @param  {String} str the obfuscted string
+ * @return {String}     unobfuscated string
  */
 async function javaUnobfuscate(str) {
 	str = str.trim();
