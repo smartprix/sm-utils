@@ -25,7 +25,8 @@ const userAgents = {
 };
 
 /**
- * Returns proxy url based on the proxy options
+ * Returns proxy url based on the proxy options.
+ *
  * @param  {Object} proxy proxy options
  * @return {String}       proxy url based on the options
  */
@@ -77,6 +78,7 @@ class Connect {
 
 	/**
 	 * Set the url for the connection.
+	 *
 	 * @param  {String} url self-descriptive
 	 * @return {Connect}    self
 	 */
@@ -88,6 +90,7 @@ class Connect {
 	/**
 	 * @static
 	 * Creates and returns a new Connect object with the given url.
+	 *
 	 * @param  {String} url self-descriptive
 	 * @return {Connect}    A new Connect object with url set to the given url
 	 */
@@ -98,9 +101,10 @@ class Connect {
 	}
 
 	/**
+	* @static
 	 * Returns a new cookie jar.
+	 *
 	 * @return {CookieJar} A cookie jar
-	 * @static
 	 */
 	static newCookieJar(...args) {
 		return request.jar(...args);
@@ -108,6 +112,7 @@ class Connect {
 
 	/**
 	 * Set or unset the followRedirect option for the connection.
+	 *
 	 * @param  {Boolean} shouldFollowRedirect boolean representing whether to follow redirect or not
 	 * @return {Connect}                      self
 	 */
@@ -118,6 +123,7 @@ class Connect {
 
 	/**
 	 * Set value of a header parameter for the connection.
+	 *
 	 * @param  {String} headerName name of the header parameter whose value is to be set
 	 * @param  {*} headerValue     value to be set
 	 * @return {Connect}           self
@@ -135,6 +141,7 @@ class Connect {
 
 	/**
 	 * Set value of the headers for the connection.
+	 *
 	 * @param  {Object} headers object representing the headers for the connection
 	 * @return {Connect}        self
 	 */
@@ -145,6 +152,7 @@ class Connect {
 
 	/**
 	 * Set the body of the connection object.
+	 *
 	 * @param  {*} body                    value for body
 	 * @param  {String} [contentType=null] string representing the content type of the body
 	 * @return {Connect}                   self
@@ -168,6 +176,7 @@ class Connect {
 
 	/**
 	 * Set the 'Referer' field in the headers.
+	 *
 	 * @param  {String} referer referer value
 	 */
 	referer(referer) {
@@ -176,6 +185,7 @@ class Connect {
 
 	/**
 	 * Set the 'User-Agent' field in the headers.
+	 *
 	 * @param  {String} userAgent name of the user-agent or its value
 	 * @return {Connect}          self
 	 */
@@ -186,6 +196,7 @@ class Connect {
 
 	/**
 	 * Set the 'Content-Type' field in the headers.
+	 *
 	 * @param  {String} contentType value for content-type
 	 */
 	contentType(contentType) {
@@ -194,6 +205,7 @@ class Connect {
 
 	/**
 	 * Returns whether the content-type is JSON or not
+	 *
 	 * @return {Boolean} true, if content-type is JSON; false, otherwise
 	 */
 	isJSON() {
@@ -206,6 +218,7 @@ class Connect {
 	 * and cookieValue is undefined (or is not passed as an argument).
 	 * Can also be used to set multiple cookies by passing in an object
 	 * representing the cookies and their values as key:value pairs.
+	 *
 	 * @param  {String|Boolean|Object} cookieName  represents the name of the cookie to be set, or the cookies object
 	 * @param  {Object} cookieValue                cookie value to be set
 	 * @return {Connect}                           self
@@ -227,6 +240,7 @@ class Connect {
 	/**
 	 * Sets multiple cookies.
 	 * Can be used to enable global cookies, if cookies is set to true.
+	 *
 	 * @param  {Object|Boolean} cookies object representing the cookies and their values as key:value pairs.
 	 * @return {Connect}                self
 	 */
@@ -243,6 +257,7 @@ class Connect {
 
 	/**
 	 * Enable global cookies.
+	 *
 	 * @param  {Boolean} [enableGlobalCookies=true] self-descriptive
 	 * @return {Connect}                            self
 	 */
@@ -253,6 +268,7 @@ class Connect {
 
 	/**
 	 * Set the value of cookie jar based on a file (cookie store).
+	 *
 	 * @param  {String} fileName name of (or path to) the file
 	 * @return {Connect}         self
 	 */
@@ -264,6 +280,7 @@ class Connect {
 
 	/**
 	 * Set the value of cookie jar.
+	 *
 	 * @param  {CookieJar} cookieJar value to be set
 	 * @return {Connect}             self
 	 */
@@ -274,6 +291,7 @@ class Connect {
 
 	/**
 	 * Set request timeout.
+	 *
 	 * @param  {Number} timeout timeout value in seconds
 	 * @return {Connect}        self
 	 */
@@ -284,6 +302,7 @@ class Connect {
 
 	/**
 	 * Set request timeout.
+	 *
 	 * @param  {Number} timeoutInMs timeout value in milliseconds
 	 * @return {Connect}            self
 	 */
@@ -296,6 +315,7 @@ class Connect {
 	 * Set value of a field in the options.
 	 * Can also be used to set multiple fields by passing in an object
 	 * representing the field-names and their values as key:value pairs.
+	 *
 	 * @param  {String|Object} fieldName name of the field to be set, or the fields object
 	 * @param  {*} fieldValue            value to be set
 	 * @return {Connect}                 self
@@ -313,6 +333,7 @@ class Connect {
 
 	/**
 	 * Set multiple fields.
+	 *
 	 * @param  {Object} fields object representing the field-names and their values as key:value pairs.
 	 * @return {Connect}       self
 	 */
@@ -323,6 +344,7 @@ class Connect {
 
 	/**
 	 * Set the request method for the connection.
+	 *
 	 * @param  {String} method one of the HTTP request methods ('GET', 'PUT', 'POST', etc.)
 	 * @return {Connect}       self
 	 */
@@ -333,6 +355,7 @@ class Connect {
 
 	/**
 	 * Set username and password for authentication.
+	 *
 	 * @param  {String} username self-descriptive
 	 * @param  {String} password self-descriptive
 	 * @return {Connect}         self
@@ -346,6 +369,7 @@ class Connect {
 
 	/**
 	 * Set proxy address (or options).
+	 *
 	 * @param  {String|Object} proxy proxy address, or object representing proxy options
 	 * @return {Connect}             self
 	 */
@@ -369,6 +393,7 @@ class Connect {
 
 	/**
 	 * Set address and port for an http proxy.
+	 *
 	 * @param  {String} proxyAddress self-descriptive
 	 * @param  {Number} proxyPort    self-descriptive
 	 * @return {Connect}             self
@@ -385,6 +410,7 @@ class Connect {
 
 	/**
 	 * Set address and port for a socks proxy.
+	 *
 	 * @param  {String} proxyAddress self-descriptive
 	 * @param  {Number} proxyPort    self-descriptive
 	 * @return {Connect}             self
@@ -401,6 +427,7 @@ class Connect {
 
 	/**
 	 * Set username and password for proxy.
+	 *
 	 * @param  {String} username self-descriptive
 	 * @param  {String} password self-descriptive
 	 * @return {Connect}         self
@@ -416,6 +443,7 @@ class Connect {
 
 	/**
 	 * Set request method to 'GET'.
+	 *
 	 * @return {Connect} self
 	 */
 	get() {
@@ -425,6 +453,7 @@ class Connect {
 
 	/**
 	 * Set request method to 'POST'.
+	 *
 	 * @return {Connect} self
 	 */
 	post() {
@@ -434,6 +463,7 @@ class Connect {
 
 	/**
 	 * Set request method to 'PUT'.
+	 *
 	 * @return {Connect} self
 	 */
 	put() {
@@ -443,6 +473,7 @@ class Connect {
 
 	/**
 	 * Set cache directory for the connection.
+	 *
 	 * @param  {String} dir name or path to the directory
 	 * @return {Connect}    self
 	 */
@@ -453,6 +484,7 @@ class Connect {
 
 	/**
 	 * Set if the body is to be returned as a buffer
+	 *
 	 * @param  {Boolean} [returnAsBuffer=true] self-descriptive
 	 * @return {Connect}                       self
 	 */
@@ -463,6 +495,7 @@ class Connect {
 
 	/**
 	 * Set the path for file for saving the response.
+	 *
 	 * @param  {String} filePath self-descriptive
 	 * @return {Connect}         self
 	 */
