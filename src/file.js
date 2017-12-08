@@ -179,6 +179,7 @@ class File {
 	 * Change the mode of the file.
 	 *
 	 * @param  {Number|String}  mode An octal number or a string representing the file mode
+	 * @return {Number}              0, on success; -1, if some error occurred
 	 */
 	async chmod(mode) {
 		return fs.chmod(this.path, mode);
@@ -188,17 +189,20 @@ class File {
 	 * Change the mode of the file or directory recursively.
 	 *
 	 * @param  {Number|String}  mode An octal number or a string representing the file mode
+	 * @return {Number}              0, on success; -1, if some error occurred
 	 */
 	async chmodr(mode) {
 		return _chmodr(this.path, mode);
 	}
 
 	/**
-	 * async chown - description
+	 * Change the owner and group of the file.
 	 *
-	 * @param  {type} user  description
-	 * @param  {type} group description
-	 * @return {type}       description
+	 * @param  {Number|String} user  user id, or user name
+	 * @param  {Number|String} group group id, or group name
+	 * @return {Number}              0, on success; any other number, if some error occurred
+	 *
+	 * NOTE: If the owner or group is specified as -1, then that ID is not changed
 	 */
 	async chown(user, group) {
 		if (Number.isInteger(user) && Number.isInteger(group)) {
@@ -208,6 +212,15 @@ class File {
 		return System.execOut(`chown ${user}:${group} ${this.path}`);
 	}
 
+	/**
+	 * Change the owner and group of the file recursively.
+	 *
+	 * @param  {Number|String} user  user id, or user name
+	 * @param  {Number|String} group group id, or group name
+	 * @return {Number}              0, on success; any other number, if some error occurred
+	 *
+	 * NOTE: If the owner or group is specified as -1, then that ID is not changed
+	 */
 	async chownr(user, group) {
 		if (Number.isInteger(user) && Number.isInteger(group)) {
 			return _chownr(this.path, user, group);
@@ -216,50 +229,128 @@ class File {
 		return System.execOut(`chown -R ${user}:${group} ${this.path}`);
 	}
 
+	/**
+	 * Change the name or location of the file.
+	 *
+	 * @param  {String} newName new path/location (not just name) for the file
+	 * @return {Number}         0, on success; -1, if some error occurred
+	 */
 	async rename(newName) {
 		return fs.rename(this.path, newName);
 	}
 
+	/**
+	 * Move file to a new location
+	 *
+	 * @param  {String} newName new location (or path) for the file
+	 * @return {Number}         0, on success; -1, if some error occurred
+	 */
 	async mv(newName) {
 		return this.rename(this.path, newName);
 	}
 
+	/**
+	 * Unlink the path from the file.
+	 *
+	 * NOTE: If the path referred to a
+	 * symbolic link, the link is removed. If the path is the only link
+	 * to the file then the file will be deleted.
+	 *
+	 * @return {Number} 0, on success; -1, if some error occurred
+	 */
 	async unlink() {
 		return fs.unlink(this.path);
 	}
 
+	/**
+	 * Remove the file.
+	 *
+	 * NOTE: The path is unlinked from the file, but the file
+	 * is deleted only if the path was the only link to the file and
+	 * the file was not opened in any other process.
+	 *
+	 * @return {Number} 0, on success; -1, if some error occurred
+	 */
 	async rm() {
 		return this.unlink();
 	}
 
+	/**
+	 * Remove the directory.
+	 *
+	 * NOTE: The directory will be deleted only if it is empty.
+	 *
+	 * @return {Number} 0, on success; -1, if some error occurred
+	 */
 	async rmdir() {
 		return fs.rmdir(this.path);
 	}
 
+	/**
+	 * Recursively delete the directory and all its contents.
+	 *
+	 * @return {Number} 0, on success; -1, if some error occurred
+	 */
 	async rmrf() {
 		return _rimraf(this.path);
 	}
 
+	/**
+	 * Create a directory.
+	 *
+	 * @param  {Number} [mode = 0o755] file mode for the directory
+	 * @return {Number}                0, on success; -1, if some error occurred
+	 */
 	async mkdir(mode = 0o755) {
 		return fs.mkdir(this.path, mode);
 	}
 
+	/**
+	 * Create a new directory and any necessary subdirectories.
+	 *
+	 * @param  {Number} [mode = 0o755] file mode for the directory
+	 * @return {Number}                0, on success; -1, if some error occurred
+	 */
 	async mkdirp(mode = 0o755) {
 		return _mkdirp(this.path, mode);
 	}
 
+	/**
+	 * Perform a glob search with the path of the file as the pattern.
+	 *
+	 * @return {Array} Array containing the matches
+	 */
 	async glob() {
 		return _glob(this.path);
 	}
 
+	/**
+	 * Read contents of the file.
+	 *
+	 * @return {String|Buffer} contents of the file
+	 */
 	async read() {
 		return fs.readFile(this.path, 'utf8');
 	}
 
+	/**
+	 * Create (all necessary directories for) the path of the file/directory.
+	 *
+	 * @param  {Number} [mode = 0o755] file mode for the directory
+	 * @return {Number}                0, on success; -1, if some error occurred
+	 */
 	async mkdirpPath(mode = 0o755) {
 		return _mkdirp(_path.dirname(this.path), mode);
 	}
 
+	/**
+	 * Write contents to the file.
+	 *
+	 * @param  {String|Buffer} contents contents to be written to the file
+	 * @param  {Object} [options = {}]  contains options for writing to the file
+	 *
+	 * The options can include parameters such as fileMode, dirMode, retries and encoding.
+	 */
 	async write(contents, options = {}) {
 		const opts = _.assign({
 			fileMode: 0o644,
@@ -281,6 +372,14 @@ class File {
 		}
 	}
 
+	/**
+	 * Append contents to the file.
+	 *
+	 * @param  {String|Buffer} contents contents to be written to the file
+	 * @param  {Object} [options = {}]  contains options for appending to the file
+	 *
+	 * The options can include parameters such as fileMode, dirMode, retries and encoding.
+	 */
 	async append(contents, options = {}) {
 		const opts = _.assign({
 			fileMode: 0o644,
@@ -302,6 +401,16 @@ class File {
 		}
 	}
 
+	/**
+	 * Copy the file to some destination.
+	 *
+	 * @param  {String} destination    path of the destination
+	 * @param  {Object} [options = {}] options for copying the file
+	 *
+	 * If the overwrite option is explicitly set to false, only then
+	 * will the function not attempt to overwrite the file if it (already)
+	 * exists at the destination.
+	 */
 	async copy(destination, options = {}) {
 		const opts = _.assign({
 			overwrite: true,
@@ -314,15 +423,31 @@ class File {
 		return fs.copyFile(this.path, destination, fs.constants.COPYFILE_EXCL);
 	}
 
+	/**
+	 * Return the canonicalized absolute pathname
+	 *
+	 * @return {String} the resolved path
+	 */
 	async realpath() {
 		return fs.realpath(this.path);
 	}
 
+	/**
+	 * Return the canonicalized absolute pathname
+	 *
+	 * @return {String} the resolved path
+	 */
 	realpathSync() {
 		return _fs.realpathSync(this.path);
 	}
 }
 
+/**
+ * Returns a new File object representing the file located at 'path'.
+ *
+ * @param  {String} path path of the file
+ * @return {File}        File object representing the file located at the path
+ */
 function file(path) {
 	return new File(path);
 }
