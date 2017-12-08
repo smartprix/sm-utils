@@ -18,6 +18,7 @@ class File {
 
 	/**
 	 * Creates a new File object.
+	 *
 	 * @param  {String} path path to the file
 	 */
 	constructor(path) {
@@ -26,6 +27,7 @@ class File {
 
 	/**
 	 * Checks whether a file exists already.
+	 *
 	 * @return {Boolean} true, if the file exists; false, otherwise
 	 */
 	async exists() {
@@ -40,6 +42,7 @@ class File {
 
 	/**
 	* Checks whether a file exists already.
+	*
 	* @return {Boolean} true, if the file exists; false, otherwise
 	 */
 	existsSync() {
@@ -54,6 +57,7 @@ class File {
 
 	/**
 	 * Returns whether this File object represents a file.
+	 *
 	 * @return {Boolean} true, if this object represents a file; false, otherwise
 	 */
 	async isFile() {
@@ -67,6 +71,7 @@ class File {
 
 	/**
 	 * Returns whether this File object represents a directory.
+	 *
 	 * @return {Boolean} true, if this object represents a directory; false, otherwise
 	 */
 	async isDir() {
@@ -80,6 +85,7 @@ class File {
 
 	/**
 	 * Returns a Date object representing the time when file was last modified.
+	 *
 	 * @return {Date} Date object, if file exists and its stats are read successfully; 0, otherwise
 	 */
 	async mtime() {
@@ -93,6 +99,7 @@ class File {
 
 	/**
 	 * Returns a Date object representing the time when file was last changed.
+	 *
 	 * @return {Date} Date object, if file exists and its stats are read successfully; 0, otherwise
 	 */
 	async ctime() {
@@ -106,6 +113,7 @@ class File {
 
 	/**
 	 * Returns a Date object representing the time when file was last accessed.
+	 *
 	 * @return {Date} Date object, if file exists and its stats are read successfully; 0, otherwise
 	 */
 	async atime() {
@@ -119,6 +127,7 @@ class File {
 
 	/**
 	 * Returns a Date object representing the time when file was created.
+	 *
 	 * @return {Date} Date object, if file exists and its stats are read successfully; 0, otherwise
 	 */
 	async crtime() {
@@ -133,6 +142,7 @@ class File {
 	/**
 	 * Returns an object with the stats of the file. If the path for the file
 	 * is a symlink, then stats of the symlink are returned.
+	 *
 	 * @return {Object} Stats object
 	 */
 	async lstat() {
@@ -142,6 +152,7 @@ class File {
 	/**
 	 * Returns an object with the stats of the file. If the path for the file
 	 * is a symlink, then stats of the target of the symlink are returned.
+	 *
 	 * @return {Object} Stats object
 	 */
 	async stat() {
@@ -152,6 +163,7 @@ class File {
 	/**
 	 * Returns the size of the file in bytes. If the file is not found
 	 * or can't be read successfully, 0 is returned.
+	 *
 	 * @return {Number} Size of file (in bytes)
 	 */
 	async size() {
@@ -165,6 +177,7 @@ class File {
 
 	/**
 	 * Change the mode of the file.
+	 *
 	 * @param  {Number|String}  mode An octal number or a string representing the file mode
 	 */
 	async chmod(mode) {
@@ -173,12 +186,20 @@ class File {
 
 	/**
 	 * Change the mode of the file or directory recursively.
+	 *
 	 * @param  {Number|String}  mode An octal number or a string representing the file mode
 	 */
 	async chmodr(mode) {
 		return _chmodr(this.path, mode);
 	}
 
+	/**
+	 * async chown - description
+	 *
+	 * @param  {type} user  description
+	 * @param  {type} group description
+	 * @return {type}       description
+	 */
 	async chown(user, group) {
 		if (Number.isInteger(user) && Number.isInteger(group)) {
 			return fs.chown(this.path, user, group);
