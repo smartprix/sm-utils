@@ -33,9 +33,8 @@ function execWrapper(method, args) {
 /**
  * Execute the given command in a shell.
  *
- * @param  {Array} args
- * first argument is the command itself
- * second argument is an options object
+ * @param {String} command
+ * @param {Object} options options object
  * options: {timeout (in ms), cwd, uid, gid, env (object), shell (eg. /bin/sh), encoding}
  *
  */
