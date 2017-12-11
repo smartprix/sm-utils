@@ -46,7 +46,6 @@ function makeProxyUrl(proxy) {
  * Class representing a Connection.
  */
 class Connect {
-
 	/**
 	 * Creates a new Connect object.
 	 * @constructor
@@ -219,7 +218,8 @@ class Connect {
 	 * Can also be used to set multiple cookies by passing in an object
 	 * representing the cookies and their values as key:value pairs.
 	 *
-	 * @param  {String|Boolean|Object} cookieName  represents the name of the cookie to be set, or the cookies object
+	 * @param  {String|Boolean|Object} cookieName  represents the name of the
+	 * cookie to be set, or the cookies object
 	 * @param  {Object} cookieValue                cookie value to be set
 	 * @return {Connect}                           self
 	 */
@@ -241,7 +241,8 @@ class Connect {
 	 * Sets multiple cookies.
 	 * Can be used to enable global cookies, if cookies is set to true.
 	 *
-	 * @param  {Object|Boolean} cookies object representing the cookies and their values as key:value pairs.
+	 * @param  {Object|Boolean} cookies object representing the cookies
+	 * and their values as key:value pairs.
 	 * @return {Connect}                self
 	 */
 	cookies(cookies) {
@@ -334,7 +335,8 @@ class Connect {
 	/**
 	 * Set multiple fields.
 	 *
-	 * @param  {Object} fields object representing the field-names and their values as key:value pairs.
+	 * @param  {Object} fields object representing the field-names and their
+	 * values as key:value pairs
 	 * @return {Connect}       self
 	 */
 	fields(fields) {

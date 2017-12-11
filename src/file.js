@@ -15,7 +15,6 @@ const fs = promisify(_fs);
  * Class representing a File
  */
 class File {
-
 	/**
 	 * Creates a new File object.
 	 *

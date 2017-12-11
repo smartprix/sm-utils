@@ -524,7 +524,8 @@ function sign(message, privateKey, opts = {}) {
  * @param  {String} signature        self-descriptive
  * @param  {String|Object} publicKey self-descriptive
  * @param  {Object} [opts = {}]      opts can have {encoding (default 'hex')}
- * @return {Boolean}                 true or false, depending on the validity of the signature for the data and public key
+ * @return {Boolean}                 true or false, depending on the validity of
+ * the signature for the data and public key
  */
 function verify(message, signature, publicKey, opts = {}) {
 	let encoding = opts.encoding || 'hex';
