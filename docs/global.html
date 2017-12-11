@@ -316,7 +316,7 @@ eg. f47ac10b-58cc-4372-a567-0e02b2c3d479
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line718">line 718</a>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line719">line 719</a>
     </li></ul></dd>
     
 
@@ -402,7 +402,7 @@ eg. f47ac10b-58cc-4372-a567-0e02b2c3d479
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line698">line 698</a>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line699">line 699</a>
     </li></ul></dd>
     
 
@@ -488,7 +488,7 @@ eg. f47ac10b-58cc-4372-a567-0e02b2c3d479
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line728">line 728</a>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line729">line 729</a>
     </li></ul></dd>
     
 
@@ -574,7 +574,7 @@ eg. f47ac10b-58cc-4372-a567-0e02b2c3d479
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line708">line 708</a>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line709">line 709</a>
     </li></ul></dd>
     
 
@@ -1521,7 +1521,7 @@ But avoids float precision issues
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line581">line 581</a>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line582">line 582</a>
     </li></ul></dd>
     
 
@@ -1768,7 +1768,7 @@ But avoids float precision issues
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line624">line 624</a>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line625">line 625</a>
     </li></ul></dd>
     
 
@@ -2017,7 +2017,7 @@ Optionally specify encoding in which you want to get the output
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line556">line 556</a>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line557">line 557</a>
     </li></ul></dd>
     
 
@@ -2177,7 +2177,7 @@ Optionally specify encoding in which you want to get the output
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line768">line 768</a>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line769">line 769</a>
     </li></ul></dd>
     
 
@@ -2427,7 +2427,7 @@ for same string and key.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line606">line 606</a>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line607">line 607</a>
     </li></ul></dd>
     
 
@@ -2483,7 +2483,7 @@ for same string and key.
     
 
     
-    <h4 class="name" id="exec"><span class="type-signature"></span>exec<span class="signature">(&hellip;args)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="exec"><span class="type-signature"></span>exec<span class="signature">(command, options)</span><span class="type-signature"></span></h4>
     
 
     
@@ -2515,8 +2515,6 @@ for same string and key.
         <th>Type</th>
 
         
-        <th>Attributes</th>
-        
 
         
 
@@ -2529,34 +2527,46 @@ for same string and key.
 
         <tr>
             
-                <td class="name"><code>args</code></td>
+                <td class="name"><code>command</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">Array</span>
+<span class="param-type">String</span>
 
 
             
             </td>
 
             
-                <td class="attributes">
-                
 
-                
+            
 
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
                 
-                    &lt;repeatable><br>
-                
-                </td>
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
             
 
             
 
-            <td class="description last">first argument is the command itself
-second argument is an options object
+            <td class="description last">options object
 options: {timeout (in ms), cwd, uid, gid, env (object), shell (eg. /bin/sh), encoding}</td>
         </tr>
 
@@ -2598,7 +2608,7 @@ options: {timeout (in ms), cwd, uid, gid, env (object), shell (eg. /bin/sh), enc
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="System.js.html">System.js</a>, <a href="System.js.html#line42">line 42</a>
+        <a href="System.js.html">System.js</a>, <a href="System.js.html#line41">line 41</a>
     </li></ul></dd>
     
 
@@ -2684,7 +2694,7 @@ options: {timeout (in ms), cwd, uid, gid, env (object), shell (eg. /bin/sh), enc
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="System.js.html">System.js</a>, <a href="System.js.html#line49">line 49</a>
+        <a href="System.js.html">System.js</a>, <a href="System.js.html#line48">line 48</a>
     </li></ul></dd>
     
 
@@ -2770,7 +2780,7 @@ options: {timeout (in ms), cwd, uid, gid, env (object), shell (eg. /bin/sh), enc
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="System.js.html">System.js</a>, <a href="System.js.html#line67">line 67</a>
+        <a href="System.js.html">System.js</a>, <a href="System.js.html#line66">line 66</a>
     </li></ul></dd>
     
 
@@ -2878,7 +2888,7 @@ options: {timeout (in ms), cwd, uid, gid, env (object), shell (eg. /bin/sh), enc
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="System.js.html">System.js</a>, <a href="System.js.html#line58">line 58</a>
+        <a href="System.js.html">System.js</a>, <a href="System.js.html#line57">line 57</a>
     </li></ul></dd>
     
 
@@ -3040,7 +3050,7 @@ if a message is given then it will be logged to console before exiting
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="System.js.html">System.js</a>, <a href="System.js.html#line218">line 218</a>
+        <a href="System.js.html">System.js</a>, <a href="System.js.html#line217">line 217</a>
     </li></ul></dd>
     
 
@@ -3175,7 +3185,7 @@ if a message is given then it will be logged to console before exiting
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="file.js.html">file.js</a>, <a href="file.js.html#line451">line 451</a>
+        <a href="file.js.html">file.js</a>, <a href="file.js.html#line450">line 450</a>
     </li></ul></dd>
     
 
@@ -3284,7 +3294,7 @@ currently gets user info from /etc/passwd
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="System.js.html">System.js</a>, <a href="System.js.html#line133">line 133</a>
+        <a href="System.js.html">System.js</a>, <a href="System.js.html#line132">line 132</a>
     </li></ul></dd>
     
 
@@ -3392,7 +3402,7 @@ currently gets user info from /etc/passwd
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="System.js.html">System.js</a>, <a href="System.js.html#line97">line 97</a>
+        <a href="System.js.html">System.js</a>, <a href="System.js.html#line96">line 96</a>
     </li></ul></dd>
     
 
@@ -3553,7 +3563,7 @@ currently gets user info from /etc/passwd
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="System.js.html">System.js</a>, <a href="System.js.html#line108">line 108</a>
+        <a href="System.js.html">System.js</a>, <a href="System.js.html#line107">line 107</a>
     </li></ul></dd>
     
 
@@ -3910,7 +3920,7 @@ Returns a 50 character long hash
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line671">line 671</a>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line672">line 672</a>
     </li></ul></dd>
     
 
@@ -4292,7 +4302,7 @@ Returns a 50 character long hash
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line816">line 816</a>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line817">line 817</a>
     </li></ul></dd>
     
 
@@ -4449,7 +4459,7 @@ Returns a 50 character long hash
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line832">line 832</a>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line833">line 833</a>
     </li></ul></dd>
     
 
@@ -4927,7 +4937,7 @@ encoding can be 'hex', 'binary' ('latin1'), 'ascii', 'base64', 'base64url', 'utf
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="System.js.html">System.js</a>, <a href="System.js.html#line186">line 186</a>
+        <a href="System.js.html">System.js</a>, <a href="System.js.html#line185">line 185</a>
     </li></ul></dd>
     
 
@@ -5035,7 +5045,7 @@ encoding can be 'hex', 'binary' ('latin1'), 'ascii', 'base64', 'base64url', 'utf
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="System.js.html">System.js</a>, <a href="System.js.html#line165">line 165</a>
+        <a href="System.js.html">System.js</a>, <a href="System.js.html#line164">line 164</a>
     </li></ul></dd>
     
 
@@ -5468,7 +5478,7 @@ The counter will reset on next millisecond
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="System.js.html">System.js</a>, <a href="System.js.html#line174">line 174</a>
+        <a href="System.js.html">System.js</a>, <a href="System.js.html#line173">line 173</a>
     </li></ul></dd>
     
 
@@ -5577,7 +5587,7 @@ returns the old umask
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="System.js.html">System.js</a>, <a href="System.js.html#line76">line 76</a>
+        <a href="System.js.html">System.js</a>, <a href="System.js.html#line75">line 75</a>
     </li></ul></dd>
     
 
@@ -5712,7 +5722,7 @@ returns the old umask
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line741">line 741</a>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line742">line 742</a>
     </li></ul></dd>
     
 
@@ -6120,7 +6130,7 @@ By default, length is 20 and charset is ALPHA_NUMERIC
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line795">line 795</a>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line796">line 796</a>
     </li></ul></dd>
     
 
@@ -8188,7 +8198,7 @@ you only need a publicKey to verify and decrypt this token
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line638">line 638</a>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line639">line 639</a>
     </li></ul></dd>
     
 
@@ -8275,7 +8285,7 @@ you only need a publicKey to verify and decrypt this token
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="System.js.html">System.js</a>, <a href="System.js.html#line194">line 194</a>
+        <a href="System.js.html">System.js</a>, <a href="System.js.html#line193">line 193</a>
     </li></ul></dd>
     
 
@@ -8363,7 +8373,7 @@ and need to make sure that other callbacks can complete.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="System.js.html">System.js</a>, <a href="System.js.html#line205">line 205</a>
+        <a href="System.js.html">System.js</a>, <a href="System.js.html#line204">line 204</a>
     </li></ul></dd>
     
 
@@ -8449,7 +8459,7 @@ and need to make sure that other callbacks can complete.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="System.js.html">System.js</a>, <a href="System.js.html#line156">line 156</a>
+        <a href="System.js.html">System.js</a>, <a href="System.js.html#line155">line 155</a>
     </li></ul></dd>
     
 
@@ -8606,7 +8616,7 @@ and need to make sure that other callbacks can complete.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line754">line 754</a>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line755">line 755</a>
     </li></ul></dd>
     
 
@@ -8895,7 +8905,7 @@ NOTE: Generate a key pair using:
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line529">line 529</a>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line530">line 530</a>
     </li></ul></dd>
     
 
@@ -8922,7 +8932,8 @@ NOTE: Generate a key pair using:
 
         
 <div class="param-desc">
-    true or false, depending on the validity of the signature for the data and public key
+    true or false, depending on the validity of
+the signature for the data and public key
 </div>
 
 
@@ -9003,7 +9014,7 @@ NOTE: Generate a key pair using:
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line649">line 649</a>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line650">line 650</a>
     </li></ul></dd>
     
 
@@ -9089,7 +9100,7 @@ NOTE: Generate a key pair using:
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line683">line 683</a>
+        <a href="Crypt.js.html">Crypt.js</a>, <a href="Crypt.js.html#line684">line 684</a>
     </li></ul></dd>
     
 
@@ -9175,7 +9186,7 @@ NOTE: Generate a key pair using:
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="System.js.html">System.js</a>, <a href="System.js.html#line84">line 84</a>
+        <a href="System.js.html">System.js</a>, <a href="System.js.html#line83">line 83</a>
     </li></ul></dd>
     
 
@@ -9225,7 +9236,7 @@ NOTE: Generate a key pair using:
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Fri Dec 08 2017 19:19:17 GMT+0530 (IST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Mon Dec 11 2017 18:22:40 GMT+0530 (IST)
 </footer>
 
 <script> prettyPrint(); </script>
