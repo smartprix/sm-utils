@@ -7,6 +7,18 @@ const privateKey = {key: privateKeyString, passphrase: 'smutils'};
 const publicKey = fs.readFileSync(`${__dirname}/public.pem`);
 
 describe('crypt library', () => {
+	it('should correctly generate random strings', () => {
+		const randomString = Crypt.randomString();
+
+		let randomStrings = [];
+		for (let i = 0; i < 1e4; i++) randomStrings.push(Crypt.randomString({length: 5}));
+		randomStrings = new Set(randomStrings);
+
+		expect(randomString.length).to.equal(20);
+		expect(randomString).to.match(/^[a-zA-Z0-9]{20}$/);
+		expect(randomStrings.size).to.equal(1e4);
+	});
+
 	it('should correctly verify password', () => {
 		const password = 'abc';
 		const hashed = Crypt.hashPassword(password);
