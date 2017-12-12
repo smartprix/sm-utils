@@ -235,7 +235,15 @@ class File {
 	 * @return {Number}         0, on success; -1, if some error occurred
 	 */
 	async rename(newName) {
-		return fs.rename(this.path, newName);
+		try {
+			await fs.rename(this.path, newName);
+			this.path = newName;
+		}
+		catch (err) {
+			return -1;
+		}
+
+		return 0;
 	}
 
 	/**
@@ -245,7 +253,7 @@ class File {
 	 * @return {Number}         0, on success; -1, if some error occurred
 	 */
 	async mv(newName) {
-		return this.rename(this.path, newName);
+		return this.rename(newName);
 	}
 
 	/**
