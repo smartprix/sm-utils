@@ -227,7 +227,14 @@ class File {
   * @return {Number}         0, on success; -1, if some error occurred
   */
 	async rename(newName) {
-		return fs.rename(this.path, newName);
+		try {
+			await fs.rename(this.path, newName);
+			this.path = newName;
+		} catch (err) {
+			return -1;
+		}
+
+		return 0;
 	}
 
 	/**
@@ -237,7 +244,7 @@ class File {
   * @return {Number}         0, on success; -1, if some error occurred
   */
 	async mv(newName) {
-		return this.rename(this.path, newName);
+		return this.rename(newName);
 	}
 
 	/**
@@ -246,8 +253,6 @@ class File {
   * NOTE: If the path referred to a
   * symbolic link, the link is removed. If the path is the only link
   * to the file then the file will be deleted.
-  *
-  * @return {Number} 0, on success; -1, if some error occurred
   */
 	async unlink() {
 		return fs.unlink(this.path);
@@ -259,8 +264,6 @@ class File {
   * NOTE: The path is unlinked from the file, but the file
   * is deleted only if the path was the only link to the file and
   * the file was not opened in any other process.
-  *
-  * @return {Number} 0, on success; -1, if some error occurred
   */
 	async rm() {
 		return this.unlink();
@@ -270,8 +273,6 @@ class File {
   * Remove the directory.
   *
   * NOTE: The directory will be deleted only if it is empty.
-  *
-  * @return {Number} 0, on success; -1, if some error occurred
   */
 	async rmdir() {
 		return fs.rmdir(this.path);
@@ -279,8 +280,6 @@ class File {
 
 	/**
   * Recursively delete the directory and all its contents.
-  *
-  * @return {Number} 0, on success; -1, if some error occurred
   */
 	async rmrf() {
 		return _rimraf(this.path);
@@ -290,7 +289,6 @@ class File {
   * Create a directory.
   *
   * @param  {Number} [mode = 0o755] file mode for the directory
-  * @return {Number}                0, on success; -1, if some error occurred
   */
 	async mkdir(mode = 0o755) {
 		return fs.mkdir(this.path, mode);
@@ -300,7 +298,6 @@ class File {
   * Create a new directory and any necessary subdirectories.
   *
   * @param  {Number} [mode = 0o755] file mode for the directory
-  * @return {Number}                0, on success; -1, if some error occurred
   */
 	async mkdirp(mode = 0o755) {
 		return _mkdirp(this.path, mode);
@@ -328,7 +325,6 @@ class File {
   * Create (all necessary directories for) the path of the file/directory.
   *
   * @param  {Number} [mode = 0o755] file mode for the directory
-  * @return {Number}                0, on success; -1, if some error occurred
   */
 	async mkdirpPath(mode = 0o755) {
 		return _mkdirp(_path.dirname(this.path), mode);
