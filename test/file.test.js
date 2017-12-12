@@ -2,7 +2,7 @@ import fs from 'fs';
 import {expect} from 'chai';
 import {File} from '../src/index';
 
-describe('test file class functions', () => {
+describe('file class', () => {
 	let file;
 	const filePath = `${__dirname}/temp.txt`;
 
@@ -13,7 +13,7 @@ describe('test file class functions', () => {
 		file = new File(filePath);
 	});
 
-	describe('file class', async () => {
+	describe('test file class functions', async () => {
 		it('should create the file correctly', async () => {
 			const existence = await file.exists();
 			const isFile = await file.isFile();
