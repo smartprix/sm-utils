@@ -7,6 +7,32 @@ const privateKey = {key: privateKeyString, passphrase: 'smutils'};
 const publicKey = fs.readFileSync(`${__dirname}/public.pem`);
 
 describe('crypt library', () => {
+	it('should correctly convert integers from one base to another', () => {
+		const decimalNumbers = [1, 12, 123, 1234, 12345, 123456,
+			1234567, 12345678, 123456789, 1234567890];
+		const binaryNumbers = ['1', '1100', '1111011', '10011010010', '11000000111001', '11110001001000000',
+			'100101101011010000111', '101111000110000101001110', '111010110111100110100010101', '1001001100101100000001011010010'];
+		const hexNumbers = ['1', 'c', '7b', '4d2', '3039', '1e240',
+			'12d687', 'bc614e', '75bcd15', '499602d2'];
+		const base36Numbers = ['1', 'c', '3f', 'ya', '9ix', '2n9c',
+			'qglj', '7clzi', '21i3v9', 'kf12oi'];
+		const base62Numbers = ['1', 'C', '1z', 'Ju', '3D7', 'W7E',
+			'5BAN', 'pnfq', '8M0kX', '1LY7VK'];
+
+		for (let i = 0; i < decimalNumbers.length; i++) {
+			const decNum = decimalNumbers[i];
+			const binNum = Crypt.baseConvert(decNum, 10, 2);
+			const hexNum = Crypt.baseConvert(decNum, 10, 16);
+			const base36Num = Crypt.baseConvert(decNum, 10, 36);
+			const base62Num = Crypt.baseConvert(decNum, 10, 62);
+
+			expect(binNum).to.equal(binaryNumbers[i]);
+			expect(hexNum).to.equal(hexNumbers[i]);
+			expect(base36Num).to.equal(base36Numbers[i]);
+			expect(base62Num).to.equal(base62Numbers[i]);
+		}
+	});
+
 	it('should correctly generate random strings', () => {
 		const randomString = Crypt.randomString();
 
@@ -16,7 +42,17 @@ describe('crypt library', () => {
 
 		expect(randomString.length).to.equal(20);
 		expect(randomString).to.match(/^[a-zA-Z0-9]{20}$/);
-		expect(randomStrings.size).to.equal(1e4);
+		expect(randomStrings.size).to.be.closeTo(1e4, 10);
+	});
+
+	it('should correctly shuffle items', () => {
+		const str = Crypt.randomString().split();
+		const shuffledStr = Crypt.shuffle(str);
+
+		const diff = str.filter(x => !shuffledStr.includes(x));
+
+		expect(str.length).to.equal(shuffledStr.length);
+		expect(diff.length).to.equal(0);
 	});
 
 	it('should correctly verify password', () => {
@@ -83,4 +119,3 @@ describe('crypt library', () => {
 		expect(await Crypt.javaUnobfuscate(obfuscated)).to.equal(original);
 	});
 });
-
