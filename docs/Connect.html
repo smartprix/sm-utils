@@ -545,6 +545,8 @@
 
 <div class="description">
     Add cookies in the options to the header.
+
+NOTE: This function is for internal use
 </div>
 
 
@@ -588,7 +590,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Connect.js.html">Connect.js</a>, <a href="Connect.js.html#line576">line 576</a>
+        <a href="Connect.js.html">Connect.js</a>, <a href="Connect.js.html#line582">line 582</a>
     </li></ul></dd>
     
 
@@ -632,6 +634,8 @@
 <div class="description">
     Add the options 'fields' to the options body, form or qs
 on the basis of the request method.
+
+NOTE: This function is for internal use
 </div>
 
 
@@ -675,7 +679,7 @@ on the basis of the request method.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Connect.js.html">Connect.js</a>, <a href="Connect.js.html#line554">line 554</a>
+        <a href="Connect.js.html">Connect.js</a>, <a href="Connect.js.html#line558">line 558</a>
     </li></ul></dd>
     
 
@@ -721,6 +725,8 @@ on the basis of the request method.
 if and only if proxy address has been previously set.
 If no proxy type is previously set, 'http' is taken as
 the default proxy type.
+
+NOTE: This function is for internal use
 </div>
 
 
@@ -764,7 +770,96 @@ the default proxy type.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Connect.js.html">Connect.js</a>, <a href="Connect.js.html#line517">line 517</a>
+        <a href="Connect.js.html">Connect.js</a>, <a href="Connect.js.html#line519">line 519</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="_makeFetchPromise"><span class="type-signature"></span>_makeFetchPromise<span class="signature">()</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    It resolves or rejects the promise object. It is
+used by fetch() to make the promise.
+
+NOTE: This function is for internal use
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Connect.js.html">Connect.js</a>, <a href="Connect.js.html#line602">line 602</a>
     </li></ul></dd>
     
 
@@ -1327,6 +1422,163 @@ the default proxy type.
     <dd>
         
 <span class="param-type"><a href="Connect.html">Connect</a></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="catch"><span class="type-signature"></span>catch<span class="signature">(errorCallback)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    It is also used for method chaining, but handles rejected cases only.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>errorCallback</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">function to be called if the Promise is rejected</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Connect.js.html">Connect.js</a>, <a href="Connect.js.html#line734">line 734</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    a Promise in pending state
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Promise</span>
 
 
     </dd>
@@ -2129,6 +2381,111 @@ and their values as key:value pairs.</td>
     <dd>
         
 <span class="param-type"><a href="Connect.html">Connect</a></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="fetch"><span class="type-signature"></span>fetch<span class="signature">()</span><span class="type-signature"> &rarr; {Promise}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    It creates and returns a promise based on the information
+passed to and parameters of this object.
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Connect.js.html">Connect.js</a>, <a href="Connect.js.html#line677">line 677</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Promise</span>
 
 
     </dd>
@@ -4921,6 +5278,186 @@ values as key:value pairs</td>
     
 
     
+    <h4 class="name" id="then"><span class="type-signature"></span>then<span class="signature">(successCallback, errorCallback)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    It is used for method chaining.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>successCallback</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">function to be called if the Promise is fulfilled</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>errorCallback</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">function to be called if the Promise is rejected</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Connect.js.html">Connect.js</a>, <a href="Connect.js.html#line724">line 724</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    a Promise in pending state
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Promise</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
     <h4 class="name" id="timeout"><span class="type-signature"></span>timeout<span class="signature">(timeout)</span><span class="type-signature"> &rarr; {<a href="Connect.html">Connect</a>}</span></h4>
     
 
@@ -5565,7 +6102,7 @@ values as key:value pairs</td>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Mon Dec 11 2017 18:22:40 GMT+0530 (IST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Wed Dec 13 2017 15:12:24 GMT+0530 (IST)
 </footer>
 
 <script> prettyPrint(); </script>
