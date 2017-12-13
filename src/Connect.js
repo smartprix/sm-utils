@@ -513,6 +513,8 @@ class Connect {
 	 * if and only if proxy address has been previously set.
 	 * If no proxy type is previously set, 'http' is taken as
 	 * the default proxy type.
+	 *
+	 * NOTE: This function is for internal use
 	 */
 	_addProxy() {
 		const proxy = this.options.proxy;
@@ -550,6 +552,8 @@ class Connect {
 	/**
 	 * Add the options 'fields' to the options body, form or qs
 	 * on the basis of the request method.
+	 *
+	 * NOTE: This function is for internal use
 	 */
 	_addFields() {
 		if (!this.options.fields) return;
@@ -572,6 +576,8 @@ class Connect {
 
 	/**
 	 * Add cookies in the options to the header.
+	 *
+	 * NOTE: This function is for internal use
 	 */
 	_addCookies() {
 		if (!this.options.cookies) return;
@@ -586,6 +592,13 @@ class Connect {
 		}
 	}
 
+
+	/**
+	 * It resolves or rejects the promise object. It is
+	 * used by fetch() to make the promise.
+	 *
+	 * NOTE: This function is for internal use
+	 */
 	_makeFetchPromise(resolve, reject, cacheFilePath) {
 		this._addProxy();
 		this._addFields();
@@ -655,6 +668,12 @@ class Connect {
 		}
 	}
 
+	/**
+	 * It creates and returns a promise based on the information
+	 * passed to and parameters of this object.
+	 *
+	 * @return {Promise}
+	 */
 	fetch() {
 		if (this.promise) return this.promise;
 
@@ -695,10 +714,23 @@ class Connect {
 		return this.promise;
 	}
 
+	/**
+	 * It is used for method chaining.
+	 *
+	 * @param  {function} successCallback function to be called if the Promise is fulfilled
+	 * @param  {function} errorCallback   function to be called if the Promise is rejected
+	 * @return {Promise}                  a Promise in pending state
+	 */
 	then(successCallback, errorCallback) {
 		return this.fetch().then(successCallback, errorCallback);
 	}
 
+	/**
+	 * It is also used for method chaining, but handles rejected cases only.
+	 *
+	 * @param  {function} errorCallback   function to be called if the Promise is rejected
+	 * @return {Promise}                  a Promise in pending state
+	 */
 	catch(errorCallback) {
 		return this.fetch().catch(errorCallback);
 	}
