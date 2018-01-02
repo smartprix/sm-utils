@@ -4,13 +4,21 @@ import {File} from '../src/index';
 
 describe('file class', () => {
 	let file;
+	let nonExistentFile;
+	let directory;
 	const filePath = `${__dirname}/temp.txt`;
+	const anotherFilePath = `${__dirname}/temp_abc.txt`;
+	const dirPath = `${__dirname}/tempDir`;
 
 	before(async () => {
 		await fs.writeFile(filePath, 'Hello..', {mode: 0o777}, (err) => {
 			if (err) throw err;
 		});
+		await fs.mkdir(dirPath);
+
 		file = new File(filePath);
+		nonExistentFile = new File(anotherFilePath);
+		directory = new File(dirPath);
 	});
 
 	describe('test file class functions', async () => {
@@ -27,6 +35,11 @@ describe('file class', () => {
 			expect(stats).to.have.any.keys('dev', 'ino', 'mode', 'nlink', 'uid',
 				'gid', 'rdev', 'size', 'blksize', 'blocks', 'atimeMs', 'mtimeMs',
 				'ctimeMs', 'birthtimeMs', 'atime', 'mtime', 'ctime', 'birthtime');
+		});
+
+		it('should give correct existence output for a non existent file', async () => {
+			const existenceOfNonExistentFile = await nonExistentFile.exists();
+			expect(existenceOfNonExistentFile).to.be.false;
 		});
 
 		it('should rename or move the file correctly', async () => {
@@ -46,6 +59,27 @@ describe('file class', () => {
 			await file.append('Testing Again!!');
 			contents = await file.read();
 			expect(contents).to.equal('Testing 123...Testing Again!!');
+		});
+
+		it('should create the directory correctly', async () => {
+			const existence = await directory.exists();
+			const isFile = await directory.isFile();
+			const isDir = await directory.isDir();
+			const stats = await directory.lstat();
+
+			expect(existence).to.equal(true);
+			expect(isFile).to.equal(false);
+			expect(isDir).to.equal(true);
+			expect(stats).to.be.an('object');
+			expect(stats).to.have.any.keys('dev', 'ino', 'mode', 'nlink', 'uid',
+				'gid', 'rdev', 'size', 'blksize', 'blocks', 'atimeMs', 'mtimeMs',
+				'ctimeMs', 'birthtimeMs', 'atime', 'mtime', 'ctime', 'birthtime');
+		});
+
+		it('should remove the directory correctly', async () => {
+			await directory.rmdir();
+			const existence = await directory.exists();
+			expect(existence).to.be.false;
 		});
 	});
 
