@@ -471,7 +471,7 @@ function hmac(algo, string, key, {encoding = 'hex'} = {}) {
  * @return {String}                           encoded HMAC digest
  */
 function sha1Hmac(string, key, {encoding = 'hex'} = {}) {
-	return hmac('sha1', key, string, {encoding});
+	return hmac('sha1', string, key, {encoding});
 }
 
 /**
@@ -482,7 +482,7 @@ function sha1Hmac(string, key, {encoding = 'hex'} = {}) {
  * @return {String}                           encoded HMAC digest
  */
 function sha256Hmac(string, key, {encoding = 'hex'} = {}) {
-	return hmac('sha256', key, string, {encoding});
+	return hmac('sha256', string, key, {encoding});
 }
 
 /**
