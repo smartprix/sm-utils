@@ -366,6 +366,7 @@ function sha512(string, { encoding = 'hex' } = {}) {
  * Create cryptographic HMAC digests
  */
 function hmac(algo, string, key, { encoding = 'hex' } = {}) {
+	if (typeof key === 'string') key = Buffer.from(key, 'binary');
 	const hashed = _crypto2.default.createHmac(algo, key).update(string);
 
 	if (encoding === 'binary') encoding = 'latin1';
@@ -377,11 +378,11 @@ function hmac(algo, string, key, { encoding = 'hex' } = {}) {
 }
 
 function sha1Hmac(string, key, { encoding = 'hex' } = {}) {
-	return hmac('sha1', key, string, { encoding });
+	return hmac('sha1', string, key, { encoding });
 }
 
 function sha256Hmac(string, key, { encoding = 'hex' } = {}) {
-	return hmac('sha256', key, string, { encoding });
+	return hmac('sha256', string, key, { encoding });
 }
 
 /**
