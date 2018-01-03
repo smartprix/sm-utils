@@ -1,6 +1,3 @@
-/* eslint-disable */
-// This is WIP
-import Redis from 'ioredis';
 import EventEmitter from 'events';
 
 const FETCHING = Symbol('Fetching_Value');
@@ -11,6 +8,7 @@ class RedisCache {
 		this.prefix = Math.random().toString(36).substring(2);
 		this.redis = redis;
 		this.fetching = {};
+		this.events = new EventEmitter();
 	}
 
 	_get(key) {
@@ -32,15 +30,26 @@ class RedisCache {
 		return this.redis.del(`${this.prefix}:${key}`);
 	}
 
-	_clear(key) {
+	_clear() {
 		return this.redis.eval(
-			`for i, name in ipairs(redis.call('KEYS', '${this.prefix}:')) do redis.call('DEL', name); end`,
+			`for i, name in ipairs(redis.call('KEYS', '${this.prefix}:*')) do redis.call('DEL', name); end`,
 			0,
 		);
 	}
 
 	_size() {
-		return redis.eval(`return #redis.pcall('keys', '${this.prefix}:*')`, 0);
+		return this.redis.eval(`return #redis.pcall('keys', '${this.prefix}:*')`, 0);
+	}
+
+	/**
+	 * gets a value from the cache immediately without waiting
+	 * @param {string} key
+	 * @param {any} defaultValue
+	 */
+	async getStale(key, defaultValue = undefined) {
+		const existing = await this._get(key);
+		if (existing === null) return defaultValue;
+		return existing;
 	}
 
 	/**
@@ -49,8 +58,7 @@ class RedisCache {
 	 * @param {any} defaultValue
 	 */
 	async get(key, defaultValue = undefined) {
-		const existing = await this.get(key);
-		if (existing === FETCHING) {
+		if (this.fetching[key] === FETCHING) {
 			// Some other process is still fetching the value
 			// Don't dogpile shit, wait for the other process
 			// to finish it
@@ -59,8 +67,11 @@ class RedisCache {
 			});
 		}
 
-		if (existing === undefined) return defaultValue;
-		return existing;
+		this.fetching[key] = FETCHING;
+		const value = await this.getStale(key, defaultValue);
+		delete this.fetching[key];
+		this.events.emit(`get:${key}`, value);
+		return value;
 	}
 
 	/**
@@ -68,7 +79,7 @@ class RedisCache {
 	 * @param {string} key
 	 */
 	async has(key) {
-		return (key in this.data);
+		return this.redis.exists(`${this.prefix}:${key}`);
 	}
 
 	/**
@@ -87,31 +98,33 @@ class RedisCache {
 			ttl = options.ttl || 0;
 		}
 
-		this.data[key] = FETCHING;
+		this.fetching[key] = FETCHING;
 
 		try {
 			if (value && value.then) {
 				// value is a Promise
 				// resolve it and then cache it
 				const resolvedValue = await value;
-				this._set(key, value, ttl);
+				await this._set(key, resolvedValue, ttl);
+				delete this.fetching[key];
 				this.events.emit(`get:${key}`, resolvedValue);
 				return true;
 			}
 			else if (typeof value === 'function') {
 				// value is a function
 				// call it and set the result
-				return this.set(key, value(key), ttl);
+				return (await this.set(key, value(key), ttl));
 			}
 
 			// value is normal
 			// just set it in the store
-			this._set(key, value, ttl);
+			await this._set(key, value, ttl);
+			delete this.fetching[key];
 			this.events.emit(`get:${key}`, value);
 			return true;
 		}
 		catch (error) {
-			this._del(key);
+			await this._del(key);
 			this.events.emit(`get:${key}`, undefined);
 			return false;
 		}
@@ -125,8 +138,7 @@ class RedisCache {
 	 * @param {int|object} options either ttl in ms, or object of {ttl}
 	 */
 	async getOrSet(key, value, options = {}) {
-		const existing = this.data[key];
-		if (existing === FETCHING) {
+		if (this.fetching[key] === FETCHING) {
 			// Some other process is still fetching the value
 			// Don't dogpile shit, wait for the other process
 			// to finish it
@@ -135,12 +147,20 @@ class RedisCache {
 			});
 		}
 
-		// key already exists, return it
-		if (existing !== undefined) return existing;
+		this.fetching[key] = FETCHING;
 
-		this.data[key] = FETCHING;
+		// key already exists, return it
+		const existing = await this._get(key);
+		if (existing) {
+			delete this.fetching[key];
+			return existing;
+		}
+
 		await this.set(key, value, options);
-		return this.data[key];
+		delete this.fetching[key];
+		const setValue = await this._get(key);
+		this.events.emit(`get:${key}`, setValue);
+		return setValue;
 	}
 
 	/**
@@ -167,8 +187,8 @@ class RedisCache {
 		return this._clear();
 	}
 
-	static globalCache() {
-		if (!globalCache) globalCache = new this();
+	static globalCache(redis) {
+		if (!globalCache) globalCache = new this(redis);
 		return globalCache;
 	}
 
@@ -201,4 +221,4 @@ class RedisCache {
 	}
 }
 
-export default Cache;
+export default RedisCache;

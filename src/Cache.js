@@ -8,6 +8,7 @@ class Cache {
 	constructor() {
 		this.data = {};
 		this.ttl = {};
+		this.fetching = {};
 		this.events = new EventEmitter();
 	}
 
@@ -45,6 +46,7 @@ class Cache {
 
 		// clear data
 		this.data = {};
+		this.fetching = {};
 	}
 
 	/**
@@ -53,8 +55,7 @@ class Cache {
 	 * @param {any} defaultValue
 	 */
 	async get(key, defaultValue = undefined) {
-		const existing = this.data[key];
-		if (existing === FETCHING) {
+		if (this.fetching[key] === FETCHING) {
 			// Some other process is still fetching the value
 			// Don't dogpile shit, wait for the other process
 			// to finish it
@@ -63,6 +64,18 @@ class Cache {
 			});
 		}
 
+		const existing = this.data[key];
+		if (existing === undefined) return defaultValue;
+		return existing;
+	}
+
+	/**
+	 * gets a value from the cache immediately without waiting
+	 * @param {string} key
+	 * @param {any} defaultValue
+	 */
+	async getStale(key, defaultValue = undefined) {
+		const existing = this.data[key];
 		if (existing === undefined) return defaultValue;
 		return existing;
 	}
@@ -91,14 +104,15 @@ class Cache {
 			ttl = options.ttl || 0;
 		}
 
-		this.data[key] = FETCHING;
+		this.fetching[key] = FETCHING;
 
 		try {
 			if (value && value.then) {
 				// value is a Promise
 				// resolve it and then cache it
 				const resolvedValue = await value;
-				this._set(key, value, ttl);
+				this._set(key, resolvedValue, ttl);
+				delete this.fetching[key];
 				this.events.emit(`get:${key}`, resolvedValue);
 				return true;
 			}
@@ -111,11 +125,13 @@ class Cache {
 			// value is normal
 			// just set it in the store
 			this._set(key, value, ttl);
+			delete this.fetching[key];
 			this.events.emit(`get:${key}`, value);
 			return true;
 		}
 		catch (error) {
 			this._del(key);
+			delete this.fetching[key];
 			this.events.emit(`get:${key}`, undefined);
 			return false;
 		}
@@ -129,8 +145,7 @@ class Cache {
 	 * @param {int|object} options either ttl in ms, or object of {ttl}
 	 */
 	async getOrSet(key, value, options = {}) {
-		const existing = this.data[key];
-		if (existing === FETCHING) {
+		if (this.fetching[key] === FETCHING) {
 			// Some other process is still fetching the value
 			// Don't dogpile shit, wait for the other process
 			// to finish it
@@ -140,10 +155,12 @@ class Cache {
 		}
 
 		// key already exists, return it
+		const existing = this.data[key];
 		if (existing !== undefined) return existing;
 
-		this.data[key] = FETCHING;
+		this.fetching[key] = FETCHING;
 		await this.set(key, value, options);
+		delete this.fetching[key];
 		return this.data[key];
 	}
 

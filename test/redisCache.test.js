@@ -1,12 +1,16 @@
-import {expect} from 'chai';
-import {Cache} from '../src/index';
+/* global describe, it */
+/* eslint-disable no-unused-expressions */
 
-const cache = new Cache();
+import Redis from 'ioredis';
+import {expect} from 'chai';
+import {RedisCache} from '../src/index';
+
+const cache = new RedisCache(new Redis());
 function sleep(val, timeout = 20) {
 	return new Promise(resolve => setTimeout(() => resolve(val), timeout));
 }
 
-describe('cache library', () => {
+describe('redis cache library', () => {
 	it('should get and set values', async () => {
 		const key = 'a';
 		const value = 'this';
@@ -121,12 +125,12 @@ describe('cache library', () => {
 	});
 
 	it('should correctly check for existance', async () => {
-		expect(await cache.has('d')).to.be.true;
-		expect(await cache.has('d1')).to.be.false;
+		expect(await cache.has('d')).to.equal(1);
+		expect(await cache.has('d1')).to.equal(0);
 	});
 
 	it('should correctly return the size', async () => {
-		const cache1 = new Cache();
+		const cache1 = new RedisCache(new Redis());
 		expect(await cache1.size()).to.equal(0);
 		expect(await cache.size()).to.equal(6);
 	});
@@ -139,4 +143,3 @@ describe('cache library', () => {
 		expect(await cache.size()).to.equal(0);
 	});
 });
-
