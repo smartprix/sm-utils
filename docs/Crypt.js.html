@@ -1,36 +1,48 @@
-'use strict';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: Crypt.js</title>
 
-var _crypto = require('crypto');
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
 
-var _crypto2 = _interopRequireDefault(_crypto);
+<body>
 
-var _zlib = require('zlib');
+<div id="main">
 
-var _zlib2 = _interopRequireDefault(_zlib);
+    <h1 class="page-title">Source: Crypt.js</h1>
 
-var _util = require('util');
+    
 
-var _lodash = require('lodash');
 
-var _lodash2 = _interopRequireDefault(_lodash);
 
-require('./lodash_utils');
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import crypto from 'crypto';
+import zlib from 'zlib';
+import {promisify} from 'util';
+import _ from 'lodash';
 
-var _base_convert = require('./base_convert');
+import './lodash_utils';
+import baseConvert from './base_convert';
 
-var _base_convert2 = _interopRequireDefault(_base_convert);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-const gzinflate = (0, _util.promisify)(_zlib2.default.inflateRaw);
-const gzdeflate = (0, _util.promisify)(_zlib2.default.deflateRaw);
+const gzinflate = promisify(zlib.inflateRaw);
+const gzdeflate = promisify(zlib.deflateRaw);
 
 const chars = {};
 chars.NUMERIC = '0123456789';
 chars.LOWER = 'abcdefghijklmnopqrstuvwxyz';
 chars.UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 // missing ', ", space, \ (as these might cause problems when copying strings)
-chars.SYMBOLS = '-_!#$%&()*+,./:;<=>?@[]^`{|}~';
+chars.SYMBOLS = '-_!#$%&amp;()*+,./:;&lt;=>?@[]^`{|}~';
 chars.HEX = chars.NUMERIC + 'abcdef';
 chars.BASE_36 = chars.NUMERIC + chars.LOWER;
 chars.ALPHA = chars.LOWER + chars.UPPER;
@@ -53,7 +65,7 @@ const data = {};
  */
 function countBits(number) {
 	let log2 = 0;
-	while (number >>= 1) {
+	while ((number >>= 1)) {
 		log2++;
 	}
 	return log2;
@@ -82,30 +94,33 @@ function randomString(options) {
 	if (typeof options === 'object') {
 		length = options.length || 20;
 		charset = options.charset || chars.ALPHA_NUMERIC;
-	} else if (typeof options === 'number') {
+	}
+	else if (typeof options === 'number') {
 		length = options;
 		charset = chars.ALPHA_NUMERIC;
-	} else {
+	}
+	else {
 		length = 20;
 		charset = chars.ALPHA_NUMERIC;
 	}
 
 	// determine mask for valid characters
-	const mask = 256 - 256 % charset.length;
+	const mask = 256 - (256 % charset.length);
 
 	// Generate the string
-	while (result.length < length) {
+	while (result.length &lt; length) {
 		// determine number of bytes to generate
 		const bytes = (length - result.length) * Math.ceil(countBits(charset.length) / 8);
 
 		let randomBuffer;
 		try {
-			randomBuffer = _crypto2.default.randomBytes(bytes);
-		} catch (e) {
+			randomBuffer = crypto.randomBytes(bytes);
+		}
+		catch (e) {
 			continue;
 		}
 
-		for (let i = 0; i < randomBuffer.length; i++) {
+		for (let i = 0; i &lt; randomBuffer.length; i++) {
 			if (randomBuffer[i] > mask) continue;
 			result += charset[randomBuffer[i] % charset.length];
 		}
@@ -126,7 +141,8 @@ function shuffle(itemToShuffle, options = {}) {
 	let array;
 	if (typeof itemToShuffle === 'string') {
 		array = itemToShuffle.split();
-	} else {
+	}
+	else {
 		array = itemToShuffle.slice();
 	}
 
@@ -141,7 +157,8 @@ function shuffle(itemToShuffle, options = {}) {
 			const x = Math.sin(seed++) * 10000;
 			return x - Math.floor(x);
 		};
-	} else {
+	}
+	else {
 		random = Math.random;
 	}
 
@@ -174,11 +191,11 @@ function nanoSecondsAlpha(base36 = false) {
 	// hence take mod 3521 from seconds so that overall string length = 7
 	if (base36) {
 		const seconds = String(hrtime[0] % 2821) + ('000000000' + String(hrtime[1])).slice(-9);
-		return ('00000000' + (0, _base_convert2.default)(seconds, 10, 36)).slice(-8);
+		return ('00000000' + baseConvert(seconds, 10, 36)).slice(-8);
 	}
 
 	const seconds = String(hrtime[0] % 3521) + ('000000000' + String(hrtime[1])).slice(-9);
-	return ('0000000' + (0, _base_convert2.default)(seconds, 10, 62)).slice(-7);
+	return ('0000000' + baseConvert(seconds, 10, 62)).slice(-7);
 }
 
 /**
@@ -221,7 +238,8 @@ function sequentialID(options) {
 	if (typeof options === 'object') {
 		length = options.length || length;
 		base36 = options.base36 || options.lowercase || base36;
-	} else if (typeof options === 'number') {
+	}
+	else if (typeof options === 'number') {
 		length = options;
 	}
 
@@ -232,23 +250,25 @@ function sequentialID(options) {
 	if (base36) {
 		// convert current time in milliseconds to base36
 		// This will always return 8 characters till 2058
-		result = (0, _base_convert2.default)(currentTime, 10, 36);
-		result += _lodash2.default.padStart((0, _base_convert2.default)(counter, 10, 36), 4, '0');
-	} else {
+		result = baseConvert(currentTime, 10, 36);
+		result += _.padStart(baseConvert(counter, 10, 36), 4, '0');
+	}
+	else {
 		// convert current time in milliseconds to base62
 		// This will always return 7 characters till 2080
-		result = (0, _base_convert2.default)(currentTime, 10, 62);
-		result += _lodash2.default.padStart((0, _base_convert2.default)(counter, 10, 62), 3, '0');
+		result = baseConvert(currentTime, 10, 62);
+		result += _.padStart(baseConvert(counter, 10, 62), 3, '0');
 	}
 
-	if (length < result.length) {
+	if (length &lt; result.length) {
 		return result.substring(0, length);
 	}
 
 	let randomStr;
 	if (base36) {
-		randomStr = randomString({ length: length - result.length, charset: chars.BASE_36 });
-	} else {
+		randomStr = randomString({length: length - result.length, charset: chars.BASE_36});
+	}
+	else {
 		randomStr = randomString(length - result.length);
 	}
 
@@ -265,21 +285,27 @@ function sequentialID(options) {
  * @return {String}     the modified string
  */
 function addDashesForUUID(str) {
-	return str.substring(0, 8) + '-' + str.substring(8, 12) + '-' + '4' + str.substring(12, 15) + '-' + 'a' + str.substring(15, 18) + '-' + str.substring(18, 30);
+	return str.substring(0, 8) + '-' +
+		str.substring(8, 12) + '-' +
+		'4' +
+		str.substring(12, 15) + '-' +
+		'a' +
+		str.substring(15, 18) + '-' +
+		str.substring(18, 30);
 }
 
 /**
  * Get sequential ID in v4 UUID format.
  */
 function sequentialUUID() {
-	return addDashesForUUID((0, _base_convert2.default)(sequentialID(21), 62, 16));
+	return addDashesForUUID(baseConvert(sequentialID(21), 62, 16));
 }
 
 /**
  * Get random ID in v4 UUID format.
  */
 function randomUUID() {
-	return addDashesForUUID(randomString({ length: 30, charset: chars.HEX }));
+	return addDashesForUUID(randomString({length: 30, charset: chars.HEX}));
 }
 
 /**
@@ -296,10 +322,10 @@ function randomUUID() {
  * The fromEncoding defaults to binary, while the toEncoding defaults to base64url.
  */
 function baseEncode(string, opts) {
-	if (_lodash2.default.isString(opts)) {
+	if (_.isString(opts)) {
 		opts = {
 			toEncoding: opts,
-			fromEncoding: 'binary'
+			fromEncoding: 'binary',
 		};
 	}
 
@@ -308,7 +334,7 @@ function baseEncode(string, opts) {
 
 	if (fromEncoding === 'base64url') fromEncoding = 'base64';
 
-	const buffer = string instanceof Buffer ? string : Buffer.from(string, fromEncoding);
+	const buffer = (string instanceof Buffer) ? string : Buffer.from(string, fromEncoding);
 
 	toEncoding = toEncoding.toLowerCase();
 
@@ -321,11 +347,15 @@ function baseEncode(string, opts) {
 	}
 
 	if (toEncoding === 'base64url') {
-		return buffer.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+		return buffer.toString('base64')
+			.replace(/\+/g, '-')
+			.replace(/\//g, '_')
+			.replace(/=+$/, '');
 	}
 
 	return string;
 }
+
 
 /**
  * Decode a string encoded using a given encoding.
@@ -338,10 +368,10 @@ function baseEncode(string, opts) {
  * (i.e that was used to encode the string).
  */
 function baseDecode(string, opts) {
-	if (_lodash2.default.isString(opts)) {
+	if (_.isString(opts)) {
 		opts = {
 			fromEncoding: opts,
-			toEncoding: 'binary'
+			toEncoding: 'binary',
 		};
 	}
 
@@ -358,7 +388,7 @@ function baseDecode(string, opts) {
 function baseDecodeToBuffer(string, fromEncoding) {
 	return baseEncode(string, {
 		fromEncoding,
-		toEncoding: 'buffer'
+		toEncoding: 'buffer',
 	});
 }
 
@@ -371,8 +401,8 @@ function baseDecodeToBuffer(string, fromEncoding) {
  * @param  {Object} [{encoding = 'hex'} = {}] encoding in the form of an object
  * @return {String}                           encoded hash value
  */
-function hash(algo, string, { encoding = 'hex' } = {}) {
-	const hashed = _crypto2.default.createHash(algo).update(string);
+function hash(algo, string, {encoding = 'hex'} = {}) {
+	const hashed = crypto.createHash(algo).update(string);
 
 	if (encoding === 'binary') encoding = 'latin1';
 	if (['latin1', 'base64', 'hex'].indexOf(encoding) > -1) {
@@ -390,8 +420,8 @@ function hash(algo, string, { encoding = 'hex' } = {}) {
  * @param  {Object} [{encoding = 'hex'} = {}] encoding in the form of an object
  * @return {String}                           encoded hash value
  */
-function md5(string, { encoding = 'hex' } = {}) {
-	return hash('md5', string, { encoding });
+function md5(string, {encoding = 'hex'} = {}) {
+	return hash('md5', string, {encoding});
 }
 
 /**
@@ -402,8 +432,8 @@ function md5(string, { encoding = 'hex' } = {}) {
  * @param  {Object} [{encoding = 'hex'} = {}] encoding in the form of an object
  * @return {String}                           encoded hash value
  */
-function sha1(string, { encoding = 'hex' } = {}) {
-	return hash('sha1', string, { encoding });
+function sha1(string, {encoding = 'hex'} = {}) {
+	return hash('sha1', string, {encoding});
 }
 
 /**
@@ -414,8 +444,8 @@ function sha1(string, { encoding = 'hex' } = {}) {
  * @param  {Object} [{encoding = 'hex'} = {}] encoding in the form of an object
  * @return {String}                           encoded hash value
  */
-function sha256(string, { encoding = 'hex' } = {}) {
-	return hash('sha256', string, { encoding });
+function sha256(string, {encoding = 'hex'} = {}) {
+	return hash('sha256', string, {encoding});
 }
 
 /**
@@ -426,8 +456,8 @@ function sha256(string, { encoding = 'hex' } = {}) {
  * @param  {Object} [{encoding = 'hex'} = {}] encoding in the form of an object
  * @return {String}                           encoded hash value
  */
-function sha384(string, { encoding = 'hex' } = {}) {
-	return hash('sha384', string, { encoding });
+function sha384(string, {encoding = 'hex'} = {}) {
+	return hash('sha384', string, {encoding});
 }
 
 /**
@@ -438,8 +468,8 @@ function sha384(string, { encoding = 'hex' } = {}) {
  * @param  {Object} [{encoding = 'hex'} = {}] encoding in the form of an object
  * @return {String}                           encoded hash value
  */
-function sha512(string, { encoding = 'hex' } = {}) {
-	return hash('sha512', string, { encoding });
+function sha512(string, {encoding = 'hex'} = {}) {
+	return hash('sha512', string, {encoding});
 }
 
 /**
@@ -450,9 +480,8 @@ function sha512(string, { encoding = 'hex' } = {}) {
  * @param  {Object} [{encoding = 'hex'} = {}] encoding in the form of an object
  * @return {String}                           encoded HMAC digest
  */
-function hmac(algo, string, key, { encoding = 'hex' } = {}) {
-	if (typeof key === 'string') key = Buffer.from(key, 'binary');
-	const hashed = _crypto2.default.createHmac(algo, key).update(string);
+function hmac(algo, string, key, {encoding = 'hex'} = {}) {
+	const hashed = crypto.createHmac(algo, key).update(string);
 
 	if (encoding === 'binary') encoding = 'latin1';
 	if (['latin1', 'base64', 'hex'].indexOf(encoding) > -1) {
@@ -469,8 +498,8 @@ function hmac(algo, string, key, { encoding = 'hex' } = {}) {
  * @param  {Object} [{encoding = 'hex'} = {}] encoding in the form of an object
  * @return {String}                           encoded HMAC digest
  */
-function sha1Hmac(string, key, { encoding = 'hex' } = {}) {
-	return hmac('sha1', string, key, { encoding });
+function sha1Hmac(string, key, {encoding = 'hex'} = {}) {
+	return hmac('sha1', string, key, {encoding});
 }
 
 /**
@@ -480,8 +509,8 @@ function sha1Hmac(string, key, { encoding = 'hex' } = {}) {
  * @param  {Object} [{encoding = 'hex'} = {}] encoding in the form of an object
  * @return {String}                           encoded HMAC digest
  */
-function sha256Hmac(string, key, { encoding = 'hex' } = {}) {
-	return hmac('sha256', string, key, { encoding });
+function sha256Hmac(string, key, {encoding = 'hex'} = {}) {
+	return hmac('sha256', string, key, {encoding});
 }
 
 /**
@@ -498,11 +527,11 @@ function sha256Hmac(string, key, { encoding = 'hex' } = {}) {
  *
  * NOTE: If privateKey is a string, it is treated as a raw key with no passphrase.
  * If privateKey is an object, it must contain the following property:
- *   key: <string> - PEM encoded private key (required)
+ *   key: &lt;string> - PEM encoded private key (required)
  */
 function sign(message, privateKey, opts = {}) {
 	let encoding = opts.encoding || 'hex';
-	const signed = _crypto2.default.createSign('SHA256').update(message);
+	const signed = crypto.createSign('SHA256').update(message);
 
 	if (encoding === 'binary') encoding = 'latin1';
 	if (['latin1', 'base64', 'hex'].indexOf(encoding) > -1) {
@@ -528,7 +557,7 @@ function sign(message, privateKey, opts = {}) {
  */
 function verify(message, signature, publicKey, opts = {}) {
 	let encoding = opts.encoding || 'hex';
-	const verified = _crypto2.default.createVerify('SHA256').update(message);
+	const verified = crypto.createVerify('SHA256').update(message);
 
 	if (encoding === 'binary') encoding = 'latin1';
 	if (['latin1', 'base64', 'hex'].indexOf(encoding) > -1) {
@@ -553,19 +582,19 @@ function verify(message, signature, publicKey, opts = {}) {
  * @param  {Object} [{encoding = 'base64url'} = {}] encoding in the form of an object
  * @return {String}                                 encrypted string
  */
-function encrypt(string, key, { encoding = 'base64url' } = {}) {
-	if (string.length < 6) {
-		string = _lodash2.default.padEnd(string, 6, '\v');
+function encrypt(string, key, {encoding = 'base64url'} = {}) {
+	if (string.length &lt; 6) {
+		string = _.padEnd(string, 6, '\v');
 	}
 
 	if (key.length !== 32) {
-		key = sha256(key, { encoding: 'buffer' });
+		key = sha256(key, {encoding: 'buffer'});
 	}
 
 	const ivLength = 16;
-	const iv = _crypto2.default.randomBytes(ivLength);
+	const iv = crypto.randomBytes(ivLength);
 
-	const cipher = _crypto2.default.createCipheriv('AES-256-CFB', key, iv);
+	const cipher = crypto.createCipheriv('AES-256-CFB', key, iv);
 	const crypted = Buffer.concat([iv, cipher.update(string), cipher.final()]);
 	return '1' + baseEncode(crypted, encoding);
 }
@@ -578,18 +607,18 @@ function encrypt(string, key, { encoding = 'base64url' } = {}) {
  * @param  {Object} [{encoding = 'base64url'} = {}] encoding in the form of an object
  * @return {String}                                 decrypted string
  */
-function decrypt(string, key, { encoding = 'base64url' } = {}) {
+function decrypt(string, key, {encoding = 'base64url'} = {}) {
 	if (key.length !== 32) {
-		key = sha256(key, { encoding: 'buffer' });
+		key = sha256(key, {encoding: 'buffer'});
 	}
 
-	const version = string.substring(0, 1); // eslint-disable-line
+	const version = string.substring(0, 1);  // eslint-disable-line
 	const decoded = baseDecodeToBuffer(string.substring(1), encoding);
 
 	const ivLength = 16;
-	const decipher = _crypto2.default.createDecipheriv('AES-256-CFB', key, decoded.slice(0, ivLength));
+	const decipher = crypto.createDecipheriv('AES-256-CFB', key, decoded.slice(0, ivLength));
 	const decrypted = Buffer.concat([decipher.update(decoded.slice(ivLength)), decipher.final()]);
-	return _lodash2.default.trimEnd(decrypted, '\v');
+	return _.trimEnd(decrypted, '\v');
 }
 
 /**
@@ -603,12 +632,12 @@ function decrypt(string, key, { encoding = 'base64url' } = {}) {
  * @param  {Object} [{encoding = 'base64url'} = {}] encoding in the form of an object
  * @return {String}                                 encrypted string
  */
-function encryptStatic(string, key, { encoding = 'base64url' } = {}) {
-	if (string.length < 6) {
-		string = _lodash2.default.padEnd(string, 6, '\v');
+function encryptStatic(string, key, {encoding = 'base64url'} = {}) {
+	if (string.length &lt; 6) {
+		string = _.padEnd(string, 6, '\v');
 	}
 
-	const cipher = _crypto2.default.createCipher('AES-256-CFB', key);
+	const cipher = crypto.createCipher('AES-256-CFB', key);
 	const crypted = Buffer.concat([cipher.update(string), cipher.final()]);
 	return '1' + baseEncode(crypted, encoding);
 }
@@ -621,13 +650,13 @@ function encryptStatic(string, key, { encoding = 'base64url' } = {}) {
  * @param  {Object} [{encoding = 'base64url'} = {}] encoding in the form of an object
  * @return {String}                                 decrypted string
  */
-function decryptStatic(string, key, { encoding = 'base64url' } = {}) {
-	const version = string.substring(0, 1); // eslint-disable-line
+function decryptStatic(string, key, {encoding = 'base64url'} = {}) {
+	const version = string.substring(0, 1);  // eslint-disable-line
 	const decoded = baseDecodeToBuffer(string.substring(1), encoding);
 
-	const decipher = _crypto2.default.createDecipher('AES-256-CFB', key);
+	const decipher = crypto.createDecipher('AES-256-CFB', key);
 	const decrypted = Buffer.concat([decipher.update(decoded), decipher.final()]);
-	return _lodash2.default.trimEnd(decrypted, '\v');
+	return _.trimEnd(decrypted, '\v');
 }
 
 /**
@@ -638,8 +667,8 @@ function decryptStatic(string, key, { encoding = 'base64url' } = {}) {
 function signAndEncrypt(message, privateKey, publicKey) {
 	const version = '1';
 	const stringified = JSON.stringify(message);
-	const signature = sign(stringified, privateKey, { encoding: 'base64url' });
-	const encrypted = encrypt(stringified, publicKey, { encoding: 'base64url' });
+	const signature = sign(stringified, privateKey, {encoding: 'base64url'});
+	const encrypted = encrypt(stringified, publicKey, {encoding: 'base64url'});
 	return version + encrypted + '.' + signature;
 }
 
@@ -652,11 +681,11 @@ function verifyAndDecrypt(token, publicKey) {
 		throw new Error('Malformed Token');
 	}
 
-	const version = messageEncrypted[0]; // eslint-disable-line
-	const message = decrypt(messageEncrypted.substring(1), publicKey, { encoding: 'base64url' });
+	const version = messageEncrypted[0];  // eslint-disable-line
+	const message = decrypt(messageEncrypted.substring(1), publicKey, {encoding: 'base64url'});
 	if (!message) throw new Error('Malformed Token');
 
-	const verified = verify(message, signature, publicKey, { encoding: 'base64url' });
+	const verified = verify(message, signature, publicKey, {encoding: 'base64url'});
 	if (!verified) {
 		throw new Error('Incorrect Signature');
 	}
@@ -669,9 +698,9 @@ function verifyAndDecrypt(token, publicKey) {
  * Returns a 50 character long hash
  */
 function hashPassword(password, opts = {}) {
-	const salt = opts.salt || _crypto2.default.randomBytes(12);
+	const salt = opts.salt || crypto.randomBytes(12);
 
-	const hashed = _crypto2.default.pbkdf2Sync(password, salt, 1000, 25, 'sha256');
+	const hashed = crypto.pbkdf2Sync(password, salt, 1000, 25, 'sha256');
 	const passHash = '1' + baseEncode(Buffer.concat([salt, hashed]), 'base64url');
 
 	return passHash.substring(0, 50);
@@ -681,13 +710,13 @@ function hashPassword(password, opts = {}) {
  * Verify that given password and hashed password are same or not
  */
 function verifyPassword(password, hashed) {
-	const version = hashed.substring(0, 1); // eslint-disable-line
+	const version = hashed.substring(0, 1);  // eslint-disable-line
 	const salt = baseDecodeToBuffer(hashed.substring(1), 'base64url').slice(0, 12);
 
-	if (hashed === hashPassword(password, { salt })) return true;
-	if (hashed === hashPassword(password.trim(), { salt })) return true;
-	if (hashed === hashPassword(_lodash2.default.upperFirst(password), { salt })) return true;
-	if (hashed === hashPassword(_lodash2.default.invertCase(password), { salt })) return true;
+	if (hashed === hashPassword(password, {salt})) return true;
+	if (hashed === hashPassword(password.trim(), {salt})) return true;
+	if (hashed === hashPassword(_.upperFirst(password), {salt})) return true;
+	if (hashed === hashPassword(_.invertCase(password), {salt})) return true;
 
 	return false;
 }
@@ -698,7 +727,7 @@ function verifyPassword(password, hashed) {
 function base64Encode(string, fromEncoding = 'binary') {
 	return baseEncode(string, {
 		fromEncoding,
-		toEncoding: 'base64'
+		toEncoding: 'base64',
 	});
 }
 
@@ -708,7 +737,7 @@ function base64Encode(string, fromEncoding = 'binary') {
 function base64UrlEncode(string, fromEncoding = 'binary') {
 	return baseEncode(string, {
 		fromEncoding,
-		toEncoding: 'base64url'
+		toEncoding: 'base64url',
 	});
 }
 
@@ -718,7 +747,7 @@ function base64UrlEncode(string, fromEncoding = 'binary') {
 function base64Decode(string, toEncoding = 'binary') {
 	return baseEncode(string, {
 		fromEncoding: 'base64',
-		toEncoding
+		toEncoding,
 	});
 }
 
@@ -728,7 +757,7 @@ function base64Decode(string, toEncoding = 'binary') {
 function base64UrlDecode(string, toEncoding = 'binary') {
 	return baseEncode(string, {
 		fromEncoding: 'base64url',
-		toEncoding
+		toEncoding,
 	});
 }
 
@@ -739,7 +768,10 @@ function base64UrlDecode(string, toEncoding = 'binary') {
  * @return {String}        packed string
  */
 function packNumbers(numbers) {
-	return (0, _base_convert2.default)(numbers.join('a').replace(/-/g, 'b').replace(/\./g, 'c'), 13, 62);
+	return baseConvert(
+		numbers.join('a').replace(/-/g, 'b').replace(/\./g, 'c'),
+		13, 62
+	);
 }
 
 /**
@@ -749,7 +781,11 @@ function packNumbers(numbers) {
  * @return {Array}      array of unpacked numbers
  */
 function unpackNumbers(str) {
-	return (0, _base_convert2.default)(str, 62, 13).replace(/b/g, '-').replace(/c/g, '.').split('a').map(Number);
+	return baseConvert(str, 62, 13)
+		.replace(/b/g, '-')
+		.replace(/c/g, '.')
+		.split('a')
+		.map(Number);
 }
 
 /**
@@ -761,12 +797,12 @@ function unpackNumbers(str) {
 function encryptedTimestampedId(options, key) {
 	const length = options.length || options;
 
-	if (length < 10) {
+	if (length &lt; 10) {
 		throw new Error('Timestamped ID should be of minimum 15 length');
 	}
 
 	let time = options.time || Math.floor(Date.now() / 1000);
-	time = (0, _base_convert2.default)(time, 10, 62);
+	time = baseConvert(time, 10, 62);
 
 	const encrypted = encryptStatic(randomString(3) + time, key);
 	const remaining = length - encrypted.length - 1;
@@ -778,6 +814,7 @@ function encryptedTimestampedId(options, key) {
 	return encrypted + '.' + random;
 }
 
+
 /**
  * Rotate a string by 47 characters
  *
@@ -786,11 +823,12 @@ function encryptedTimestampedId(options, key) {
  */
 function rot47(str) {
 	const s = [];
-	for (let i = 0; i < str.length; i++) {
+	for (let i = 0; i &lt; str.length; i++) {
 		const j = str.charCodeAt(i);
-		if (j >= 33 && j <= 126) {
-			s[i] = String.fromCharCode(33 + (j + 14) % 94);
-		} else {
+		if ((j >= 33) &amp;&amp; (j &lt;= 126)) {
+			s[i] = String.fromCharCode(33 + ((j + 14) % 94));
+		}
+		else {
 			s[i] = String.fromCharCode(j);
 		}
 	}
@@ -807,8 +845,9 @@ function rot47(str) {
 async function javaObfuscate(str) {
 	if (!str) return '';
 	try {
-		return base64Encode((await gzdeflate(Buffer.from(rot47(str), 'latin1'))));
-	} catch (e) {
+		return base64Encode(await gzdeflate(Buffer.from(rot47(str), 'latin1')));
+	}
+	catch (e) {
 		return '';
 	}
 }
@@ -825,13 +864,14 @@ async function javaUnobfuscate(str) {
 
 	try {
 		return rot47((await gzinflate(base64Decode(str, 'buffer'))).toString('latin1'));
-	} catch (e) {
+	}
+	catch (e) {
 		return '';
 	}
 }
 
 module.exports = {
-	baseConvert: _base_convert2.default,
+	baseConvert,
 	chars,
 
 	randomString,
@@ -888,5 +928,28 @@ module.exports = {
 
 	rot47,
 	javaObfuscate,
-	javaUnobfuscate
+	javaUnobfuscate,
 };
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Connect.html">Connect</a></li><li><a href="File.html">File</a></li></ul><h3>Global</h3><ul><li><a href="global.html#addDashesForUUID">addDashesForUUID</a></li><li><a href="global.html#base64Decode">base64Decode</a></li><li><a href="global.html#base64Encode">base64Encode</a></li><li><a href="global.html#base64UrlDecode">base64UrlDecode</a></li><li><a href="global.html#base64UrlEncode">base64UrlEncode</a></li><li><a href="global.html#baseDecode">baseDecode</a></li><li><a href="global.html#baseDecodeToBuffer">baseDecodeToBuffer</a></li><li><a href="global.html#baseEncode">baseEncode</a></li><li><a href="global.html#countBits">countBits</a></li><li><a href="global.html#decrypt">decrypt</a></li><li><a href="global.html#decryptStatic">decryptStatic</a></li><li><a href="global.html#encrypt">encrypt</a></li><li><a href="global.html#encryptedTimestampedId">encryptedTimestampedId</a></li><li><a href="global.html#encryptStatic">encryptStatic</a></li><li><a href="global.html#exec">exec</a></li><li><a href="global.html#execFile">execFile</a></li><li><a href="global.html#execFileOut">execFileOut</a></li><li><a href="global.html#execOut">execOut</a></li><li><a href="global.html#exit">exit</a></li><li><a href="global.html#file">file</a></li><li><a href="global.html#getAllUsers">getAllUsers</a></li><li><a href="global.html#getuid">getuid</a></li><li><a href="global.html#getUserInfo">getUserInfo</a></li><li><a href="global.html#hash">hash</a></li><li><a href="global.html#hashPassword">hashPassword</a></li><li><a href="global.html#hmac">hmac</a></li><li><a href="global.html#javaObfuscate">javaObfuscate</a></li><li><a href="global.html#javaUnobfuscate">javaUnobfuscate</a></li><li><a href="global.html#makeProxyUrl">makeProxyUrl</a></li><li><a href="global.html#md5">md5</a></li><li><a href="global.html#microtime">microtime</a></li><li><a href="global.html#millitime">millitime</a></li><li><a href="global.html#msCounter">msCounter</a></li><li><a href="global.html#nanoSecondsAlpha">nanoSecondsAlpha</a></li><li><a href="global.html#nanotime">nanotime</a></li><li><a href="global.html#noUmask">noUmask</a></li><li><a href="global.html#packNumbers">packNumbers</a></li><li><a href="global.html#randomString">randomString</a></li><li><a href="global.html#randomUUID">randomUUID</a></li><li><a href="global.html#rot47">rot47</a></li><li><a href="global.html#sequentialID">sequentialID</a></li><li><a href="global.html#sequentialUUID">sequentialUUID</a></li><li><a href="global.html#sha1">sha1</a></li><li><a href="global.html#sha1Hmac">sha1Hmac</a></li><li><a href="global.html#sha256">sha256</a></li><li><a href="global.html#sha256Hmac">sha256Hmac</a></li><li><a href="global.html#sha384">sha384</a></li><li><a href="global.html#sha512">sha512</a></li><li><a href="global.html#shuffle">shuffle</a></li><li><a href="global.html#sign">sign</a></li><li><a href="global.html#signAndEncrypt">signAndEncrypt</a></li><li><a href="global.html#sleep">sleep</a></li><li><a href="global.html#tick">tick</a></li><li><a href="global.html#time">time</a></li><li><a href="global.html#unpackNumbers">unpackNumbers</a></li><li><a href="global.html#verify">verify</a></li><li><a href="global.html#verifyAndDecrypt">verifyAndDecrypt</a></li><li><a href="global.html#verifyPassword">verifyPassword</a></li><li><a href="global.html#yesUmask">yesUmask</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Tue Jan 02 2018 16:51:10 GMT+0530 (IST)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
