@@ -21,9 +21,20 @@ class RedisCache {
 		this.events = new _events2.default();
 	}
 
-	_get(key) {
+	async _get(key) {
 		const prefixedKey = `${this.prefix}:${key}`;
-		return this.redis.get(prefixedKey);
+		const value = await this.redis.get(prefixedKey);
+		let parsedValue;
+		try {
+			parsedValue = JSON.parse(value);
+		} catch (err) {
+			parsedValue = value;
+		}
+		return parsedValue;
+	}
+
+	async _has(key) {
+		return this.redis.exists(`${this.prefix}:${key}`);
 	}
 
 	_set(key, value, ttl = 0) {
@@ -33,7 +44,8 @@ class RedisCache {
 			return this.redis.set(prefixedKey, value);
 		}
 
-		return this.redis.set(prefixedKey, value, 'PX', ttl);
+		if (value === undefined) return true;
+		return this.redis.set(prefixedKey, JSON.stringify(value), 'PX', ttl);
 	}
 
 	_del(key) {
@@ -86,7 +98,7 @@ class RedisCache {
   * @param {string} key
   */
 	async has(key) {
-		return this.redis.exists(`${this.prefix}:${key}`);
+		return this._has(key);
 	}
 
 	/**
@@ -155,16 +167,15 @@ class RedisCache {
 
 		// key already exists, return it
 		const existing = await this._get(key);
-		if (existing) {
+		if (existing !== null) {
 			delete this.fetching[key];
 			return existing;
 		}
 
-		await this.set(key, value, options);
-		delete this.fetching[key];
-		const setValue = await this._get(key);
-		this.events.emit(`get:${key}`, setValue);
-		return setValue;
+		this.set(key, value, options);
+		return new Promise(resolve => {
+			this.events.once(`get:${key}`, resolve);
+		});
 	}
 
 	/**
