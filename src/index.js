@@ -4,6 +4,7 @@ import Connect from './Connect';
 import Cache from './Cache';
 import RedisCache from './RedisCache';
 import System from './System';
+import Lock from './Lock';
 import baseConvert from './base_convert';
 import cfg from './cfg';
 import view from './view';
@@ -23,4 +24,5 @@ module.exports = {
 	Cache,
 	RedisCache,
 	System,
+	Lock,
 };

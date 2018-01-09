@@ -24,6 +24,10 @@ var _System = require('./System');
 
 var _System2 = _interopRequireDefault(_System);
 
+var _Lock = require('./Lock');
+
+var _Lock2 = _interopRequireDefault(_Lock);
+
 var _base_convert = require('./base_convert');
 
 var _base_convert2 = _interopRequireDefault(_base_convert);
@@ -53,5 +57,6 @@ module.exports = {
 	Connect: _Connect2.default,
 	Cache: _Cache2.default,
 	RedisCache: _RedisCache2.default,
-	System: _System2.default
+	System: _System2.default,
+	Lock: _Lock2.default
 };
