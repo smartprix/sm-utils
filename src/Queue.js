@@ -14,6 +14,12 @@ class Queue {
 			Queue.jobs.on('error', (err) => {
 				console.log('Queue error: ', err.message);
 			});
+			process.once('SIGTERM', () => {
+				Queue.jobs.shutdown(5000, (err) => {
+					console.log('Queue shutdown: ', err || '');
+					process.exit(0);
+				});
+			});
 		}
 	}
 
@@ -23,7 +29,7 @@ class Queue {
 	 * @param {Number|String} priority Priority of the job
 	 */
 	async addJob(jobData, priority = 0) {
-		return new Promise((res, rej) => {
+		return new Promise((resolve, reject) => {
 			const job = Queue.jobs
 				.create(this.name, jobData)
 				.priority(priority);
@@ -37,8 +43,8 @@ class Queue {
 
 			job.removeOnComplete(true)
 				.save((err) => {
-					if (!err) res(this);
-					rej(err);
+					if (!err) resolve(this);
+					reject(new Error(err));
 				});
 		});
 	}
@@ -62,9 +68,6 @@ class Queue {
 	/**
 	 * Processor function : async
 	 * @param {Object} job Has information about the job
-	 * @param {Object} ctx Used to pause and resume the Queue
-	 * @param {Function} done To be called when the processing
-	 * 		of the job is done or errored out
 	 */
 
 	/**
@@ -75,12 +78,14 @@ class Queue {
 	 */
 	addProcessor(processor, concurrency = 1) {
 		Queue.jobs.process(this.name, concurrency, async (job, ctx, done) => {
+			job.log('Start processing');
 			try {
-				await processor(job, ctx, done);
+				await processor(job);
 			}
 			catch (e) {
 				done(new Error(this.name + ' Job failed: ' + e.message));
 			}
+			done();
 		});
 	}
 }
