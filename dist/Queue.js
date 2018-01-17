@@ -168,6 +168,32 @@ class Queue {
 			});
 		});
 	}
+
+	/**
+  * Cleanup function to be called during startup,
+  * resets jobs older than specified time
+  * @param {String} name Queue name
+  * @param {Number} olderThan Time in milliseconds
+  * @returns {Boolean} Cleanup Done or not
+  */
+	static async cleanup(name, olderThan) {
+		if (olderThan === undefined) return false;
+		const n = await new Promise((resolve, reject) => Queue.jobs.activeCount(name, (err, total) => {
+			if (err) reject(new Error('Could not get total active jobs'));
+			resolve(total);
+		}));
+		return new Promise((resolve, reject) => {
+			_kue2.default.job.rangeByType(name, 'active', 0, n, 'asc', (err, jobs) => {
+				if (err) reject(new Error('Could not fetch jobs: ' + err));
+				for (let i = 0; i < jobs.length; i++) {
+					if (Date.now() - jobs[i].created_at > olderThan) {
+						jobs[i].inactive();
+					} else break;
+				}
+				resolve(true);
+			});
+		});
+	}
 }
 
 exports.default = Queue;
