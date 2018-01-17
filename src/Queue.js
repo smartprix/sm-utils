@@ -1,6 +1,5 @@
 import kue from 'kue';
 
-// This is WIP
 class Queue {
 	static jobs;
 
@@ -46,8 +45,8 @@ class Queue {
 			}
 
 			job.save((err) => {
-				if (!err) resolve(job.id);
-				reject(new Error(err));
+				if (err) reject(new Error(err));
+				resolve(job.id);
 			});
 		});
 	}
@@ -68,6 +67,10 @@ class Queue {
 		this.delay = delay;
 	}
 
+	/**
+	 * Sets removeOnComplete for any job added to this Queue from now on
+	 * @param {Boolean} removeOnComplete True/False
+	 */
 	setRemoveOnCompletion(removeOnComplete) {
 		this.removeOnComplete = removeOnComplete;
 	}
@@ -102,6 +105,7 @@ class Queue {
 	 * Process a single job in the Queue and mark it complete or failed,
 	 * for when you want to manually process jobs
 	 * @param {Function} processor An async function which will be called to process the job data
+	 * @returns {Object} Result of processor function and jobId of completed job
 	 */
 	async processJob(processor) {
 		return new Promise((resolve, reject) => {
@@ -112,23 +116,51 @@ class Queue {
 				const job = jobs[0];
 				try {
 					const res = await processor(job.data);
-					job.complete(() => res);
-					resolve(res);
+					job.complete();
+					resolve({res, jobId: job.id});
 				}
 				catch (e) {
-					job.failed(() => e);
-					reject(new Error(e.message));
+					job.failed();
+					reject(new Error('Job failed ' + e));
 				}
 			});
 		});
 	}
 
+	/**
+	 * Function to query the status of a job
+	 * @param {Number} jobId Job id for which status info is required
+	 * @returns {Object} Object full of job details like state, time, attempts, etc.
+	 */
 	static async status(jobId) {
 		return new Promise((resolve, reject) => {
 			kue.Job.get(jobId, (err, job) => {
 				if (err || !job) reject(new Error('Job not found ' + err));
 				job = JSON.parse(JSON.stringify(job));
 				resolve(job);
+			});
+		});
+	}
+
+	/**
+	 * Manualy process a specific Job
+	 * @param {Number} jobId Id of the job to be processed
+	 * @param {Function} processor The function which will be called with the job data
+	 * @returns {*} Result of the processor function
+	 */
+	static async processJobById(jobId, processor) {
+		return new Promise((resolve, reject) => {
+			kue.Job.get(jobId, async (err, job) => {
+				if (err) reject(new Error('Could not fetch job' + err));
+				try {
+					const res = await processor(job.data);
+					job.complete();
+					resolve(res);
+				}
+				catch (e) {
+					job.failed();
+					reject(new Error('Job failed ' + e));
+				}
 			});
 		});
 	}
