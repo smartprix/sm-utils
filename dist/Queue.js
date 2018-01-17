@@ -141,7 +141,7 @@ class Queue {
 		return new Promise((resolve, reject) => {
 			_kue2.default.Job.get(jobId, (err, job) => {
 				if (err || !job) reject(new Error('Job not found ' + err));
-				job = JSON.parse(JSON.stringify(job));
+				job = job.toJSON();
 				resolve(job);
 			});
 		});
