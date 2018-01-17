@@ -44,23 +44,35 @@ class Queue {
 		});
 	}
 
+	/**
+	 * Set number of retry attempts for any job added after this is called
+	 * @param {Number} attempts Number of attempts (>= 0) 
+	 */
 	setAttempts(attempts) {
 		this.attempts = attempts;
 	}
 
+	/**
+	 * Set delay b/w successive jobs
+	 * @param {Number} delay Delay b/w jobs, milliseconds 
+	 */
 	setDelay(delay) {
 		this.delay = delay;
 	}
 
 	/**
+	 * Processor function
+	 * @param {Object} job Has information about the job
+	 * @param {Object} ctx Used to pause and resume the Queue
+	 * @param {Function} done To be called when the processing
+	 * 		of the job is done or errored out
+	 */
+
+	/**
 	 * Attach a processor to the Queue
-	 * @param {Function} processor A function which accepts three params:
-	 * 		@param {Object} job Has information about the job
-	 * 		@param {Object} ctx Used to pause and resume the Queue
-	 * 		@param {Function} done To be called when the processing
-	 * 			of the job is done or errored out
+	 * @param {Function} processor A function which will be called to process the job
 	 * @param {Number} concurrency The number of jobs this processor
-	 * 		can handle concurrently 
+	 * 		can handle concurrently/parallely
 	 */
 	addProccessor(processor, concurrency = 1) {
 		jobs.process(this.name, concurrency, async (job, ctx, done) => {
