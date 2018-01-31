@@ -154,13 +154,28 @@ class Queue {
 	}
 
 	/**
+	 * Function shuts down the Queue gracefully.
+	 * Waits for active jobs to complete until timeout,
+	 * then marks them failed.
+	 * @param {Number} timeout Time in milliseconds, default = 5000
+	 */
+	static async exit(timeout = 5000) {
+		return new Promise((resolve) => {
+			Queue.jobs.shutdown(timeout, (err) => {
+				console.log('Sm-utils Queue shutdown: ', err || '');
+				resolve(true);
+			});
+		});
+	}
+
+	/**
 	 * Cleanup function to be called during startup,
-	 * resets jobs older than specified time
+	 * resets active jobs older than specified time
 	 * @param {String} name Queue name
-	 * @param {Number} olderThan Time in milliseconds
+	 * @param {Number} olderThan Time in milliseconds, default = 5000
 	 * @returns {Boolean} Cleanup Done or not
 	 */
-	static async cleanup(name, olderThan) {
+	static async cleanup(name, olderThan = 5000) {
 		if (olderThan === undefined) return false;
 		const n = await new Promise((resolve, reject) => Queue.jobs.activeCount(name, (err, total) => {
 			if (err) reject(new Error('Could not get total active jobs'));
