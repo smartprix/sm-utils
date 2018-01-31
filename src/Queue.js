@@ -117,7 +117,7 @@ class Queue {
 				try {
 					const res = await processor(job.data);
 					job.complete();
-					resolve({res, jobId: job.id});
+					resolve({res, job: job.toJSON()});
 				}
 				catch (e) {
 					job.failed();
@@ -155,7 +155,7 @@ class Queue {
 				try {
 					const res = await processor(job.data);
 					job.complete();
-					resolve(res);
+					resolve({res, job: job.toJSON()});
 				}
 				catch (e) {
 					job.failed();
