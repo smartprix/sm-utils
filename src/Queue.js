@@ -1,5 +1,7 @@
 import kue from 'kue';
 
+let processorWrapper;
+
 class Queue {
 	static jobs;
 
@@ -105,7 +107,8 @@ class Queue {
 	 * Process a single job in the Queue and mark it complete or failed,
 	 * for when you want to manually process jobs
 	 * @param {Function} processor An async function which will be called to process the job data
-	 * @returns {Object} Result of processor function and jobId of completed job
+	 * @returns {Object} Result of processor function and
+	 * 		Job object of completed job (same as returned by status)
 	 */
 	async processJob(processor) {
 		return new Promise((resolve, reject) => {
@@ -114,15 +117,7 @@ class Queue {
 					reject(new Error('Queue empty ' + err));
 				}
 				const job = jobs[0];
-				try {
-					const res = await processor(job.data);
-					job.complete();
-					resolve({res, job: job.toJSON()});
-				}
-				catch (e) {
-					job.failed();
-					reject(new Error('Job failed ' + e));
-				}
+				await processorWrapper(job, processor, resolve, reject);
 			});
 		});
 	}
@@ -146,21 +141,14 @@ class Queue {
 	 * Manualy process a specific Job
 	 * @param {Number} jobId Id of the job to be processed
 	 * @param {Function} processor The function which will be called with the job data
-	 * @returns {*} Result of the processor function
+	 * @returns {Object} Result of processor function and
+	 * 		Job object of completed job (same as returned by status)
 	 */
 	static async processJobById(jobId, processor) {
 		return new Promise((resolve, reject) => {
 			kue.Job.get(jobId, async (err, job) => {
 				if (err) reject(new Error('Could not fetch job' + err));
-				try {
-					const res = await processor(job.data);
-					job.complete();
-					resolve({res, job: job.toJSON()});
-				}
-				catch (e) {
-					job.failed();
-					reject(new Error('Job failed ' + e));
-				}
+				await processorWrapper(job, processor, resolve, reject);
 			});
 		});
 	}
@@ -190,5 +178,17 @@ class Queue {
 		});
 	}
 }
+
+processorWrapper = async function (job, processor, resolve, reject) {
+	try {
+		const res = await processor(job.data);
+		job.complete();
+		resolve({res, job: job.toJSON()});
+	}
+	catch (e) {
+		job.failed();
+		reject(new Error('Job failed ' + e));
+	}
+};
 
 export default Queue;
