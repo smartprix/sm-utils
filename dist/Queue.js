@@ -10,6 +10,8 @@ var _kue2 = _interopRequireDefault(_kue);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+let processorWrapper;
+
 class Queue {
 
 	constructor(name, redis = { port: 6379, host: '127.0.0.1' }) {
@@ -39,14 +41,20 @@ class Queue {
   */
 	async addJob(jobData, priority = 0) {
 		return new Promise((resolve, reject) => {
-			const job = Queue.jobs.create(this.name, jobData).priority(priority);
+			const options = {
+				noFailure: this.noFailure
+			};
+			const job = Queue.jobs.create(this.name, { jobData, options }).priority(priority);
 
+			// default = 1
 			if (this.attempts) {
 				job.attempts(this.attempts);
 			}
+			// default = 0
 			if (this.delay) {
 				job.delay(this.delay).backoff(true);
 			}
+			// default = false
 			if (this.removeOnComplete) {
 				job.removeOnComplete(true);
 			}
@@ -83,6 +91,15 @@ class Queue {
 	}
 
 	/**
+  * Sets noFailure for any job added to this Queue from now on
+  * This will mark the job the complete even if it fails
+  * @param {Boolean} noFailure True/False
+  */
+	setNoFailure(noFailure) {
+		this.noFailure = noFailure;
+	}
+
+	/**
   * Processor function : async
   * @param {Object} jobData The information saved in the job during adding
   * @param {Object} ctx Optional - Can be used to pause and resume queue
@@ -99,9 +116,13 @@ class Queue {
 			job.log('Start processing');
 			let res;
 			try {
-				res = await processor(job.data, ctx);
+				res = await processor(job.data.jobData, ctx);
 			} catch (e) {
-				done(new Error(this.name + ' Job failed: ' + e.message));
+				if (job.data.options.noFailure) {
+					done(null, e);
+				} else {
+					done(new Error(this.name + ' Job failed: ' + e.message));
+				}
 			}
 			done(null, res);
 		});
@@ -111,7 +132,8 @@ class Queue {
   * Process a single job in the Queue and mark it complete or failed,
   * for when you want to manually process jobs
   * @param {Function} processor An async function which will be called to process the job data
-  * @returns {Object} Result of processor function and jobId of completed job
+  * @returns {Object} Result of processor function and
+  * 		Job object of completed job (same as returned by status)
   */
 	async processJob(processor) {
 		return new Promise((resolve, reject) => {
@@ -120,14 +142,7 @@ class Queue {
 					reject(new Error('Queue empty ' + err));
 				}
 				const job = jobs[0];
-				try {
-					const res = await processor(job.data);
-					job.complete();
-					resolve({ res, jobId: job.id });
-				} catch (e) {
-					job.failed();
-					reject(new Error('Job failed ' + e));
-				}
+				await processorWrapper(job, processor, resolve, reject);
 			});
 		});
 	}
@@ -151,32 +166,41 @@ class Queue {
   * Manualy process a specific Job
   * @param {Number} jobId Id of the job to be processed
   * @param {Function} processor The function which will be called with the job data
-  * @returns {*} Result of the processor function
+  * @returns {Object} Result of processor function and
+  * 		Job object of completed job (same as returned by status)
   */
 	static async processJobById(jobId, processor) {
 		return new Promise((resolve, reject) => {
 			_kue2.default.Job.get(jobId, async (err, job) => {
 				if (err) reject(new Error('Could not fetch job' + err));
-				try {
-					const res = await processor(job.data);
-					job.complete();
-					resolve(res);
-				} catch (e) {
-					job.failed();
-					reject(new Error('Job failed ' + e));
-				}
+				await processorWrapper(job, processor, resolve, reject);
+			});
+		});
+	}
+
+	/**
+  * Function shuts down the Queue gracefully.
+  * Waits for active jobs to complete until timeout,
+  * then marks them failed.
+  * @param {Number} timeout Time in milliseconds, default = 5000
+  */
+	static async exit(timeout = 5000) {
+		return new Promise(resolve => {
+			Queue.jobs.shutdown(timeout, err => {
+				console.log('Sm-utils Queue shutdown: ', err || '');
+				resolve(true);
 			});
 		});
 	}
 
 	/**
   * Cleanup function to be called during startup,
-  * resets jobs older than specified time
+  * resets active jobs older than specified time
   * @param {String} name Queue name
-  * @param {Number} olderThan Time in milliseconds
+  * @param {Number} olderThan Time in milliseconds, default = 5000
   * @returns {Boolean} Cleanup Done or not
   */
-	static async cleanup(name, olderThan) {
+	static async cleanup(name, olderThan = 5000) {
 		if (olderThan === undefined) return false;
 		const n = await new Promise((resolve, reject) => Queue.jobs.activeCount(name, (err, total) => {
 			if (err) reject(new Error('Could not get total active jobs'));
@@ -195,5 +219,20 @@ class Queue {
 		});
 	}
 }
+
+processorWrapper = async function (job, processor, resolve, reject) {
+	try {
+		const res = await processor(job.data.jobData);
+		job.complete();
+		resolve({ res, job: job.toJSON() });
+	} catch (e) {
+		if (job.data.options.noFailure) {
+			job.complete();
+		} else {
+			job.failed();
+			reject(new Error('Job failed ' + e));
+		}
+	}
+};
 
 exports.default = Queue;

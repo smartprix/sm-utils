@@ -20,8 +20,9 @@ describe('Queue library', () => {
 		expect(details.state).to.equal('inactive');
 	});
 	it('should process job', async () => {
-		const res = await Queue.processJobById(id1, jobData => jobData.data);
+		const {res, job} = await Queue.processJobById(id1, jobData => jobData.data);
 		expect(res).to.equal(testData);
+		expect(job.state).to.equal('complete');
 	});
 	it('should return complete state in status', async () => {
 		const details = await Queue.status(id1);
