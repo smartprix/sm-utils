@@ -32,16 +32,22 @@ class Queue {
 	 */
 	async addJob(jobData, priority = 0) {
 		return new Promise((resolve, reject) => {
+			const options = {
+				noFailure: this.noFailure,
+			};
 			const job = Queue.jobs
-				.create(this.name, jobData)
+				.create(this.name, {jobData, options})
 				.priority(priority);
 
+			// default = 1
 			if (this.attempts) {
 				job.attempts(this.attempts);
 			}
+			// default = 0
 			if (this.delay) {
 				job.delay(this.delay).backoff(true);
 			}
+			// default = false
 			if (this.removeOnComplete) {
 				job.removeOnComplete(true);
 			}
@@ -78,6 +84,15 @@ class Queue {
 	}
 
 	/**
+	 * Sets noFailure for any job added to this Queue from now on
+	 * This will mark the job the complete even if it fails
+	 * @param {Boolean} noFailure True/False
+	 */
+	setNoFailure(noFailure) {
+		this.noFailure = noFailure;
+	}
+
+	/**
 	 * Processor function : async
 	 * @param {Object} jobData The information saved in the job during adding
 	 * @param {Object} ctx Optional - Can be used to pause and resume queue
@@ -94,10 +109,15 @@ class Queue {
 			job.log('Start processing');
 			let res;
 			try {
-				res = await processor(job.data, ctx);
+				res = await processor(job.data.jobData, ctx);
 			}
 			catch (e) {
-				done(new Error(this.name + ' Job failed: ' + e.message));
+				if (job.data.options.noFailure) {
+					done(null, e);
+				}
+				else {
+					done(new Error(this.name + ' Job failed: ' + e.message));
+				}
 			}
 			done(null, res);
 		});
@@ -196,13 +216,18 @@ class Queue {
 
 processorWrapper = async function (job, processor, resolve, reject) {
 	try {
-		const res = await processor(job.data);
+		const res = await processor(job.data.jobData);
 		job.complete();
 		resolve({res, job: job.toJSON()});
 	}
 	catch (e) {
-		job.failed();
-		reject(new Error('Job failed ' + e));
+		if (job.data.options.noFailure) {
+			job.complete();
+		}
+		else {
+			job.failed();
+			reject(new Error('Job failed ' + e));
+		}
 	}
 };
 
