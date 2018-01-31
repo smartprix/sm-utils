@@ -1,16 +1,21 @@
-/* global after, describe, it */
+/* global before, after, describe, it */
 import {expect} from 'chai';
 import {Queue} from '../src';
 
-const queue = new Queue('test');
+let queue;
+
+before(() => {
+	queue = new Queue('test');
+	Queue.cleanup('test');
+});
 
 describe('Queue library', () => {
 	let id1;
 	let id2;
 	const testData = 'test123';
 	it('should add job and return id', async () => {
-		id1 = await queue.addJob({data: testData});
-		id2 = await queue.addJob({data: testData});
+		id1 = await queue.addJob({data: testData + '1'});
+		id2 = await queue.addJob({data: testData + '2'});
 		expect(id1).to.be.a('Number');
 		expect(id2).to.be.a('Number');
 	});
@@ -21,7 +26,7 @@ describe('Queue library', () => {
 	});
 	it('should process job', async () => {
 		const {res, job} = await Queue.processJobById(id1, jobData => jobData.data);
-		expect(res).to.equal(testData);
+		expect(res).to.equal(testData + '1');
 		expect(job.state).to.equal('complete');
 	});
 	it('should return complete state in status', async () => {
@@ -39,16 +44,25 @@ describe('Queue library', () => {
 		catch (e) {
 			err = e;
 		}
-		expect(err.message).to.equal('Job failed Error: test ' + testData);
+		expect(err.message).to.equal('Job failed Error: test ' + testData + '2');
 	});
 	it('should return failed state in status', async () => {
 		const details = await Queue.status(id2);
 		expect(details.id).to.equal(id2);
 		expect(details.state).to.equal('failed');
 	});
+	it('should set job complete even on failure, after setting noFailure', async () => {
+		queue.setNoFailure(true);
+		const id3 = await queue.addJob({data: testData + '3'});
+		const {res, job} = await Queue.processJobById(id3, async (jobData) => {
+			throw new Error('test ' + jobData.data);
+		});
+		expect(res.error.message).to.equal('test ' + testData + '3');
+		expect(job.state).to.equal('complete');
+	});
 });
 
-after(() => {
-	Queue.jobs.shutdown(1000, () => {});
+after(async () => {
+	await Queue.exit();
 });
 

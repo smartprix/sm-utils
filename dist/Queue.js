@@ -24,11 +24,9 @@ class Queue {
 			Queue.jobs.on('error', err => {
 				console.log('Queue error: ', err.message);
 			});
-			process.once('SIGTERM', () => {
-				Queue.jobs.shutdown(5000, err => {
-					console.log('Queue shutdown: ', err || '');
-					process.exit(0);
-				});
+			process.once('SIGTERM', async () => {
+				await Queue.exit();
+				process.exit(0);
 			});
 		}
 	}
@@ -185,7 +183,8 @@ class Queue {
   * @param {Number} timeout Time in milliseconds, default = 5000
   */
 	static async exit(timeout = 5000) {
-		return new Promise(resolve => {
+		return new Promise((resolve, reject) => {
+			if (Queue.jobs === undefined) reject(new Error('Queue not initialized'));
 			Queue.jobs.shutdown(timeout, err => {
 				console.log('Sm-utils Queue shutdown: ', err || '');
 				resolve(true);
@@ -201,7 +200,7 @@ class Queue {
   * @returns {Boolean} Cleanup Done or not
   */
 	static async cleanup(name, olderThan = 5000) {
-		if (olderThan === undefined) return false;
+		if (Queue.jobs === undefined) return false;
 		const n = await new Promise((resolve, reject) => Queue.jobs.activeCount(name, (err, total) => {
 			if (err) reject(new Error('Could not get total active jobs'));
 			resolve(total);
@@ -228,6 +227,7 @@ processorWrapper = async function (job, processor, resolve, reject) {
 	} catch (e) {
 		if (job.data.options.noFailure) {
 			job.complete();
+			resolve({ job: job.toJSON(), res: { error: e } });
 		} else {
 			job.failed();
 			reject(new Error('Job failed ' + e));
