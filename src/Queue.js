@@ -10,17 +10,14 @@ async function processorWrapper(job, processor, resolve, reject) {
 	}
 	catch (e) {
 		job.error(e);
-		if (job.data.options.noFailure) {
-			res = e;
-		}
-		else {
+		if (!job.data.options.noFailure) {
 			job.failed();
 			reject(new Error('Job failed ' + e));
 			return;
 		}
 	}
 	job.complete();
-	job.set('result', res);
+	if (!_.isNil(res)) job.set('result', res);
 	const jobDetails = _.pick(job.toJSON(), ['id', 'type', 'data', 'result', 'state', 'error', 'created_at', 'updated_at', 'attempts']);
 	resolve(jobDetails);
 }
@@ -133,7 +130,7 @@ class Queue {
 
 	/**
 	 * An async function which will be called to process the job data
-	 * @callback Queue~processorCallback
+	 * @callback processorCallback
 	 * @param {*} jobData The information saved in the job during adding of job
 	 * @param {Object} [ctx] Can be used to pause and resume queue,
 	 * 	Will only be passed when attaching a processor to the queue
@@ -143,12 +140,12 @@ class Queue {
 	 * 			then forcefully shuts them down (like shutdown)
 	 * 		ctx.resume() : Resumes Queue processing
 	 * 		For detailed info : https://github.com/Automattic/kue#pause-processing
-	 * @returns {*} Must return something, will be saved/returned
+	 * @returns {*} Will be saved in return field in JobDetails
 	 */
 
 	/**
 	 * Attach a processor to the Queue which will keep getting jobs as it completes them
-	 * @param {Queue~processorCallback} processor
+	 * @param {processorCallback} processor Function to be called to process the job data
 	 * @param {Number} [concurrency=1] The number of jobs this processor can handle parallely
 	 */
 	addProcessor(processor, concurrency = 1) {
@@ -160,10 +157,11 @@ class Queue {
 			}
 			catch (e) {
 				if (job.data.options.noFailure) {
-					done(null, e);
+					job.error(e);
 				}
 				else {
 					done(new Error(this.name + ' Job failed: ' + e.message));
+					return;
 				}
 			}
 			done(null, res);
@@ -194,7 +192,7 @@ class Queue {
 	/**
 	 * Process a single job in the Queue and mark it complete or failed,
 	 * for when you want to manually process jobs
-	 * @param {Queue~processorCallback} processor Called without ctx
+	 * @param {processorCallback} processor Function to be called to process the job data, without ctx
 	 * @returns {jobDetails} Job object of completed job
 	 */
 	async processJob(processor) {
@@ -217,7 +215,10 @@ class Queue {
 	static async status(jobId) {
 		return new Promise((resolve, reject) => {
 			kue.Job.get(jobId, (err, job) => {
-				if (err || !job) reject(new Error('Job not found ' + err));
+				if (err || !job) {
+					reject(new Error('Job not found ' + err));
+					return;
+				}
 				job = _.pick(job.toJSON(), ['id', 'type', 'data', 'result', 'state', 'error', 'created_at', 'updated_at', 'attempts']);
 				resolve(job);
 			});
@@ -227,13 +228,16 @@ class Queue {
 	/**
 	 * Manualy process a specific Job
 	 * @param {Number} jobId Id of the job to be processed
-	 * @param {Queue~processorCallback} processor Called without ctx
+	 * @param {processorCallback} processor Function to be called to process the job data, without ctx
 	 * @returns {jobDetails} Result of processor function and job object of completed job
 	 */
 	static async processJobById(jobId, processor) {
 		return new Promise((resolve, reject) => {
 			kue.Job.get(jobId, async (err, job) => {
-				if (err) reject(new Error('Could not fetch job' + err));
+				if (err) {
+					reject(new Error('Could not fetch job' + err));
+					return;
+				}
 				await processorWrapper(job, processor, resolve, reject);
 			});
 		});
