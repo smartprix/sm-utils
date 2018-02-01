@@ -1,6 +1,11 @@
+/* global before, after, describe, it */
 import fs from 'fs';
+import {promisify} from 'util';
 import {expect} from 'chai';
 import {File} from '../src/index';
+
+const writeFile = promisify(fs.writeFile);
+const mkdir = promisify(fs.mkdir);
 
 describe('file class', () => {
 	let file;
@@ -11,10 +16,15 @@ describe('file class', () => {
 	const dirPath = `${__dirname}/tempDir`;
 
 	before(async () => {
-		await fs.writeFile(filePath, 'Hello..', {mode: 0o777}, (err) => {
-			if (err) throw err;
-		});
-		await fs.mkdir(dirPath);
+		try {
+			await writeFile(filePath, 'Hello..', {mode: 0o777});
+			await mkdir(dirPath);
+		}
+		catch (e) {
+			if (e.code !== 'EEXIST') {
+				throw new Error(e);
+			}
+		}
 
 		file = new File(filePath);
 		nonExistentFile = new File(anotherFilePath);
