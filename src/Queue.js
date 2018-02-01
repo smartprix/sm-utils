@@ -50,6 +50,10 @@ class Queue {
 			if (this.delay) {
 				job.delay(this.delay).backoff(true);
 			}
+			// default = 0, i.e. infinite
+			if (this.ttl > 0) {
+				job.ttl(this.ttl);
+			}
 			// default = false
 			if (this.removeOnComplete) {
 				job.removeOnComplete(true);
@@ -76,6 +80,15 @@ class Queue {
 	 */
 	setDelay(delay) {
 		this.delay = delay;
+	}
+
+	/**
+	 * Set TTL (time to live) for new jobs added from now on,
+	 * will fail job if not completed in TTL time
+	 * @param {Number} ttl Time in milliseconds, infinite when 0. default = 0
+	 */
+	setTTL(ttl) {
+		this.ttl = ttl;
 	}
 
 	/**
