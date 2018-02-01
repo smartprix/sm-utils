@@ -4,9 +4,9 @@ import {Queue} from '../src';
 
 let queue;
 
-before(() => {
+before(async () => {
 	queue = new Queue('test');
-	Queue.cleanup('test');
+	await queue.cleanup();
 });
 
 describe('Queue library', () => {
@@ -25,8 +25,8 @@ describe('Queue library', () => {
 		expect(details.state).to.equal('inactive');
 	});
 	it('should process job', async () => {
-		const {res, job} = await Queue.processJobById(id1, jobData => jobData.data);
-		expect(res).to.equal(testData + '1');
+		const job = await Queue.processJobById(id1, jobData => jobData.data);
+		expect(job.result).to.equal(testData + '1');
 		expect(job.state).to.equal('complete');
 	});
 	it('should return complete state in status', async () => {
@@ -54,10 +54,10 @@ describe('Queue library', () => {
 	it('should set job complete even on failure, after setting noFailure', async () => {
 		queue.setNoFailure(true);
 		const id3 = await queue.addJob({data: testData + '3'});
-		const {res, job} = await Queue.processJobById(id3, async (jobData) => {
+		const job = await Queue.processJobById(id3, async (jobData) => {
 			throw new Error('test ' + jobData.data);
 		});
-		expect(res.error.message).to.equal('test ' + testData + '3');
+		expect(job.error).to.equal('test ' + testData + '3');
 		expect(job.state).to.equal('complete');
 	});
 });
