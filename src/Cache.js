@@ -194,12 +194,12 @@ class Cache {
 		return globalCache;
 	}
 
-	static get(key) {
-		return this.globalCache().get(key);
+	static get(key, defaultValue) {
+		return this.globalCache().get(key, defaultValue);
 	}
 
-	static getStale(key) {
-		return this.globalCache().getStale(key);
+	static getStale(key, defaultValue) {
+		return this.globalCache().getStale(key, defaultValue);
 	}
 
 	static has(key) {
