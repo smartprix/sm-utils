@@ -38,16 +38,20 @@ class Queue {
 
 	/**
 	 * Class constructor : Create a new Queue
+	 * The redis and enableWatchdog settings are required only the first time to init
 	 * @param {String} name Name of the queue
 	 * @param {Object} [redis={port: 6379, host: '127.0.0.1'}] Redist connection settings object
+	 * @param {Boolean} [enableWatchdog=false] Will watch for stuck jobs due to any connection issues
+	 * 		Read more here :  https://github.com/Automattic/kue#unstable-redis-connections
 	 */
-	constructor(name, redis = {port: 6379, host: '127.0.0.1'}) {
+	constructor(name, redis = {port: 6379, host: '127.0.0.1'}, enableWatchdog = false) {
 		this.name = name;
 
 		if (!Queue.jobs) {
 			Queue.jobs = kue.createQueue({
 				redis,
 			});
+			if (enableWatchdog)	Queue.jobs.watchStuckJobs(10000);
 			Queue.jobs.on('error', (err) => {
 				console.log('Queue error: ', err.message);
 			});
@@ -263,7 +267,7 @@ class Queue {
 	}
 
 	/**
-	 * Manualy process a specific Job
+	 * Manualy process a specific Job, ignores any attempts limit set
 	 * @param {Number} jobId Id of the job to be processed
 	 * @param {processorCallback} processor Function to be called to process the job data, without ctx
 	 * @returns {jobDetails} Result of processor function and job object of completed job
