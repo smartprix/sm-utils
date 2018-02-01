@@ -3,7 +3,9 @@ import Crypt from './Crypt';
 import Connect from './Connect';
 import Cache from './Cache';
 import Queue from './Queue';
+import RedisCache from './RedisCache';
 import System from './System';
+import Lock from './Lock';
 import baseConvert from './base_convert';
 import cfg from './cfg';
 import view from './view';
@@ -22,5 +24,7 @@ module.exports = {
 	Connect,
 	Cache,
 	Queue,
+	RedisCache,
 	System,
+	Lock,
 };
