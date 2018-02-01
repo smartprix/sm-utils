@@ -60,7 +60,10 @@ class Cache {
 			// Don't dogpile shit, wait for the other process
 			// to finish it
 			return new Promise((resolve) => {
-				this.events.once(`get:${key}`, resolve);
+				this.events.once(`get:${key}`, (val) => {
+					if (val === null || val === undefined) resolve(defaultValue);
+					else resolve(val);
+				});
 			});
 		}
 
@@ -193,6 +196,10 @@ class Cache {
 
 	static get(key) {
 		return this.globalCache().get(key);
+	}
+
+	static getStale(key) {
+		return this.globalCache().getStale(key);
 	}
 
 	static has(key) {

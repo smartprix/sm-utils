@@ -95,6 +95,20 @@ describe('redis cache library', () => {
 		expect(counter).to.equal(1);
 	});
 
+	it('should emit event after getting in getOrSet', async () => {
+		await cache.set('i', 'test');
+		cache.getOrSet('i');
+		const value = await cache.getOrSet('i');
+		expect(value).to.equal('test');
+	});
+
+	it('should return default value when event returns undefined', async () => {
+		await cache.set('k', undefined);
+		cache.getOrSet('k');
+		const value = await cache.get('k', 'default');
+		expect(value).to.equal('default');
+	});
+
 	it('should correctly set ttl', async () => {
 		const key = 'g';
 		const value = 'you';
@@ -132,7 +146,7 @@ describe('redis cache library', () => {
 	it('should correctly return the size', async () => {
 		const cache1 = new RedisCache('test2', new Redis());
 		expect(await cache1.size()).to.equal(0);
-		expect(await cache.size()).to.equal(6);
+		expect(await cache.size()).to.equal(7);
 	});
 
 	it('should correctly clear the cache', async () => {

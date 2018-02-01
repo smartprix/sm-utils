@@ -38,13 +38,13 @@ class RedisCache {
 	}
 
 	_set(key, value, ttl = 0) {
+		if (value === undefined) return true;
 		const prefixedKey = `${this.prefix}:${key}`;
 
 		if (ttl <= 0) {
-			return this.redis.set(prefixedKey, value);
+			return this.redis.set(prefixedKey, JSON.stringify(value));
 		}
 
-		if (value === undefined) return true;
 		return this.redis.set(prefixedKey, JSON.stringify(value), 'PX', ttl);
 	}
 
@@ -82,7 +82,9 @@ class RedisCache {
 			// Don't dogpile shit, wait for the other process
 			// to finish it
 			return new Promise(resolve => {
-				this.events.once(`get:${key}`, resolve);
+				this.events.once(`get:${key}`, val => {
+					if (val === null || val === undefined) resolve(defaultValue);else resolve(val);
+				});
 			});
 		}
 
@@ -142,6 +144,7 @@ class RedisCache {
 		} catch (error) {
 			await this._del(key);
 			this.events.emit(`get:${key}`, undefined);
+			delete this.fetching[key];
 			return false;
 		}
 	}
@@ -169,6 +172,7 @@ class RedisCache {
 		const existing = await this._get(key);
 		if (existing !== null) {
 			delete this.fetching[key];
+			this.events.emit(`get:${key}`, existing);
 			return existing;
 		}
 
@@ -203,12 +207,16 @@ class RedisCache {
 	}
 
 	static globalCache(redis) {
-		if (!globalCache) globalCache = new this(redis);
+		if (!globalCache) globalCache = new this('global', redis);
 		return globalCache;
 	}
 
-	static get(key) {
-		return this.globalCache().get(key);
+	static getStale(key, defaultValue) {
+		return this.globalCache().getStale(key, defaultValue);
+	}
+
+	static get(key, defaultValue) {
+		return this.globalCache().get(key, defaultValue);
 	}
 
 	static has(key) {

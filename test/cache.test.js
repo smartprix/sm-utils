@@ -1,3 +1,6 @@
+/* global it, describe */
+/* eslint-disable no-unused-expressions */
+
 import {expect} from 'chai';
 import {Cache} from '../src/index';
 
@@ -91,6 +94,12 @@ describe('cache library', () => {
 		expect(counter).to.equal(1);
 	});
 
+	it('should return default value when event returns undefined', async () => {
+		cache.set('k', undefined);
+		const value = await cache.get('k', 'default');
+		expect(value).to.equal('default');
+	});
+
 	it('should correctly set ttl', async () => {
 		const key = 'g';
 		const value = 'you';
@@ -128,7 +137,7 @@ describe('cache library', () => {
 	it('should correctly return the size', async () => {
 		const cache1 = new Cache();
 		expect(await cache1.size()).to.equal(0);
-		expect(await cache.size()).to.equal(6);
+		expect(await cache.size()).to.equal(7);
 	});
 
 	it('should correctly clear the cache', async () => {
