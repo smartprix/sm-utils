@@ -4,21 +4,32 @@ import _ from 'lodash';
 async function processorWrapper(job, processor, resolve, reject) {
 	let res;
 	try {
+		if (job.state() === 'active') {
+			reject(new Error('Job already processing'));
+			return;
+		}
 		job.active();
 		job.attempt(() => {});
 		res = await processor(job.data.input);
 	}
 	catch (e) {
-		job.error(e);
+		job.error(e.message);
+		job._error = e.message;
 		if (!job.data.options.noFailure) {
 			job.failed();
 			reject(new Error('Job failed ' + e));
 			return;
 		}
 	}
+	if (!_.isNil(res)) {
+		job.result = res;
+		job.set('result', JSON.stringify(res));
+	}
 	job.complete();
-	if (!_.isNil(res)) job.set('result', res);
+
 	const jobDetails = _.pick(job.toJSON(), ['id', 'type', 'data', 'result', 'state', 'error', 'created_at', 'updated_at', 'attempts']);
+	jobDetails.attempts.made++;
+	jobDetails.attempts.remaining--;
 	resolve(jobDetails);
 }
 
@@ -208,6 +219,32 @@ class Queue {
 	}
 
 	/**
+	 * Cleanup function to be called during startup,
+	 * resets active jobs older than specified time
+	 * @param {Number} [olderThan=5000] Time in milliseconds, default = 5000
+	 */
+	async cleanup(olderThan = 5000) {
+		const n = await new Promise((resolve, reject) =>
+			Queue.jobs.activeCount(this.name, (err, total) => {
+				if (err) reject(new Error('Could not get total active jobs: ' + err));
+				else resolve(total);
+			}));
+		return new Promise((resolve, reject) => {
+			kue.Job.rangeByType(this.name, 'active', 0, n, 'asc', (err, jobs) => {
+				if (err) {
+					reject(new Error('Could not fetch jobs: ' + err));
+					return;
+				}
+				for (let i = 0; i < jobs.length; i++) {
+					if (Date.now() - jobs[i].created_at > olderThan) { jobs[i].inactive() }
+					else break;
+				}
+				resolve();
+			});
+		});
+	}
+
+	/**
 	 * Function to query the status of a job
 	 * @param {Number} jobId Job id for which status info is required
 	 * @returns {jobDetails} Object full of job details like state, time, attempts, etc.
@@ -234,7 +271,7 @@ class Queue {
 	static async processJobById(jobId, processor) {
 		return new Promise((resolve, reject) => {
 			kue.Job.get(jobId, async (err, job) => {
-				if (err) {
+				if (err || !job) {
 					reject(new Error('Could not fetch job' + err));
 					return;
 				}
@@ -258,33 +295,6 @@ class Queue {
 			Queue.jobs.shutdown(timeout, (err) => {
 				console.log('Sm-utils Queue shutdown: ', err || '');
 				resolve(true);
-			});
-		});
-	}
-
-	/**
-	 * Cleanup function to be called during startup,
-	 * resets active jobs older than specified time
-	 * @param {String} name Queue name
-	 * @param {Number} [olderThan=5000] Time in milliseconds, default = 5000
-	 */
-	static async cleanup(name, olderThan = 5000) {
-		if (Queue.jobs === undefined) throw new Error('Queue not initialized');
-		const n = await new Promise((resolve, reject) => Queue.jobs.activeCount(name, (err, total) => {
-			if (err) reject(new Error('Could not get total active jobs: ' + err));
-			else resolve(total);
-		}));
-		return new Promise((resolve, reject) => {
-			kue.job.rangeByType(name, 'active', 0, n, 'asc', (err, jobs) => {
-				if (err) {
-					reject(new Error('Could not fetch jobs: ' + err));
-					return;
-				}
-				for (let i = 0; i < jobs.length; i++) {
-					if (Date.now() - jobs[i].created_at > olderThan) { jobs[i].inactive() }
-					else break;
-				}
-				resolve();
 			});
 		});
 	}
