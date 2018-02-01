@@ -1,6 +1,29 @@
 import kue from 'kue';
+import _ from 'lodash';
 
-let processorWrapper;
+async function processorWrapper(job, processor, resolve, reject) {
+	let res;
+	try {
+		job.active();
+		job.attempt(() => {});
+		res = await processor(job.data.input);
+	}
+	catch (e) {
+		job.error(e);
+		if (job.data.options.noFailure) {
+			res = e;
+		}
+		else {
+			job.failed();
+			reject(new Error('Job failed ' + e));
+			return;
+		}
+	}
+	job.complete();
+	job.set('result', res);
+	const jobDetails = _.pick(job.toJSON(), ['id', 'type', 'data', 'result', 'state', 'error', 'created_at', 'updated_at', 'attempts']);
+	resolve(jobDetails);
+}
 
 class Queue {
 	static jobs;
@@ -29,17 +52,17 @@ class Queue {
 
 	/**
 	 * Add a job to the Queue
-	 * @param {*} jobData Job data
+	 * @param {*} input Job data
 	 * @param {Number|String} priority Priority of the job
 	 * @returns {Number} The ID of the job created
 	 */
-	async addJob(jobData, priority = 0) {
+	async addJob(input, priority = 0) {
 		return new Promise((resolve, reject) => {
 			const options = {
 				noFailure: this.noFailure,
 			};
 			const job = Queue.jobs
-				.create(this.name, {jobData, options})
+				.create(this.name, {input, options})
 				.priority(priority);
 
 			// default = 1
@@ -133,7 +156,7 @@ class Queue {
 			job.log('Start processing');
 			let res;
 			try {
-				res = await processor(job.data.jobData, ctx);
+				res = await processor(job.data.input, ctx);
 			}
 			catch (e) {
 				if (job.data.options.noFailure) {
@@ -148,17 +171,31 @@ class Queue {
 	}
 
 	/**
-	 * Job processing result
-	 * @typedef {Object} jobResult
-	 * @property {*} res Result returned by processor function
-	 * @property {jobDetails} job Job status object
+	 * Internal data object
+	 * @typedef {Object} internalData
+	 * @property {*} input Input data given to job
+	 * @property {Object} options Internal options used to set noFailure and extra properties
+	 */
+
+	/**
+	 * Job status object.
+	 * @typedef {Object} jobDetails
+	 * @property {Number} id
+	 * @property {String} type Name of the Queue
+	 * @property {internalData} data Internal data object, includes input and options
+	 * @property {*} result Result of the processor callback
+	 * @property {String} state One of {'inactive', 'delayed' ,'active', 'complete', 'failed'}
+	 * @property {*} error
+	 * @property {Number} created_at unix time stamp
+	 * @property {Number} updated_at unix time stamp
+	 * @property {Object} attempts Attempts Object
 	 */
 
 	/**
 	 * Process a single job in the Queue and mark it complete or failed,
 	 * for when you want to manually process jobs
 	 * @param {Queue~processorCallback} processor Called without ctx
-	 * @returns {jobResult} Result of processor function and job object of completed job
+	 * @returns {jobDetails} Job object of completed job
 	 */
 	async processJob(processor) {
 		return new Promise((resolve, reject) => {
@@ -173,23 +210,6 @@ class Queue {
 	}
 
 	/**
-	 * Job status object.
-	 * Only listed important properties, there maybe more
-	 * @typedef {Object} jobDetails
-	 * @property {Number} id
-	 * @property {String} type Name of the Queue
-	 * @property {Object} data : {jobData, options}
-	 * @property {*} result Result of the processor callback
-	 * @property {Number} priority
-	 * @property {String} state One of {'inactive', 'delayed' ,'active', 'complete', 'failed'}
-	 * @property {*} error
-	 * @property {Number} created_at unix time stamp
-	 * @property {Number} delay delay in milliseconds, if any was set
-	 * @property {Number} ttl TTL in milliseconds, if any was set
-	 * @property {Object} attempts Attempts Object
-	 */
-
-	/**
 	 * Function to query the status of a job
 	 * @param {Number} jobId Job id for which status info is required
 	 * @returns {jobDetails} Object full of job details like state, time, attempts, etc.
@@ -198,7 +218,7 @@ class Queue {
 		return new Promise((resolve, reject) => {
 			kue.Job.get(jobId, (err, job) => {
 				if (err || !job) reject(new Error('Job not found ' + err));
-				job = job.toJSON();
+				job = _.pick(job.toJSON(), ['id', 'type', 'data', 'result', 'state', 'error', 'created_at', 'updated_at', 'attempts']);
 				resolve(job);
 			});
 		});
@@ -208,7 +228,7 @@ class Queue {
 	 * Manualy process a specific Job
 	 * @param {Number} jobId Id of the job to be processed
 	 * @param {Queue~processorCallback} processor Called without ctx
-	 * @returns {jobResult} Result of processor function and job object of completed job
+	 * @returns {jobDetails} Result of processor function and job object of completed job
 	 */
 	static async processJobById(jobId, processor) {
 		return new Promise((resolve, reject) => {
@@ -265,23 +285,5 @@ class Queue {
 		});
 	}
 }
-
-processorWrapper = async function (job, processor, resolve, reject) {
-	try {
-		const res = await processor(job.data.jobData);
-		job.complete();
-		resolve({res, job: job.toJSON()});
-	}
-	catch (e) {
-		if (job.data.options.noFailure) {
-			job.complete();
-			resolve({job: job.toJSON(), res: {error: e}});
-		}
-		else {
-			job.failed();
-			reject(new Error('Job failed ' + e));
-		}
-	}
-};
 
 export default Queue;
