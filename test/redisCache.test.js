@@ -1,15 +1,16 @@
-/* global it, describe */
+/* global describe, it */
 /* eslint-disable no-unused-expressions */
 
+import Redis from 'ioredis';
 import {expect} from 'chai';
-import {Cache} from '../src/index';
+import {RedisCache} from '../src/index';
 
-const cache = new Cache();
+const cache = new RedisCache('test', new Redis());
 function sleep(val, timeout = 20) {
 	return new Promise(resolve => setTimeout(() => resolve(val), timeout));
 }
 
-describe('cache library', () => {
+describe('redis cache library', () => {
 	it('should get and set values', async () => {
 		const key = 'a';
 		const value = 'this';
@@ -94,8 +95,16 @@ describe('cache library', () => {
 		expect(counter).to.equal(1);
 	});
 
+	it('should emit event after getting in getOrSet', async () => {
+		await cache.set('i', 'test');
+		cache.getOrSet('i');
+		const value = await cache.getOrSet('i');
+		expect(value).to.equal('test');
+	});
+
 	it('should return default value when event returns undefined', async () => {
-		cache.set('k', undefined);
+		await cache.set('k', undefined);
+		cache.getOrSet('k');
 		const value = await cache.get('k', 'default');
 		expect(value).to.equal('default');
 	});
@@ -130,12 +139,12 @@ describe('cache library', () => {
 	});
 
 	it('should correctly check for existance', async () => {
-		expect(await cache.has('d')).to.be.true;
-		expect(await cache.has('d1')).to.be.false;
+		expect(await cache.has('d')).to.equal(1);
+		expect(await cache.has('d1')).to.equal(0);
 	});
 
 	it('should correctly return the size', async () => {
-		const cache1 = new Cache();
+		const cache1 = new RedisCache('test2', new Redis());
 		expect(await cache1.size()).to.equal(0);
 		expect(await cache.size()).to.equal(7);
 	});
@@ -148,4 +157,3 @@ describe('cache library', () => {
 		expect(await cache.size()).to.equal(0);
 	});
 });
-

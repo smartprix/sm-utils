@@ -4,53 +4,71 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
-var _ioredis = require('ioredis');
-
-var _ioredis2 = _interopRequireDefault(_ioredis);
-
 var _events = require('events');
 
 var _events2 = _interopRequireDefault(_events);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-/* eslint-disable */
-// This is WIP
 const FETCHING = Symbol('Fetching_Value');
 let globalCache;
 
 class RedisCache {
-	constructor(redis) {
-		this.prefix = Math.random().toString(36).substring(2);
+	constructor(prefix, redis) {
+		this.prefix = prefix;
 		this.redis = redis;
 		this.fetching = {};
+		this.events = new _events2.default();
 	}
 
-	_get(key) {
+	async _get(key) {
 		const prefixedKey = `${this.prefix}:${key}`;
-		return this.redis.get(prefixedKey);
+		const value = await this.redis.get(prefixedKey);
+		let parsedValue;
+		try {
+			parsedValue = JSON.parse(value);
+		} catch (err) {
+			parsedValue = value;
+		}
+		return parsedValue;
+	}
+
+	async _has(key) {
+		return this.redis.exists(`${this.prefix}:${key}`);
 	}
 
 	_set(key, value, ttl = 0) {
+		if (value === undefined) return true;
 		const prefixedKey = `${this.prefix}:${key}`;
 
 		if (ttl <= 0) {
-			return this.redis.set(prefixedKey, value);
+			return this.redis.set(prefixedKey, JSON.stringify(value));
 		}
 
-		return this.redis.set(prefixedKey, value, 'PX', ttl);
+		return this.redis.set(prefixedKey, JSON.stringify(value), 'PX', ttl);
 	}
 
 	_del(key) {
 		return this.redis.del(`${this.prefix}:${key}`);
 	}
 
-	_clear(key) {
-		return this.redis.eval(`for i, name in ipairs(redis.call('KEYS', '${this.prefix}:')) do redis.call('DEL', name); end`, 0);
+	_clear() {
+		return this.redis.eval(`for i, name in ipairs(redis.call('KEYS', '${this.prefix}:*')) do redis.call('DEL', name); end`, 0);
 	}
 
 	_size() {
-		return redis.eval(`return #redis.pcall('keys', '${this.prefix}:*')`, 0);
+		return this.redis.eval(`return #redis.pcall('keys', '${this.prefix}:*')`, 0);
+	}
+
+	/**
+  * gets a value from the cache immediately without waiting
+  * @param {string} key
+  * @param {any} defaultValue
+  */
+	async getStale(key, defaultValue = undefined) {
+		const existing = await this._get(key);
+		if (existing === null) return defaultValue;
+		return existing;
 	}
 
 	/**
@@ -59,18 +77,22 @@ class RedisCache {
   * @param {any} defaultValue
   */
 	async get(key, defaultValue = undefined) {
-		const existing = await this.get(key);
-		if (existing === FETCHING) {
+		if (this.fetching[key] === FETCHING) {
 			// Some other process is still fetching the value
 			// Don't dogpile shit, wait for the other process
 			// to finish it
 			return new Promise(resolve => {
-				this.events.once(`get:${key}`, resolve);
+				this.events.once(`get:${key}`, val => {
+					if (val === null || val === undefined) resolve(defaultValue);else resolve(val);
+				});
 			});
 		}
 
-		if (existing === undefined) return defaultValue;
-		return existing;
+		this.fetching[key] = FETCHING;
+		const value = await this.getStale(key, defaultValue);
+		delete this.fetching[key];
+		this.events.emit(`get:${key}`, value);
+		return value;
 	}
 
 	/**
@@ -78,7 +100,7 @@ class RedisCache {
   * @param {string} key
   */
 	async has(key) {
-		return key in this.data;
+		return this._has(key);
 	}
 
 	/**
@@ -96,30 +118,33 @@ class RedisCache {
 			ttl = options.ttl || 0;
 		}
 
-		this.data[key] = FETCHING;
+		this.fetching[key] = FETCHING;
 
 		try {
 			if (value && value.then) {
 				// value is a Promise
 				// resolve it and then cache it
 				const resolvedValue = await value;
-				this._set(key, value, ttl);
+				await this._set(key, resolvedValue, ttl);
+				delete this.fetching[key];
 				this.events.emit(`get:${key}`, resolvedValue);
 				return true;
 			} else if (typeof value === 'function') {
 				// value is a function
 				// call it and set the result
-				return this.set(key, value(key), ttl);
+				return await this.set(key, value(key), ttl);
 			}
 
 			// value is normal
 			// just set it in the store
-			this._set(key, value, ttl);
+			await this._set(key, value, ttl);
+			delete this.fetching[key];
 			this.events.emit(`get:${key}`, value);
 			return true;
 		} catch (error) {
-			this._del(key);
+			await this._del(key);
 			this.events.emit(`get:${key}`, undefined);
+			delete this.fetching[key];
 			return false;
 		}
 	}
@@ -132,8 +157,7 @@ class RedisCache {
   * @param {int|object} options either ttl in ms, or object of {ttl}
   */
 	async getOrSet(key, value, options = {}) {
-		const existing = this.data[key];
-		if (existing === FETCHING) {
+		if (this.fetching[key] === FETCHING) {
 			// Some other process is still fetching the value
 			// Don't dogpile shit, wait for the other process
 			// to finish it
@@ -142,12 +166,20 @@ class RedisCache {
 			});
 		}
 
-		// key already exists, return it
-		if (existing !== undefined) return existing;
+		this.fetching[key] = FETCHING;
 
-		this.data[key] = FETCHING;
-		await this.set(key, value, options);
-		return this.data[key];
+		// key already exists, return it
+		const existing = await this._get(key);
+		if (existing !== null) {
+			delete this.fetching[key];
+			this.events.emit(`get:${key}`, existing);
+			return existing;
+		}
+
+		this.set(key, value, options);
+		return new Promise(resolve => {
+			this.events.once(`get:${key}`, resolve);
+		});
 	}
 
 	/**
@@ -174,13 +206,17 @@ class RedisCache {
 		return this._clear();
 	}
 
-	static globalCache() {
-		if (!globalCache) globalCache = new this();
+	static globalCache(redis) {
+		if (!globalCache) globalCache = new this('global', redis);
 		return globalCache;
 	}
 
-	static get(key) {
-		return this.globalCache().get(key);
+	static getStale(key, defaultValue) {
+		return this.globalCache().getStale(key, defaultValue);
+	}
+
+	static get(key, defaultValue) {
+		return this.globalCache().get(key, defaultValue);
 	}
 
 	static has(key) {
@@ -208,4 +244,4 @@ class RedisCache {
 	}
 }
 
-exports.default = Cache;
+exports.default = RedisCache;
