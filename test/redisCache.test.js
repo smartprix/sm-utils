@@ -5,7 +5,7 @@ import Redis from 'ioredis';
 import {expect} from 'chai';
 import {RedisCache} from '../src/index';
 
-const cache = new RedisCache(new Redis());
+const cache = new RedisCache('test', new Redis());
 function sleep(val, timeout = 20) {
 	return new Promise(resolve => setTimeout(() => resolve(val), timeout));
 }
@@ -130,7 +130,7 @@ describe('redis cache library', () => {
 	});
 
 	it('should correctly return the size', async () => {
-		const cache1 = new RedisCache(new Redis());
+		const cache1 = new RedisCache('test2', new Redis());
 		expect(await cache1.size()).to.equal(0);
 		expect(await cache.size()).to.equal(6);
 	});

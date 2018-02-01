@@ -14,8 +14,8 @@ const FETCHING = Symbol('Fetching_Value');
 let globalCache;
 
 class RedisCache {
-	constructor(redis) {
-		this.prefix = Math.random().toString(36).substring(2);
+	constructor(prefix, redis) {
+		this.prefix = prefix;
 		this.redis = redis;
 		this.fetching = {};
 		this.events = new _events2.default();
