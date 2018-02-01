@@ -113,13 +113,13 @@ describe('redis cache library', () => {
 		const key = 'g';
 		const value = 'you';
 		expect(await cache.get(key)).to.be.undefined;
-		expect(await cache.set(key, value, 20)).to.be.true;
+		expect(await cache.set(key, value, 200)).to.be.true;
 		expect(await cache.get(key)).to.equal(value);
-		await sleep('', 10);
+		await sleep('', 100);
 		expect(await cache.get(key)).to.equal(value);
-		await sleep('', 7);
+		await sleep('', 40);
 		expect(await cache.get(key)).to.equal(value);
-		await sleep('', 4);
+		await sleep('', 70);
 		expect(await cache.get(key)).to.be.undefined;
 	});
 

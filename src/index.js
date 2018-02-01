@@ -2,6 +2,7 @@ import File from './file';
 import Crypt from './Crypt';
 import Connect from './Connect';
 import Cache from './Cache';
+import Queue from './Queue';
 import RedisCache from './RedisCache';
 import System from './System';
 import Lock from './Lock';
@@ -22,6 +23,7 @@ module.exports = {
 	Crypt,
 	Connect,
 	Cache,
+	Queue,
 	RedisCache,
 	System,
 	Lock,

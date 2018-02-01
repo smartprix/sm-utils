@@ -16,6 +16,10 @@ var _Cache = require('./Cache');
 
 var _Cache2 = _interopRequireDefault(_Cache);
 
+var _Queue = require('./Queue');
+
+var _Queue2 = _interopRequireDefault(_Queue);
+
 var _RedisCache = require('./RedisCache');
 
 var _RedisCache2 = _interopRequireDefault(_RedisCache);
@@ -56,6 +60,7 @@ module.exports = {
 	Crypt: _Crypt2.default,
 	Connect: _Connect2.default,
 	Cache: _Cache2.default,
+	Queue: _Queue2.default,
 	RedisCache: _RedisCache2.default,
 	System: _System2.default,
 	Lock: _Lock2.default
