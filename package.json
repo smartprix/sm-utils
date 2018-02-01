@@ -42,7 +42,7 @@
     "rimraf": "2.6.2",
     "socks5-http-client": "^1.0.2",
     "socks5-https-client": "^1.2.1",
-    "source-map-support": "0.5.0",
+    "source-map-support": "0.5.3",
     "stack-trace": "0.0.10",
     "thenify-all": "1.6.0",
     "tough-cookie-file-store": "^1.2.0"
@@ -51,11 +51,11 @@
     "babel-cli": "6.26.0",
     "babel-preset-stage-0": "6.24.1",
     "chai": "4.1.2",
-    "eslint": "4.14.0",
+    "eslint": "4.16.0",
     "eslint-config-smartprix": "3.3.1",
     "ghooks": "2.0.2",
     "isparta": "4.0.0",
-    "mocha": "4.1.0"
+    "mocha": "5.0.0"
   },
   "eslintConfig": {
     "extends": "smartprix",

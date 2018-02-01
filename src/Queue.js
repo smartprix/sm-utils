@@ -296,8 +296,9 @@ class Queue {
 				resolve(true);
 				return;
 			}
+
+			// eslint-disable-next-line no-unused-vars
 			Queue.jobs.shutdown(timeout, (err) => {
-				console.log('Sm-utils Queue shutdown: ', err || '');
 				resolve(true);
 			});
 		});

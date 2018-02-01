@@ -122,14 +122,16 @@ describe('Lock library', () => {
 			await promiseTwo;
 			elapsed = process.hrtime(timeStart);
 			elapsedMs = (elapsed[0] * 1000) + (elapsed[1] / 1000000);
-			expect(elapsedMs).to.be.above(100);
+			// set it slightly less than 100 because setTimeout and process.hrtime might differ by a ms
+			expect(elapsedMs).to.be.above(99);
 			expect(elapsedMs).to.be.below(150);
 			expect(lock.acquireQueue.c).to.have.lengthOf(1);
 
 			await promiseThree;
 			elapsed = process.hrtime(timeStart);
 			elapsedMs = (elapsed[0] * 1000) + (elapsed[1] / 1000000);
-			expect(elapsedMs).to.be.above(200);
+			// set it slightly less than 200 because setTimeout and process.hrtime might differ by a ms
+			expect(elapsedMs).to.be.above(199);
 			expect(elapsedMs).to.be.below(250);
 			expect(lock.acquireQueue.c).to.be.undefined;
 		});
