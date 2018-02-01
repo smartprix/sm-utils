@@ -95,7 +95,8 @@ describe('Lock library', () => {
 			const elapsedMs = (elapsed[0] * 1000) + (elapsed[1] / 1000000);
 
 			expect(await lock._has('b')).to.be.true;
-			expect(elapsedMs).to.be.above(100);
+			// set it slightly less than 100 because setTimeout and process.hrtime might differ by a ms
+			expect(elapsedMs).to.be.above(99);
 			expect(elapsedMs).to.be.below(105);
 		});
 
