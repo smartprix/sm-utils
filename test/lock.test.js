@@ -116,21 +116,21 @@ describe('Lock library', () => {
 			await promiseOne;
 			let elapsed = process.hrtime(timeStart);
 			let elapsedMs = (elapsed[0] * 1000) + (elapsed[1] / 1000000);
-			expect(elapsedMs).to.be.below(5);
+			expect(elapsedMs).to.be.below(50);
 			expect(lock.acquireQueue.c).to.have.lengthOf(2);
 
 			await promiseTwo;
 			elapsed = process.hrtime(timeStart);
 			elapsedMs = (elapsed[0] * 1000) + (elapsed[1] / 1000000);
 			expect(elapsedMs).to.be.above(100);
-			expect(elapsedMs).to.be.below(105);
+			expect(elapsedMs).to.be.below(150);
 			expect(lock.acquireQueue.c).to.have.lengthOf(1);
 
 			await promiseThree;
 			elapsed = process.hrtime(timeStart);
 			elapsedMs = (elapsed[0] * 1000) + (elapsed[1] / 1000000);
 			expect(elapsedMs).to.be.above(200);
-			expect(elapsedMs).to.be.below(205);
+			expect(elapsedMs).to.be.below(250);
 			expect(lock.acquireQueue.c).to.be.undefined;
 		});
 
