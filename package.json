@@ -1,6 +1,6 @@
 {
   "name": "sm-utils",
-  "version": "2.11.0",
+  "version": "2.11.1",
   "description": "Uilities for NodeJS",
   "main": "dist/index.js",
   "engines": {
@@ -25,7 +25,7 @@
   "license": "ISC",
   "dependencies": {
     "babel-plugin-transform-es2015-modules-commonjs": "^6.26.0",
-    "chalk": "2.3.0",
+    "chalk": "2.3.1",
     "chmodr": "1.0.2",
     "chownr": "1.0.1",
     "continuation-local-storage": "3.2.1",
@@ -34,7 +34,7 @@
     "ioredis": ">= 3.2.2",
     "jsdoc": "^3.5.5",
     "kue": "^0.11.6",
-    "lodash": "4.17.4",
+    "lodash": "4.17.5",
     "longjohn": "^0.2.12",
     "lru-cache": "4.1.1",
     "mkdirp": "0.5.1",
@@ -51,7 +51,7 @@
     "babel-cli": "6.26.0",
     "babel-preset-stage-0": "6.24.1",
     "chai": "4.1.2",
-    "eslint": "4.16.0",
+    "eslint": "4.17.0",
     "eslint-config-smartprix": "3.3.1",
     "ghooks": "2.0.2",
     "isparta": "4.0.0",
