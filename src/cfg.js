@@ -28,6 +28,17 @@ cfg.set = function (key, value) {
 	return prev;
 };
 
+// set values in global config with an object to assign all key values from it
+// if a key already exists then it is merged with new value
+// if obj is not an Object then nothing happens
+cfg.merge = function (obj) {
+	if (obj instanceof Object) {
+		config = _.merge(config, obj);
+		return null;
+	}
+	return null;
+};
+
 cfg.delete = function (key) {
 	delete config[key];
 };
