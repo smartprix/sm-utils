@@ -1,7 +1,6 @@
 import kue from 'kue';
 import _ from 'lodash';
 import {EventEmitter} from 'events';
-import {setTimeout} from 'timers';
 
 async function processorWrapper(job, processor, resolve, reject) {
 	let res;
@@ -212,6 +211,46 @@ class Queue {
 	 */
 	resumeProcessor() {
 		Queue.events.emit(`${this.name}:resume`);
+	}
+
+	/**
+	 * Return count of pending jobs in Queue
+	 * @returns {Number} inactiveCount
+	 */
+	async pendingJobs() {
+		return new Promise((resolve, reject) => {
+			Queue.jobs.inactiveCount(this.name, (err, total) => {
+				if (err) reject(err);
+				else resolve(total);
+			});
+		});
+	}
+
+	/**
+	 * Return count of completed jobs in Queue
+	 * Might return 0 if removeOnComplete was true
+	 * @returns {Number} completeCount
+	 */
+	async completedJobs() {
+		return new Promise((resolve, reject) => {
+			Queue.jobs.completeCount(this.name, (err, total) => {
+				if (err) reject(err);
+				else resolve(total);
+			});
+		});
+	}
+
+	/**
+	 * Return count of failed jobs in Queue
+	 * @returns {Number} failedCount
+	 */
+	async failedJobs() {
+		return new Promise((resolve, reject) => {
+			Queue.jobs.failedCount(this.name, (err, total) => {
+				if (err) reject(err);
+				else resolve(total);
+			});
+		});
 	}
 
 	/**
