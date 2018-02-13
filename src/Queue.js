@@ -1,5 +1,6 @@
 import kue from 'kue';
 import _ from 'lodash';
+import {EventEmitter} from 'events';
 
 async function processorWrapper(job, processor, resolve, reject) {
 	let res;
@@ -35,6 +36,7 @@ async function processorWrapper(job, processor, resolve, reject) {
 
 class Queue {
 	static jobs;
+	static events = new EventEmitter();
 
 	/**
 	 * Class constructor : Create a new Queue
@@ -168,6 +170,16 @@ class Queue {
 		Queue.jobs.setMaxListeners(Queue.jobs.getMaxListeners() + concurrency);
 
 		Queue.jobs.process(this.name, concurrency, async (job, ctx, done) => {
+			Queue.events.setMaxListeners(Queue.events.getMaxListeners() + 2);
+
+			Queue.events.on(`${this.name}:pause`, () => {
+				ctx.pause(5000);
+			});
+
+			Queue.events.on(`${this.name}:resume`, () => {
+				ctx.resume();
+			});
+
 			job.log('Start processing');
 			let res;
 			try {
@@ -184,6 +196,14 @@ class Queue {
 			}
 			done(null, res);
 		});
+	}
+
+	pauseProcessor() {
+		Queue.events.emit(`${this.name}:pause`);
+	}
+
+	resumeProcessor() {
+		Queue.events.emit(`${this.name}:resume`);
 	}
 
 	/**
