@@ -1,6 +1,7 @@
 import kue from 'kue';
 import _ from 'lodash';
 import {EventEmitter} from 'events';
+import {setTimeout} from 'timers';
 
 async function processorWrapper(job, processor, resolve, reject) {
 	let res;
@@ -149,14 +150,6 @@ class Queue {
 	 * An async function which will be called to process the job data
 	 * @callback processorCallback
 	 * @param {*} jobData The information saved in the job during adding of job
-	 * @param {Object} [ctx] Can be used to pause and resume queue,
-	 * 	Will only be passed when attaching a processor to the queue
-	 * 		Usage:
-	 * 		ctx.pause(timeout, callback()) :
-	 * 			Waits for any active jobs to complete till timeout,
-	 * 			then forcefully shuts them down (like shutdown)
-	 * 		ctx.resume() : Resumes Queue processing
-	 * 		For detailed info : https://github.com/Automattic/kue#pause-processing
 	 * @returns {*} Will be saved in return field in JobDetails
 	 */
 
@@ -172,8 +165,13 @@ class Queue {
 		Queue.jobs.process(this.name, concurrency, async (job, ctx, done) => {
 			Queue.events.setMaxListeners(Queue.events.getMaxListeners() + 2);
 
-			Queue.events.on(`${this.name}:pause`, () => {
-				ctx.pause(5000);
+			Queue.events.on(`${this.name}:pause`, (timeout, res, rej) => {
+				// ctx Can be used to pause and resume worker,
+				// For detailed info : https://github.com/Automattic/kue#pause-processing
+				ctx.pause(timeout, (err) => {
+					if (err) rej();
+					else res();
+				});
 			});
 
 			Queue.events.on(`${this.name}:resume`, () => {
@@ -198,10 +196,20 @@ class Queue {
 		});
 	}
 
-	pauseProcessor() {
-		Queue.events.emit(`${this.name}:pause`);
+	/**
+	 * Pause Queue processing
+	 * Gives timeout time to all workers to complete their current jobs then stops them
+	 * @param {Number} [timeout=5000] Time to complete current jobs in ms
+	 */
+	async pauseProcessor(timeout = 5000) {
+		return new Promise((resolve, reject) => {
+			Queue.events.emit(`${this.name}:pause`, timeout, resolve, reject);
+		});
 	}
 
+	/**
+	 * Resume Queue processing
+	 */
 	resumeProcessor() {
 		Queue.events.emit(`${this.name}:resume`);
 	}
