@@ -164,6 +164,9 @@ class Queue {
 	 * @param {Number} [concurrency=1] The number of jobs this processor can handle parallely
 	 */
 	addProcessor(processor, concurrency = 1) {
+		// Increase max event listeners limit
+		Queue.jobs.setMaxListeners(Queue.jobs.getMaxListeners() + concurrency);
+
 		Queue.jobs.process(this.name, concurrency, async (job, ctx, done) => {
 			job.log('Start processing');
 			let res;
