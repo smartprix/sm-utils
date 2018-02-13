@@ -60,9 +60,14 @@ class Cache {
 			// Don't dogpile shit, wait for the other process
 			// to finish it
 			return new Promise((resolve) => {
+				// Increment MaxListeners
+				this.events.setMaxListeners(this.events.getMaxListeners() + 1);
+
 				this.events.once(`get:${key}`, (val) => {
 					if (val === null || val === undefined) resolve(defaultValue);
 					else resolve(val);
+					// Decrement MaxListeners until 10
+					this.events.setMaxListeners(Math.max(this.events.getMaxListeners() - 1, 10));
 				});
 			});
 		}
@@ -153,7 +158,12 @@ class Cache {
 			// Don't dogpile shit, wait for the other process
 			// to finish it
 			return new Promise((resolve) => {
-				this.events.once(`get:${key}`, resolve);
+				this.events.setMaxListeners(this.events.getMaxListeners() + 1);
+
+				this.events.once(`get:${key}`, (val) => {
+					this.events.setMaxListeners(Math.max(this.events.getMaxListeners() - 1, 10));
+					resolve(val);
+				});
 			});
 		}
 
