@@ -10,6 +10,7 @@ class Cache {
 		this.ttl = {};
 		this.fetching = {};
 		this.events = new EventEmitter();
+		this.events.setMaxListeners(20);
 	}
 
 	_set(key, value, ttl = 0) {
@@ -153,7 +154,9 @@ class Cache {
 			// Don't dogpile shit, wait for the other process
 			// to finish it
 			return new Promise((resolve) => {
-				this.events.once(`get:${key}`, resolve);
+				this.events.once(`get:${key}`, (val) => {
+					resolve(val);
+				});
 			});
 		}
 
@@ -187,6 +190,14 @@ class Cache {
 	 */
 	async clear() {
 		return this._clear();
+	}
+
+	/**
+	 * Sets the max event listeners for the internal events object
+	 * @param {Number} n A non-negative integer
+	 */
+	setMaxListeners(n) {
+		this.events.setMaxListeners(n);
 	}
 
 	static globalCache() {
