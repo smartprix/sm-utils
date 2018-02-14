@@ -51,19 +51,8 @@ async function iterateOverJobs(queue, jobType, numOfJobs, cb) {
 
 class Queue {
 	static jobs;
-	static events = new EventEmitter();
 
-	/**
-	 * Class constructor : Create a new Queue
-	 * The redis and enableWatchdog settings are required only the first time to init
-	 * @param {String} name Name of the queue
-	 * @param {Object} [redis={port: 6379, host: '127.0.0.1'}] Redist connection settings object
-	 * @param {Boolean} [enableWatchdog=false] Will watch for stuck jobs due to any connection issues
-	 * 		Read more here :  https://github.com/Automattic/kue#unstable-redis-connections
-	 */
-	constructor(name, redis = {port: 6379, host: '127.0.0.1'}, enableWatchdog = false) {
-		this.name = name;
-
+	static init(redis, enableWatchdog) {
 		if (!Queue.jobs) {
 			Queue.jobs = kue.createQueue({
 				redis,
@@ -77,6 +66,22 @@ class Queue {
 				process.exit(0);
 			});
 		}
+	}
+
+	/**
+	 * Class constructor : Create a new Queue
+	 * The redis and enableWatchdog settings are required only the first time to init
+	 * Can also be set beforehand by calling Queue.init()
+	 * @param {String} name Name of the queue
+	 * @param {Object} [redis={port: 6379, host: '127.0.0.1'}] Redist connection settings object
+	 * @param {Boolean} [enableWatchdog=false] Will watch for stuck jobs due to any connection issues
+	 * 		Read more here :  https://github.com/Automattic/kue#unstable-redis-connections
+	 */
+	constructor(name, redis = {port: 6379, host: '127.0.0.1'}, enableWatchdog = false) {
+		this.name = name;
+		this.events = new EventEmitter();
+		this.events.setMaxListeners(2);
+		Queue.init(redis, enableWatchdog);
 	}
 
 	/**
@@ -177,9 +182,7 @@ class Queue {
 		Queue.jobs.setMaxListeners(Queue.jobs.getMaxListeners() + concurrency);
 
 		Queue.jobs.process(this.name, concurrency, async (job, ctx, done) => {
-			Queue.events.setMaxListeners(Queue.events.getMaxListeners() + 2);
-
-			Queue.events.on(`${this.name}:pause`, (timeout, res, rej) => {
+			this.events.on('pause', (timeout, res, rej) => {
 				// ctx Can be used to pause and resume worker,
 				// For detailed info : https://github.com/Automattic/kue#pause-processing
 				ctx.pause(timeout, (err) => {
@@ -188,7 +191,7 @@ class Queue {
 				});
 			});
 
-			Queue.events.on(`${this.name}:resume`, () => {
+			this.events.on('resume', () => {
 				ctx.resume();
 			});
 
@@ -217,7 +220,7 @@ class Queue {
 	 */
 	async pauseProcessor(timeout = 5000) {
 		return new Promise((resolve, reject) => {
-			Queue.events.emit(`${this.name}:pause`, timeout, resolve, reject);
+			this.events.emit('pause', timeout, resolve, reject);
 		});
 	}
 
@@ -225,7 +228,7 @@ class Queue {
 	 * Resume Queue processing
 	 */
 	resumeProcessor() {
-		Queue.events.emit(`${this.name}:resume`);
+		this.events.emit('resume');
 	}
 
 	/**
