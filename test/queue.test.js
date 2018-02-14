@@ -10,7 +10,7 @@ function sleep(val, timeout = 20) {
 
 before(async () => {
 	queue = new Queue('test');
-	await queue.clear(1);
+	await queue.delete(1);
 });
 
 describe('Queue library', () => {

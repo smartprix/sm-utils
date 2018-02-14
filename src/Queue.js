@@ -34,7 +34,8 @@ async function processorWrapper(job, processor, resolve, reject) {
 	resolve(jobDetails);
 }
 
-async function iterateOverJobs(queue, jobType, numOfJobs, cb) {
+async function iterateOverJobs(queue, jobType, numOfJobs, olderThan, action) {
+	const now = Date.now();
 	return new Promise((resolve, reject) => {
 		kue.Job.rangeByType(queue, jobType, 0, numOfJobs, 'asc', async (err, jobs) => {
 			if (err) {
@@ -42,7 +43,11 @@ async function iterateOverJobs(queue, jobType, numOfJobs, cb) {
 				return;
 			}
 			for (let i = 0; i < jobs.length; i++) {
-				if (!cb(jobs[i])) break;
+				if (now - jobs[i].created_at > olderThan) {
+					jobs[i].log(`Doing ${action}`);
+					jobs[i][action](() => {});
+				}
+				else break;
 			}
 			resolve();
 		});
@@ -85,14 +90,10 @@ class Queue {
 	 * 		Read more here :  https://github.com/Automattic/kue#unstable-redis-connections
 	 */
 	constructor(name, redis = {port: 6379, host: '127.0.0.1'}, enableWatchdog = false) {
-		if (Queue.queues[name] === 'EXISTS') {
-			throw new Error('This queue name is already being used');
-		}
 		this.name = name;
-		Queue.queues[name] = 'EXISTS';
+		if (!Queue.queues[name]) Queue.queues[name] = {processorAdded: false};
 		this.events = new EventEmitter();
 		this.events.setMaxListeners(3);
-		this.processorAdded = false;
 		Queue.init(redis, enableWatchdog);
 	}
 
@@ -190,8 +191,8 @@ class Queue {
 	 * @param {Number} [concurrency=1] The number of jobs this processor can handle parallely
 	 */
 	addProcessor(processor, concurrency = 1) {
-		if (this.processorAdded) {
-			throw new Error('Processor already added, can only be set once per queue.');
+		if (Queue.queues[this.name].processorAdded) {
+			throw new Error(`Processor already added for queue ${this.name}, can only be set once per queue.`);
 		}
 		// Increase max event listeners limit
 		Queue.jobs.setMaxListeners(Queue.jobs.getMaxListeners() + concurrency);
@@ -216,6 +217,7 @@ class Queue {
 				res = await processor(job.data.input, ctx);
 			}
 			catch (e) {
+				job.log('Errored: ' + e.message);
 				if (job.data.options.noFailure) {
 					job.error(e);
 				}
@@ -224,9 +226,10 @@ class Queue {
 					return;
 				}
 			}
+			job.log('Done');
 			done(null, res);
 		});
-		this.processorAdded = true;
+		Queue.queues[this.name].processorAdded = true;
 	}
 
 	/**
@@ -294,6 +297,22 @@ class Queue {
 	}
 
 	/**
+	 * Return count of delayed jobs in Queue
+	 * @returns {Number} delayedCount
+	 */
+	async delayedJobs() {
+		return Queue.getCount(this.name, 'delayed');
+	}
+
+	/**
+	 * Return count of active jobs in Queue
+	 * @returns {Number} activeCount
+	 */
+	async activeJobs() {
+		return Queue.getCount(this.name, 'active');
+	}
+
+	/**
 	 * Internal data object
 	 * @typedef {Object} internalData
 	 * @property {*} input Input data given to job
@@ -339,40 +358,31 @@ class Queue {
 	 */
 	async cleanup(olderThan = 5000) {
 		const n = await Queue.getCount(this.name, 'active');
-		const now = Date.now();
-		await iterateOverJobs(this.name, 'active', n, (job) => {
-			if (now - job.created_at > olderThan) {
-				job.inactive();
-				return true;
-			}
-			return false;
-		});
+		return iterateOverJobs(this.name, 'active', n, olderThan, 'inactive');
 	}
 
 	/**
-	 * Removes old completed/failed jobs from queue and clears any active jobs
+	 * Removes any old jobs from queue
 	 * older than specified time
 	 * @param {Number} [olderThan=3600000] Time in milliseconds, default = 3600000 (1 hr)
 	 */
-	async clear(olderThan = 3600000) {
-		const now = Date.now();
+	async delete(olderThan = 3600000) {
 		const completed = await this.completedJobs();
-		const removeComplete = iterateOverJobs(this.name, 'complete', completed, (job) => {
-			if (now - job.created_at > olderThan) {
-				job.remove(() => {});
-				return true;
-			}
-			return false;
-		});
+		const removeComplete = iterateOverJobs(this.name, 'complete', completed, olderThan, 'remove');
+
 		const failed = await this.failedJobs();
-		const removeFailed = iterateOverJobs(this.name, 'failed', failed, (job) => {
-			if (now - job.created_at > olderThan) {
-				job.remove(() => {});
-				return true;
-			}
-			return false;
-		});
-		return Promise.all([removeComplete, removeFailed, this.cleanup(olderThan)]);
+		const removeFailed = iterateOverJobs(this.name, 'failed', failed, olderThan, 'remove');
+
+		const inactive = await this.pendingJobs();
+		const removeInactive = iterateOverJobs(this.name, 'inactive', inactive, olderThan, 'remove');
+
+		const delayed = await this.delayedJobs();
+		const removeDelayed = iterateOverJobs(this.name, 'delayed', delayed, olderThan, 'remove');
+
+		const active = await this.activeJobs();
+		const removeActive = iterateOverJobs(this.name, 'active', active, olderThan, 'remove');
+
+		return Promise.all([removeComplete, removeFailed, removeInactive, removeDelayed, removeActive]);
 	}
 
 	/**
