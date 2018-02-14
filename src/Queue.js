@@ -34,6 +34,21 @@ async function processorWrapper(job, processor, resolve, reject) {
 	resolve(jobDetails);
 }
 
+async function iterateOverJobs(queue, jobType, numOfJobs, cb) {
+	return new Promise((resolve, reject) => {
+		kue.Job.rangeByType(queue, jobType, 0, numOfJobs, 'asc', async (err, jobs) => {
+			if (err) {
+				reject(new Error('Could not fetch jobs: ' + err));
+				return;
+			}
+			for (let i = 0; i < jobs.length; i++) {
+				if (!cb(jobs[i])) break;
+			}
+			resolve();
+		});
+	});
+}
+
 class Queue {
 	static jobs;
 	static events = new EventEmitter();
@@ -214,16 +229,32 @@ class Queue {
 	}
 
 	/**
-	 * Return count of pending jobs in Queue
-	 * @returns {Number} inactiveCount
+	 * Return count of jobs in Queue of JobType
+	 * @param {String} queue Queue name
+	 * @param {String} jobType One of {'inactive', 'delayed' ,'active', 'complete', 'failed'}
+	 * @returns {Number} count
 	 */
-	async pendingJobs() {
+	static async getCount(queue, jobType) {
 		return new Promise((resolve, reject) => {
-			Queue.jobs.inactiveCount(this.name, (err, total) => {
-				if (err) reject(err);
+			Queue.jobs[jobType + 'Count'](queue, (err, total) => {
+				if (err) reject(new Error('Could not get total ' + jobType + ' jobs: ' + err));
 				else resolve(total);
 			});
 		});
+	}
+	/**
+	 * Return count of inactive jobs in Queue
+	 * @returns {Number} inactiveCount
+	 */
+	async inactiveJobs() {
+		return Queue.getCount(this.name, 'inactive');
+	}
+
+	/**
+	 * Alias for inactiveJobs
+	 */
+	pendingJobs() {
+		return this.inactiveJobs();
 	}
 
 	/**
@@ -232,12 +263,7 @@ class Queue {
 	 * @returns {Number} completeCount
 	 */
 	async completedJobs() {
-		return new Promise((resolve, reject) => {
-			Queue.jobs.completeCount(this.name, (err, total) => {
-				if (err) reject(err);
-				else resolve(total);
-			});
-		});
+		return Queue.getCount(this.name, 'complete');
 	}
 
 	/**
@@ -245,12 +271,7 @@ class Queue {
 	 * @returns {Number} failedCount
 	 */
 	async failedJobs() {
-		return new Promise((resolve, reject) => {
-			Queue.jobs.failedCount(this.name, (err, total) => {
-				if (err) reject(err);
-				else resolve(total);
-			});
-		});
+		return Queue.getCount(this.name, 'failed');
 	}
 
 	/**
@@ -298,24 +319,41 @@ class Queue {
 	 * @param {Number} [olderThan=5000] Time in milliseconds, default = 5000
 	 */
 	async cleanup(olderThan = 5000) {
-		const n = await new Promise((resolve, reject) =>
-			Queue.jobs.activeCount(this.name, (err, total) => {
-				if (err) reject(new Error('Could not get total active jobs: ' + err));
-				else resolve(total);
-			}));
-		return new Promise((resolve, reject) => {
-			kue.Job.rangeByType(this.name, 'active', 0, n, 'asc', (err, jobs) => {
-				if (err) {
-					reject(new Error('Could not fetch jobs: ' + err));
-					return;
-				}
-				for (let i = 0; i < jobs.length; i++) {
-					if (Date.now() - jobs[i].created_at > olderThan) { jobs[i].inactive() }
-					else break;
-				}
-				resolve();
-			});
+		const n = await Queue.getCount(this.name, 'active');
+		const now = Date.now();
+		await iterateOverJobs(this.name, 'active', n, (job) => {
+			if (now - job.created_at > olderThan) {
+				job.inactive();
+				return true;
+			}
+			return false;
 		});
+	}
+
+	/**
+	 * Removes old completed/failed jobs from queue and clears any active jobs
+	 * older than specified time
+	 * @param {Number} [olderThan=3600000] Time in milliseconds, default = 3600000 (1 hr)
+	 */
+	async clear(olderThan = 3600000) {
+		const now = Date.now();
+		const completed = await this.completedJobs();
+		const removeComplete = iterateOverJobs(this.name, 'complete', completed, (job) => {
+			if (now - job.created_at > olderThan) {
+				job.remove(() => {});
+				return true;
+			}
+			return false;
+		});
+		const failed = await this.failedJobs();
+		const removeFailed = iterateOverJobs(this.name, 'failed', failed, (job) => {
+			if (now - job.created_at > olderThan) {
+				job.remove(() => {});
+				return true;
+			}
+			return false;
+		});
+		return Promise.all([removeComplete, removeFailed, this.cleanup(olderThan)]);
 	}
 
 	/**
