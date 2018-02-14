@@ -51,7 +51,14 @@ async function iterateOverJobs(queue, jobType, numOfJobs, cb) {
 
 class Queue {
 	static jobs;
+	static queues = {};
 
+	/**
+	 * Initialise the redis connection
+	 * @param {Object} [redis={port: 6379, host: '127.0.0.1'}] Redist connection settings object
+	 * @param {Boolean} [enableWatchdog=false] Will watch for stuck jobs due to any connection issues
+	 * Read more here :  https://github.com/Automattic/kue#unstable-redis-connections
+	 */
 	static init(redis, enableWatchdog) {
 		if (!Queue.jobs) {
 			Queue.jobs = kue.createQueue({
@@ -78,9 +85,14 @@ class Queue {
 	 * 		Read more here :  https://github.com/Automattic/kue#unstable-redis-connections
 	 */
 	constructor(name, redis = {port: 6379, host: '127.0.0.1'}, enableWatchdog = false) {
+		if (Queue.queues[name] === 'EXISTS') {
+			throw new Error('This queue name is already being used');
+		}
 		this.name = name;
+		Queue.queues[name] = 'EXISTS';
 		this.events = new EventEmitter();
-		this.events.setMaxListeners(2);
+		this.events.setMaxListeners(3);
+		this.processorAdded = false;
 		Queue.init(redis, enableWatchdog);
 	}
 
@@ -178,6 +190,9 @@ class Queue {
 	 * @param {Number} [concurrency=1] The number of jobs this processor can handle parallely
 	 */
 	addProcessor(processor, concurrency = 1) {
+		if (this.processorAdded) {
+			throw new Error('Processor already added, can only be set once per queue.');
+		}
 		// Increase max event listeners limit
 		Queue.jobs.setMaxListeners(Queue.jobs.getMaxListeners() + concurrency);
 
@@ -211,6 +226,7 @@ class Queue {
 			}
 			done(null, res);
 		});
+		this.processorAdded = true;
 	}
 
 	/**
