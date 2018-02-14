@@ -10,7 +10,7 @@ function sleep(val, timeout = 20) {
 
 before(async () => {
 	queue = new Queue('test');
-	await queue.cleanup();
+	await queue.clear(1);
 });
 
 describe('Queue library', () => {
@@ -104,6 +104,15 @@ describe('Queue library', () => {
 		detail = await Queue.status(id);
 		expect(detail.state).to.equal('inactive');
 	}).timeout(10000);
+
+	it('should give correct counts', async () => {
+		const inactive = await queue.pendingJobs();
+		const failed = await queue.failedJobs();
+		const completed = await queue.completedJobs();
+		expect(inactive).to.equal(1);
+		expect(failed).to.equal(1);
+		expect(completed).to.equal(4);
+	});
 
 	it('should resume processor', async () => {
 		queue.resumeProcessor();
