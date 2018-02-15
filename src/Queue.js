@@ -1,5 +1,6 @@
 import kue from 'kue';
 import _ from 'lodash';
+import {EventEmitter} from 'events';
 
 async function processorWrapper(job, processor, resolve, reject) {
 	let res;
@@ -33,20 +34,37 @@ async function processorWrapper(job, processor, resolve, reject) {
 	resolve(jobDetails);
 }
 
+async function iterateOverJobs(queue, jobType, numOfJobs, olderThan, action) {
+	const now = Date.now();
+	return new Promise((resolve, reject) => {
+		kue.Job.rangeByType(queue, jobType, 0, numOfJobs, 'asc', async (err, jobs) => {
+			if (err) {
+				reject(new Error('Could not fetch jobs: ' + err));
+				return;
+			}
+			for (let i = 0; i < jobs.length; i++) {
+				if (now - jobs[i].created_at > olderThan) {
+					jobs[i].log(`Doing ${action}`);
+					jobs[i][action](() => {});
+				}
+				else break;
+			}
+			resolve();
+		});
+	});
+}
+
 class Queue {
 	static jobs;
+	static queues = {};
 
 	/**
-	 * Class constructor : Create a new Queue
-	 * The redis and enableWatchdog settings are required only the first time to init
-	 * @param {String} name Name of the queue
+	 * Initialise the redis connection
 	 * @param {Object} [redis={port: 6379, host: '127.0.0.1'}] Redist connection settings object
 	 * @param {Boolean} [enableWatchdog=false] Will watch for stuck jobs due to any connection issues
-	 * 		Read more here :  https://github.com/Automattic/kue#unstable-redis-connections
+	 * Read more here :  https://github.com/Automattic/kue#unstable-redis-connections
 	 */
-	constructor(name, redis = {port: 6379, host: '127.0.0.1'}, enableWatchdog = false) {
-		this.name = name;
-
+	static init(redis, enableWatchdog) {
 		if (!Queue.jobs) {
 			Queue.jobs = kue.createQueue({
 				redis,
@@ -60,6 +78,23 @@ class Queue {
 				process.exit(0);
 			});
 		}
+	}
+
+	/**
+	 * Class constructor : Create a new Queue
+	 * The redis and enableWatchdog settings are required only the first time to init
+	 * Can also be set beforehand by calling Queue.init()
+	 * @param {String} name Name of the queue
+	 * @param {Object} [redis={port: 6379, host: '127.0.0.1'}] Redist connection settings object
+	 * @param {Boolean} [enableWatchdog=false] Will watch for stuck jobs due to any connection issues
+	 * 		Read more here :  https://github.com/Automattic/kue#unstable-redis-connections
+	 */
+	constructor(name, redis = {port: 6379, host: '127.0.0.1'}, enableWatchdog = false) {
+		this.name = name;
+		if (!Queue.queues[name]) Queue.queues[name] = {processorAdded: false};
+		this.events = new EventEmitter();
+		this.events.setMaxListeners(3);
+		Queue.init(redis, enableWatchdog);
 	}
 
 	/**
@@ -147,14 +182,6 @@ class Queue {
 	 * An async function which will be called to process the job data
 	 * @callback processorCallback
 	 * @param {*} jobData The information saved in the job during adding of job
-	 * @param {Object} [ctx] Can be used to pause and resume queue,
-	 * 	Will only be passed when attaching a processor to the queue
-	 * 		Usage:
-	 * 		ctx.pause(timeout, callback()) :
-	 * 			Waits for any active jobs to complete till timeout,
-	 * 			then forcefully shuts them down (like shutdown)
-	 * 		ctx.resume() : Resumes Queue processing
-	 * 		For detailed info : https://github.com/Automattic/kue#pause-processing
 	 * @returns {*} Will be saved in return field in JobDetails
 	 */
 
@@ -164,13 +191,33 @@ class Queue {
 	 * @param {Number} [concurrency=1] The number of jobs this processor can handle parallely
 	 */
 	addProcessor(processor, concurrency = 1) {
+		if (Queue.queues[this.name].processorAdded) {
+			throw new Error(`Processor already added for queue ${this.name}, can only be set once per queue.`);
+		}
+		// Increase max event listeners limit
+		Queue.jobs.setMaxListeners(Queue.jobs.getMaxListeners() + concurrency);
+
 		Queue.jobs.process(this.name, concurrency, async (job, ctx, done) => {
+			this.events.on('pause', (timeout, res, rej) => {
+				// ctx Can be used to pause and resume worker,
+				// For detailed info : https://github.com/Automattic/kue#pause-processing
+				ctx.pause(timeout, (err) => {
+					if (err) rej();
+					else res();
+				});
+			});
+
+			this.events.on('resume', () => {
+				ctx.resume();
+			});
+
 			job.log('Start processing');
 			let res;
 			try {
 				res = await processor(job.data.input, ctx);
 			}
 			catch (e) {
+				job.log('Errored: ' + e.message);
 				if (job.data.options.noFailure) {
 					job.error(e);
 				}
@@ -179,8 +226,90 @@ class Queue {
 					return;
 				}
 			}
+			job.log('Done');
 			done(null, res);
 		});
+		Queue.queues[this.name].processorAdded = true;
+	}
+
+	/**
+	 * Pause Queue processing
+	 * Gives timeout time to all workers to complete their current jobs then stops them
+	 * @param {Number} [timeout=5000] Time to complete current jobs in ms
+	 */
+	async pauseProcessor(timeout = 5000) {
+		return new Promise((resolve, reject) => {
+			this.events.emit('pause', timeout, resolve, reject);
+		});
+	}
+
+	/**
+	 * Resume Queue processing
+	 */
+	resumeProcessor() {
+		this.events.emit('resume');
+	}
+
+	/**
+	 * Return count of jobs in Queue of JobType
+	 * @param {String} queue Queue name
+	 * @param {String} jobType One of {'inactive', 'delayed' ,'active', 'complete', 'failed'}
+	 * @returns {Number} count
+	 */
+	static async getCount(queue, jobType) {
+		return new Promise((resolve, reject) => {
+			Queue.jobs[jobType + 'Count'](queue, (err, total) => {
+				if (err) reject(new Error('Could not get total ' + jobType + ' jobs: ' + err));
+				else resolve(total);
+			});
+		});
+	}
+	/**
+	 * Return count of inactive jobs in Queue
+	 * @returns {Number} inactiveCount
+	 */
+	async inactiveJobs() {
+		return Queue.getCount(this.name, 'inactive');
+	}
+
+	/**
+	 * Alias for inactiveJobs
+	 */
+	pendingJobs() {
+		return this.inactiveJobs();
+	}
+
+	/**
+	 * Return count of completed jobs in Queue
+	 * Might return 0 if removeOnComplete was true
+	 * @returns {Number} completeCount
+	 */
+	async completedJobs() {
+		return Queue.getCount(this.name, 'complete');
+	}
+
+	/**
+	 * Return count of failed jobs in Queue
+	 * @returns {Number} failedCount
+	 */
+	async failedJobs() {
+		return Queue.getCount(this.name, 'failed');
+	}
+
+	/**
+	 * Return count of delayed jobs in Queue
+	 * @returns {Number} delayedCount
+	 */
+	async delayedJobs() {
+		return Queue.getCount(this.name, 'delayed');
+	}
+
+	/**
+	 * Return count of active jobs in Queue
+	 * @returns {Number} activeCount
+	 */
+	async activeJobs() {
+		return Queue.getCount(this.name, 'active');
 	}
 
 	/**
@@ -228,24 +357,32 @@ class Queue {
 	 * @param {Number} [olderThan=5000] Time in milliseconds, default = 5000
 	 */
 	async cleanup(olderThan = 5000) {
-		const n = await new Promise((resolve, reject) =>
-			Queue.jobs.activeCount(this.name, (err, total) => {
-				if (err) reject(new Error('Could not get total active jobs: ' + err));
-				else resolve(total);
-			}));
-		return new Promise((resolve, reject) => {
-			kue.Job.rangeByType(this.name, 'active', 0, n, 'asc', (err, jobs) => {
-				if (err) {
-					reject(new Error('Could not fetch jobs: ' + err));
-					return;
-				}
-				for (let i = 0; i < jobs.length; i++) {
-					if (Date.now() - jobs[i].created_at > olderThan) { jobs[i].inactive() }
-					else break;
-				}
-				resolve();
-			});
-		});
+		const n = await Queue.getCount(this.name, 'active');
+		return iterateOverJobs(this.name, 'active', n, olderThan, 'inactive');
+	}
+
+	/**
+	 * Removes any old jobs from queue
+	 * older than specified time
+	 * @param {Number} [olderThan=3600000] Time in milliseconds, default = 3600000 (1 hr)
+	 */
+	async delete(olderThan = 3600000) {
+		const completed = await this.completedJobs();
+		const removeComplete = iterateOverJobs(this.name, 'complete', completed, olderThan, 'remove');
+
+		const failed = await this.failedJobs();
+		const removeFailed = iterateOverJobs(this.name, 'failed', failed, olderThan, 'remove');
+
+		const inactive = await this.pendingJobs();
+		const removeInactive = iterateOverJobs(this.name, 'inactive', inactive, olderThan, 'remove');
+
+		const delayed = await this.delayedJobs();
+		const removeDelayed = iterateOverJobs(this.name, 'delayed', delayed, olderThan, 'remove');
+
+		const active = await this.activeJobs();
+		const removeActive = iterateOverJobs(this.name, 'active', active, olderThan, 'remove');
+
+		return Promise.all([removeComplete, removeFailed, removeInactive, removeDelayed, removeActive]);
 	}
 
 	/**
