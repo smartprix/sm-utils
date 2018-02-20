@@ -1,3 +1,5 @@
+import _ from 'lodash';
+
 function invertCase(str) {
 	let output = '';
 	let code = '';
@@ -88,6 +90,16 @@ function transform(str, from, to) {
 	return out;
 }
 
+// Break String From Next Given Character After A Given Position
+function trimToNext(str, pos, char = ' ') {
+	const trimPos = str.indexOf(char, pos);
+	if (trimPos !== -1) {
+		return _.trimEnd(str.substring(0, trimPos), char);
+	}
+
+	return _.trimEnd(str, char);
+}
+
 export default {
 	invertCase,
 	isVowel,
@@ -95,4 +107,5 @@ export default {
 	plural,
 	pluralize,
 	transform,
+	trimToNext,
 };
