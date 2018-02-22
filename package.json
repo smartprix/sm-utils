@@ -19,7 +19,9 @@
     "check-coverage": "true",
     "build": "babel src --out-dir dist",
     "lint": "eslint src",
-    "test-only": "NODE_ENV=test mocha --slow 0 --exit --require babel-register test/*.test.js"
+    "test-only": "NODE_ENV=test mocha --slow 0 --exit --require babel-register test/*.test.js",
+    "-precommit": "npm run build && npm test && npm run check-coverage",
+    "prepublishOnly": "npm run build"
   },
   "author": "Hitesh Khandelwal <hitesh@smartprix.com> (http://www.smartprix.com/)",
   "license": "ISC",

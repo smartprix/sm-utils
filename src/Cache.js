@@ -164,10 +164,20 @@ class Cache {
 		const existing = this.data[key];
 		if (existing !== undefined) return existing;
 
+		// no value given, return undefined
+		if (value === undefined) return undefined;
+
 		this.fetching[key] = FETCHING;
 		await this.set(key, value, options);
 		delete this.fetching[key];
 		return this.data[key];
+	}
+
+	/**
+	 * alias for getOrSet
+	 */
+	async $(key, value, options = {}) {
+		return this.getOrSet(key, value, options);
 	}
 
 	/**
@@ -222,6 +232,10 @@ class Cache {
 	}
 
 	static getOrSet(key, value, options = {}) {
+		return this.globalCache().getOrSet(key, value, options);
+	}
+
+	static $(key, value, options = {}) {
 		return this.globalCache().getOrSet(key, value, options);
 	}
 

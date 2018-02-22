@@ -1,12 +1,34 @@
 import EventEmitter from 'events';
+import Redis from 'ioredis';
 
 const FETCHING = Symbol('Fetching_Value');
+const redisMap = {};
 let globalCache;
 
 class RedisCache {
-	constructor(prefix, redis) {
+	constructor(prefix, redisConf = {}) {
+		if (redisConf instanceof Redis) {
+			this.redis = redisConf;
+		}
+		else {
+			const host = redisConf.host || '127.0.0.1';
+			const port = redisConf.port || 6379;
+			const password = redisConf.password || undefined;
+			const address = `${host}:${port}`;
+
+			// cache redis connections in a map to prevent a new connection on each instance
+			if (!redisMap[address]) {
+				redisMap[address] = new Redis({
+					host,
+					port,
+					password,
+				});
+			}
+
+			this.redis = redisMap[address];
+		}
+
 		this.prefix = prefix;
-		this.redis = redis;
 		this.fetching = {};
 		this.events = new EventEmitter();
 	}
@@ -174,10 +196,24 @@ class RedisCache {
 			return existing;
 		}
 
+		// no value given, return undefined
+		if (value === undefined) {
+			this.events.emit(`get:${key}`, undefined);
+			delete this.fetching[key];
+			return undefined;
+		}
+
 		this.set(key, value, options);
 		return new Promise((resolve) => {
 			this.events.once(`get:${key}`, resolve);
 		});
+	}
+
+	/**
+	 * alias for getOrSet
+	 */
+	async $(key, value, options = {}) {
+		return this.getOrSet(key, value, options);
 	}
 
 	/**
@@ -226,6 +262,10 @@ class RedisCache {
 	}
 
 	static getOrSet(key, value, options = {}) {
+		return this.globalCache().getOrSet(key, value, options);
+	}
+
+	static $(key, value, options = {}) {
 		return this.globalCache().getOrSet(key, value, options);
 	}
 
