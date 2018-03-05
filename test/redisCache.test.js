@@ -147,6 +147,22 @@ describe('redis cache library', () => {
 		expect(await cache.size()).to.equal(7);
 	});
 
+	it('should correctly memoize a function', async () => {
+		let count = 0;
+		const sum = cache.memoize('myFunc', (a, b) => {
+			count++;
+			return a + b;
+		});
+
+		expect(await sum(1, 2)).to.equal(3);
+		expect(await sum(2, 3)).to.equal(5);
+		await sum(1, 2);
+		await sum(1, 2);
+		await sum(1, 2);
+		await sum(2, 3);
+		expect(count).to.equal(2);
+	});
+
 	it('should correctly clear the cache', async () => {
 		expect(await cache.get('a')).to.equal('this');
 		await cache.clear();

@@ -210,6 +210,30 @@ class Cache {
 		this.events.setMaxListeners(n);
 	}
 
+	/**
+	 * memoizes a function (caches the return value of the function)
+	 * ```js
+	 * const cachedFn = cache.memoize('expensiveFn', expensiveFn);
+	 * const result = cachedFn('a', 'b');
+	 * ```
+	 * @param {string} key cache key with which to memoize the results
+	 * @param {function} fn function to memoize
+	 * @param {int|object} options either ttl in ms, or object of {ttl}
+	 */
+	memoize(key, fn, options = {}) {
+		return async (...args) => {
+			let cacheKey;
+			if (options.keyFn) {
+				cacheKey = key + ':' + options.keyFn(...args);
+			}
+			else {
+				cacheKey = key + ':' + JSON.stringify(args);
+			}
+
+			return this.getOrSet(cacheKey, () => fn(...args), options);
+		};
+	}
+
 	static globalCache() {
 		if (!globalCache) globalCache = new this();
 		return globalCache;
@@ -249,6 +273,14 @@ class Cache {
 
 	static clear() {
 		return this.globalCache().clear();
+	}
+
+	static setMaxListeners(n) {
+		return this.globalCache().setMaxListeners(n);
+	}
+
+	static memoize(key, fn, options = {}) {
+		return this.globalCache().memoize(key, fn, options);
 	}
 }
 
