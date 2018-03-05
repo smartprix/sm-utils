@@ -35,7 +35,7 @@ function readDefaultConfigFiles() {
 	if (configRead) return;
 	configRead = true;
 
-	const env = process.env.NODE_ENV || 'developement';
+	const env = process.env.NODE_ENV || 'development';
 	cfg.file(`${process.cwd()}/config.js`, {ignoreNotFound: true});
 	cfg.file(`${process.cwd()}/config.${env}.js`, {ignoreNotFound: true});
 	cfg.file(`${process.cwd()}/private/config.js`, {ignoreNotFound: true});
@@ -57,7 +57,7 @@ cfg.set = function (key, value) {
 
 	// if key is Object then merge it with existing config
 	if (value === undefined && key instanceof Object) {
-		const env = process.env.NODE_ENV || 'developement';
+		const env = process.env.NODE_ENV || 'development';
 		Object.assign(config, key);
 		Object.assign(config, key[`$env_${env}`]);
 		return null;
@@ -75,7 +75,7 @@ cfg.merge = function (obj) {
 	readDefaultConfigFiles();
 
 	if (obj instanceof Object) {
-		const env = process.env.NODE_ENV || 'developement';
+		const env = process.env.NODE_ENV || 'development';
 		merge(config, obj);
 		merge(config, obj[`$env_${env}`]);
 		return null;
@@ -91,7 +91,7 @@ cfg.assign = function (obj) {
 	readDefaultConfigFiles();
 
 	if (obj instanceof Object) {
-		const env = process.env.NODE_ENV || 'developement';
+		const env = process.env.NODE_ENV || 'development';
 		Object.assign(config, obj);
 		Object.assign(config, obj[`$env_${env}`]);
 		return null;
