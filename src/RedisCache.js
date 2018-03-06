@@ -1,36 +1,88 @@
 import EventEmitter from 'events';
 import Redis from 'ioredis';
+import Cache from './Cache';
 
 const FETCHING = Symbol('Fetching_Value');
 const redisMap = {};
+const localCache = new Cache();
+const processId = process.pid;
 let globalCache;
 
 class RedisCache {
+	static globalPrefix = 'all';
+
 	constructor(prefix, redisConf = {}) {
-		if (redisConf instanceof Redis) {
-			this.redis = redisConf;
-		}
-		else {
-			const host = redisConf.host || '127.0.0.1';
-			const port = redisConf.port || 6379;
-			const password = redisConf.password || redisConf.auth || undefined;
-			const address = `${host}:${port}`;
-
-			// cache redis connections in a map to prevent a new connection on each instance
-			if (!redisMap[address]) {
-				redisMap[address] = new Redis({
-					host,
-					port,
-					password,
-				});
-			}
-
-			this.redis = redisMap[address];
-		}
-
 		this.prefix = prefix;
 		this.fetching = {};
 		this.events = new EventEmitter();
+
+		if (redisConf instanceof Redis) {
+			this.redis = redisConf;
+			return;
+		}
+
+		const redis = {
+			host: redisConf.host || '127.0.0.1',
+			port: redisConf.port || 6379,
+			password: redisConf.password || redisConf.auth || undefined,
+		};
+
+		this.redis = this.constructor.getRedis(redis);
+	}
+
+	static getRedis(redis) {
+		const address = `${redis.host}:${redis.port}`;
+
+		// cache redis connections in a map to prevent a new connection on each instance
+		if (!redisMap[address]) {
+			redisMap[address] = new Redis(redis);
+
+			// we need a different connection for subscription, because once subscribed
+			// no other commands can be issued
+			this.subscribe(redis);
+		}
+
+		return redisMap[address];
+	}
+
+	static subscribe(redis) {
+		const redisIns = new Redis(redis);
+		redisIns.on('message', this.handleSubscribeMessage);
+
+		// eslint-disable-next-line no-use-before-define
+		const channelName = `RC\v${this.globalPrefix}`;
+		redisIns.subscribe(channelName, (err) => {
+			console.error("[RedisCache] can't subscribe to channel", err);
+		});
+	}
+
+	static handleSubscribeMessage(channel, message) {
+		// the channel is RC\v${globalPrefix} => Rs\vall
+		// the message is ${pid}\v${prefix}\v${command}\v${args.join('\v')}
+		const [pid, prefix, command, key, ...args] = message.split('\v');
+
+		if (Number(pid) === processId) {
+			// since the message came from the same process, it's already been handled
+			// we don't need to do anything
+			return;
+		}
+
+		if (command === 'delete') {
+			localCache.del(`${prefix}:${key}`)
+				.then(() => {})
+				.catch(e => console.error(e));
+		}
+		else if (command === 'set') {
+			const ttl = Number(args[0]);
+			const value = args[1];
+
+			localCache.set(`${prefix}:${key}`, value, {ttl})
+				.then(() => {})
+				.catch(e => console.error(e));
+		}
+		else {
+			console.error(`[RedisCache] unknown subscribe command ${command}`);
+		}
 	}
 
 	async _get(key) {
