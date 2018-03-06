@@ -1,8 +1,9 @@
 import Redis from 'ioredis';
-import Cache from './Cache';
 
+const DELETE = Symbol('DELETE');
 const redisMap = {};
-const localCache = new Cache();
+const localCache = {};
+const localCacheTTL = {};
 const processId = process.pid;
 const getting = {};
 const setting = {};
@@ -63,7 +64,7 @@ class RedisCache {
 	}
 
 	static handleSubscribeMessage(channel, message) {
-		// the channel is RC\v${globalPrefix} => Rs\vall
+		// the channel is RC:${globalPrefix} => RC:a
 		// the message is ${pid}\v${prefix}\v${command}\v${args.join('\v')}
 		const [pid, prefix, command, key, ...args] = message.split('\v');
 
@@ -74,7 +75,7 @@ class RedisCache {
 		}
 
 		if (command === 'delete') {
-			localCache.del(`${prefix}:${key}`)
+			localCache.del(this._localKey(prefix, key))
 				.then(() => {})
 				.catch(e => console.error(e));
 		}
@@ -82,13 +83,23 @@ class RedisCache {
 			const ttl = Number(args[0]);
 			const value = args[1];
 
-			localCache.set(`${prefix}:${key}`, value, {ttl})
+			localCache.set(this._localKey(prefix, key), value, {ttl})
 				.then(() => {})
 				.catch(e => console.error(e));
 		}
 		else {
 			console.error(`[RedisCache] unknown subscribe command ${command}`);
 		}
+	}
+
+	// key for localCahce
+	static _localKey(prefix, key) {
+		return `${prefix}:${key}`;
+	}
+
+	// key for localCahce
+	_localKey(key) {
+		return `${this.prefix}:${key}`;
 	}
 
 	// get prefixed key for redis
@@ -140,12 +151,51 @@ class RedisCache {
 		return this.redis.eval(`return #redis.pcall('keys', '${keyGlob}')`, 0);
 	}
 
+	_localCache(key, value, ttl = 0) {
+		// the channel is RC:${globalPrefix} => RC:a
+		// the message is ${pid}\v${prefix}\v${command}\v${args.join('\v')}
+
+		const prefixedKey = this._key(key);
+		if (value === undefined) {
+			return localCache[prefixedKey];
+		}
+
+		const channelName = `RC:${this.globalPrefix}`;
+
+		if (value === DELETE) {
+			this.redis.publish(channelName, `${processId}:${this.prefix}:delete:${key}`);
+
+			// delete ttl
+			if (key in localCacheTTL) {
+				clearTimeout(localCacheTTL[prefixedKey]);
+				delete localCacheTTL[prefixedKey];
+			}
+
+			// delete data
+			delete localCache[prefixedKey];
+			return undefined;
+		}
+
+		// set value
+		const stringified = JSON.stringify(value);
+		localCache[prefixedKey] = stringified;
+		if (ttl > 0) {
+			// set ttl
+			clearTimeout(localCacheTTL[prefixedKey]);
+			localCacheTTL[prefixedKey] = setTimeout(() => {
+				delete localCache[prefixedKey];
+			}, ttl);
+		}
+
+		return value;
+	}
+
 	_getting(key, value) {
 		const prefixedKey = this._key(key);
 		if (value === undefined) {
 			return getting[prefixedKey];
 		}
-		if (value === false) {
+		if (value === DELETE) {
 			delete getting[prefixedKey];
 			return undefined;
 		}
@@ -159,7 +209,7 @@ class RedisCache {
 		if (value === undefined) {
 			return setting[prefixedKey];
 		}
-		if (value === false) {
+		if (value === DELETE) {
 			delete setting[prefixedKey];
 			return undefined;
 		}
@@ -174,6 +224,11 @@ class RedisCache {
 	 * @param {any} defaultValue
 	 */
 	async getStale(key, defaultValue = undefined) {
+		const localValue = this._localCache(key);
+		if (localValue !== undefined) {
+			return localValue;
+		}
+
 		const gettingPromise = this._getting(key);
 		if (gettingPromise) {
 			return _withDefault(gettingPromise, defaultValue);
@@ -181,8 +236,11 @@ class RedisCache {
 
 		const promise = this._get(key);
 		this._getting(key, promise);
-		const value = await _withDefault(promise, defaultValue);
-		this._getting(key, false);
+		const value = await promise;
+		this._localCache(key, value);
+		this._getting(key, DELETE);
+
+		if (value === undefined) return defaultValue;
 		return value;
 	}
 
@@ -230,8 +288,9 @@ class RedisCache {
 				// resolve it and then cache it
 				this._setting(key, value);
 				const resolvedValue = await value;
+				this._localCache(key, resolvedValue, ttl);
 				await this._set(key, resolvedValue, ttl);
-				this._setting(key, false);
+				this._setting(key, DELETE);
 				return true;
 			}
 			else if (typeof value === 'function') {
@@ -243,13 +302,14 @@ class RedisCache {
 			// value is normal
 			// just set it in the store
 			this._setting(key, Promise.resolve(value));
+			this._localCache(key, value, ttl);
 			await this._set(key, value, ttl);
-			this._setting(key, false);
+			this._setting(key, DELETE);
 			return true;
 		}
 		catch (error) {
 			await this._del(key);
-			this._setting(key, false);
+			this._setting(key, DELETE);
 			return false;
 		}
 	}
@@ -302,6 +362,7 @@ class RedisCache {
 	 * @param {string} key
 	 */
 	async del(key) {
+		this._localCache(key, DELETE);
 		return this._del(key);
 	}
 
