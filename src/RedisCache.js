@@ -1,20 +1,24 @@
-import EventEmitter from 'events';
 import Redis from 'ioredis';
 import Cache from './Cache';
 
-const FETCHING = Symbol('Fetching_Value');
 const redisMap = {};
 const localCache = new Cache();
 const processId = process.pid;
+const getting = {};
+const setting = {};
 let globalCache;
 
+async function _withDefault(promise, defaultValue) {
+	const value = await promise;
+	if (value === undefined) return defaultValue;
+	return value;
+}
+
 class RedisCache {
-	static globalPrefix = 'all';
+	static globalPrefix = 'a';
 
 	constructor(prefix, redisConf = {}) {
 		this.prefix = prefix;
-		this.fetching = {};
-		this.events = new EventEmitter();
 
 		if (redisConf instanceof Redis) {
 			this.redis = redisConf;
@@ -47,13 +51,15 @@ class RedisCache {
 
 	static subscribe(redis) {
 		const redisIns = new Redis(redis);
-		redisIns.on('message', this.handleSubscribeMessage);
+		const channelName = `RC:${this.globalPrefix}`;
 
-		// eslint-disable-next-line no-use-before-define
-		const channelName = `RC\v${this.globalPrefix}`;
 		redisIns.subscribe(channelName, (err) => {
-			console.error("[RedisCache] can't subscribe to channel", err);
+			if (err) {
+				console.error(`[RedisCache] can't subscribe to channel ${channelName}`, err);
+			}
 		});
+
+		redisIns.on('message', this.handleSubscribeMessage);
 	}
 
 	static handleSubscribeMessage(channel, message) {
@@ -85,26 +91,30 @@ class RedisCache {
 		}
 	}
 
+	// get prefixed key for redis
+	_key(key) {
+		return `RC:${this.constructor.globalPrefix}:${this.prefix}:${key}`;
+	}
+
 	async _get(key) {
-		const prefixedKey = `${this.prefix}:${key}`;
+		const prefixedKey = this._key(key);
 		const value = await this.redis.get(prefixedKey);
-		let parsedValue;
+		if (value === null) return undefined;
 		try {
-			parsedValue = JSON.parse(value);
+			return JSON.parse(value);
 		}
 		catch (err) {
-			parsedValue = value;
+			return value;
 		}
-		return parsedValue;
 	}
 
 	async _has(key) {
-		return this.redis.exists(`${this.prefix}:${key}`);
+		return this.redis.exists(this._key(key));
 	}
 
 	_set(key, value, ttl = 0) {
 		if (value === undefined) return true;
-		const prefixedKey = `${this.prefix}:${key}`;
+		const prefixedKey = this._key(key);
 
 		if (ttl <= 0) {
 			return this.redis.set(prefixedKey, JSON.stringify(value));
@@ -114,18 +124,48 @@ class RedisCache {
 	}
 
 	_del(key) {
-		return this.redis.del(`${this.prefix}:${key}`);
+		return this.redis.del(this._key(key));
 	}
 
 	_clear() {
+		const keyGlob = this._key('*');
 		return this.redis.eval(
-			`for i, name in ipairs(redis.call('KEYS', '${this.prefix}:*')) do redis.call('DEL', name); end`,
+			`for i, name in ipairs(redis.call('KEYS', '${keyGlob}')) do redis.call('DEL', name); end`,
 			0,
 		);
 	}
 
 	_size() {
-		return this.redis.eval(`return #redis.pcall('keys', '${this.prefix}:*')`, 0);
+		const keyGlob = this._key('*');
+		return this.redis.eval(`return #redis.pcall('keys', '${keyGlob}')`, 0);
+	}
+
+	_getting(key, value) {
+		const prefixedKey = this._key(key);
+		if (value === undefined) {
+			return getting[prefixedKey];
+		}
+		if (value === false) {
+			delete getting[prefixedKey];
+			return undefined;
+		}
+
+		getting[prefixedKey] = value;
+		return value;
+	}
+
+	_setting(key, value) {
+		const prefixedKey = this._key(key);
+		if (value === undefined) {
+			return setting[prefixedKey];
+		}
+		if (value === false) {
+			delete setting[prefixedKey];
+			return undefined;
+		}
+
+		setting[prefixedKey] = value;
+		return value;
 	}
 
 	/**
@@ -134,9 +174,16 @@ class RedisCache {
 	 * @param {any} defaultValue
 	 */
 	async getStale(key, defaultValue = undefined) {
-		const existing = await this._get(key);
-		if (existing === null) return defaultValue;
-		return existing;
+		const gettingPromise = this._getting(key);
+		if (gettingPromise) {
+			return _withDefault(gettingPromise, defaultValue);
+		}
+
+		const promise = this._get(key);
+		this._getting(key, promise);
+		const value = await _withDefault(promise, defaultValue);
+		this._getting(key, false);
+		return value;
 	}
 
 	/**
@@ -145,23 +192,12 @@ class RedisCache {
 	 * @param {any} defaultValue
 	 */
 	async get(key, defaultValue = undefined) {
-		if (this.fetching[key] === FETCHING) {
-			// Some other process is still fetching the value
-			// Don't dogpile shit, wait for the other process
-			// to finish it
-			return new Promise((resolve) => {
-				this.events.once(`get:${key}`, (val) => {
-					if (val === null || val === undefined) resolve(defaultValue);
-					else resolve(val);
-				});
-			});
+		const settingPromise = this._setting(key);
+		if (settingPromise) {
+			return _withDefault(settingPromise, defaultValue);
 		}
 
-		this.fetching[key] = FETCHING;
-		const value = await this.getStale(key, defaultValue);
-		delete this.fetching[key];
-		this.events.emit(`get:${key}`, value);
-		return value;
+		return this.getStale(key, defaultValue);
 	}
 
 	/**
@@ -188,37 +224,51 @@ class RedisCache {
 			ttl = options.ttl || 0;
 		}
 
-		this.fetching[key] = FETCHING;
-
 		try {
 			if (value && value.then) {
 				// value is a Promise
 				// resolve it and then cache it
+				this._setting(key, value);
 				const resolvedValue = await value;
 				await this._set(key, resolvedValue, ttl);
-				delete this.fetching[key];
-				this.events.emit(`get:${key}`, resolvedValue);
+				this._setting(key, false);
 				return true;
 			}
 			else if (typeof value === 'function') {
 				// value is a function
 				// call it and set the result
-				return (await this.set(key, value(key), ttl));
+				return this.set(key, value(key), ttl);
 			}
 
 			// value is normal
 			// just set it in the store
+			this._setting(key, Promise.resolve(value));
 			await this._set(key, value, ttl);
-			delete this.fetching[key];
-			this.events.emit(`get:${key}`, value);
+			this._setting(key, false);
 			return true;
 		}
 		catch (error) {
 			await this._del(key);
-			this.events.emit(`get:${key}`, undefined);
-			delete this.fetching[key];
+			this._setting(key, false);
 			return false;
 		}
+	}
+
+	async _getOrSet(key, value, options = {}) {
+		// key already exists, return it
+		const existingValue = await this.getStale(key);
+		if (existingValue !== undefined) {
+			return existingValue;
+		}
+
+		// no value given, return undefined
+		if (value === undefined) {
+			this._setting(key, Promise.resolve(undefined));
+			return undefined;
+		}
+
+		this.set(key, value, options);
+		return this._setting(key);
 	}
 
 	/**
@@ -229,36 +279,15 @@ class RedisCache {
 	 * @param {int|object} options either ttl in ms, or object of {ttl}
 	 */
 	async getOrSet(key, value, options = {}) {
-		if (this.fetching[key] === FETCHING) {
+		const settingPromise = this._setting(key);
+		if (settingPromise) {
 			// Some other process is still fetching the value
 			// Don't dogpile shit, wait for the other process
 			// to finish it
-			return new Promise((resolve) => {
-				this.events.once(`get:${key}`, resolve);
-			});
+			return settingPromise;
 		}
 
-		this.fetching[key] = FETCHING;
-
-		// key already exists, return it
-		const existing = await this._get(key);
-		if (existing !== null) {
-			delete this.fetching[key];
-			this.events.emit(`get:${key}`, existing);
-			return existing;
-		}
-
-		// no value given, return undefined
-		if (value === undefined) {
-			this.events.emit(`get:${key}`, undefined);
-			delete this.fetching[key];
-			return undefined;
-		}
-
-		this.set(key, value, options);
-		return new Promise((resolve) => {
-			this.events.once(`get:${key}`, resolve);
-		});
+		return this._setting(key, this._getOrSet(key, value, options));
 	}
 
 	/**
@@ -290,14 +319,6 @@ class RedisCache {
 	 */
 	async clear() {
 		return this._clear();
-	}
-
-	/**
-	 * Sets the max event listeners for the internal events object
-	 * @param {Number} n A non-negative integer
-	 */
-	setMaxListeners(n) {
-		this.events.setMaxListeners(n);
 	}
 
 	/**
@@ -363,10 +384,6 @@ class RedisCache {
 
 	static clear() {
 		return this.globalCache().clear();
-	}
-
-	static setMaxListeners(n) {
-		return this.globalCache().setMaxListeners(n);
 	}
 
 	static memoize(key, fn, options = {}) {

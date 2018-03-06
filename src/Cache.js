@@ -1,7 +1,4 @@
 /* eslint-disable guard-for-in */
-import EventEmitter from 'events';
-
-const FETCHING = Symbol('Fetching_Value');
 let globalCache;
 
 class Cache {
@@ -9,8 +6,6 @@ class Cache {
 		this.data = {};
 		this.ttl = {};
 		this.fetching = {};
-		this.events = new EventEmitter();
-		this.events.setMaxListeners(20);
 	}
 
 	_set(key, value, ttl = 0) {
@@ -56,16 +51,13 @@ class Cache {
 	 * @param {any} defaultValue
 	 */
 	async get(key, defaultValue = undefined) {
-		if (this.fetching[key] === FETCHING) {
+		if (this.fetching[key]) {
 			// Some other process is still fetching the value
 			// Don't dogpile shit, wait for the other process
 			// to finish it
-			return new Promise((resolve) => {
-				this.events.once(`get:${key}`, (val) => {
-					if (val === null || val === undefined) resolve(defaultValue);
-					else resolve(val);
-				});
-			});
+			const value = await this.fetching[key];
+			if (value === undefined) return defaultValue;
+			return value;
 		}
 
 		const existing = this.data[key];
@@ -108,16 +100,14 @@ class Cache {
 			ttl = options.ttl || 0;
 		}
 
-		this.fetching[key] = FETCHING;
-
 		try {
 			if (value && value.then) {
 				// value is a Promise
 				// resolve it and then cache it
+				this.fetching[key] = value;
 				const resolvedValue = await value;
 				this._set(key, resolvedValue, ttl);
 				delete this.fetching[key];
-				this.events.emit(`get:${key}`, resolvedValue);
 				return true;
 			}
 			else if (typeof value === 'function') {
@@ -129,14 +119,11 @@ class Cache {
 			// value is normal
 			// just set it in the store
 			this._set(key, value, ttl);
-			delete this.fetching[key];
-			this.events.emit(`get:${key}`, value);
 			return true;
 		}
 		catch (error) {
 			this._del(key);
 			delete this.fetching[key];
-			this.events.emit(`get:${key}`, undefined);
 			return false;
 		}
 	}
@@ -149,15 +136,11 @@ class Cache {
 	 * @param {int|object} options either ttl in ms, or object of {ttl}
 	 */
 	async getOrSet(key, value, options = {}) {
-		if (this.fetching[key] === FETCHING) {
+		if (this.fetching[key]) {
 			// Some other process is still fetching the value
 			// Don't dogpile shit, wait for the other process
 			// to finish it
-			return new Promise((resolve) => {
-				this.events.once(`get:${key}`, (val) => {
-					resolve(val);
-				});
-			});
+			return this.fetching[key];
 		}
 
 		// key already exists, return it
@@ -167,9 +150,7 @@ class Cache {
 		// no value given, return undefined
 		if (value === undefined) return undefined;
 
-		this.fetching[key] = FETCHING;
 		await this.set(key, value, options);
-		delete this.fetching[key];
 		return this.data[key];
 	}
 
@@ -200,14 +181,6 @@ class Cache {
 	 */
 	async clear() {
 		return this._clear();
-	}
-
-	/**
-	 * Sets the max event listeners for the internal events object
-	 * @param {Number} n A non-negative integer
-	 */
-	setMaxListeners(n) {
-		this.events.setMaxListeners(n);
 	}
 
 	/**
@@ -273,10 +246,6 @@ class Cache {
 
 	static clear() {
 		return this.globalCache().clear();
-	}
-
-	static setMaxListeners(n) {
-		return this.globalCache().setMaxListeners(n);
 	}
 
 	static memoize(key, fn, options = {}) {
