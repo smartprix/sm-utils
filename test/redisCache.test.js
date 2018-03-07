@@ -1,6 +1,7 @@
 /* global describe, it, before */
 /* eslint-disable no-unused-expressions */
 import {expect} from 'chai';
+import _ from 'lodash';
 import {RedisCache} from '../src/index';
 
 const cache = new RedisCache('test');
@@ -168,32 +169,89 @@ describe('redis cache library', () => {
 	});
 
 	it('should correctly use localCache', async () => {
+		const redisCache = new RedisCache('test');
+
 		const key = 'localCache';
 		const value = 'rocks!';
 
 		RedisCache.redisGetCount = 0;
 		await cache.set(key, value);
-		expect(await cache.get(key)).to.equal(value);
-		expect(await cache.get(key)).to.equal(value);
-		expect(await cache.get(key)).to.equal(value);
-		expect(await cache.get(key)).to.equal(value);
+		expect(await redisCache.get(key)).to.equal(value);
+		expect(await redisCache.get(key)).to.equal(value);
+		expect(await redisCache.get(key)).to.equal(value);
+		expect(await redisCache.get(key)).to.equal(value);
 		expect(RedisCache.redisGetCount).to.equal(0);
-		expect(await cache.get('nonexistant')).to.be.undefined;
+		expect(await redisCache.get('nonexistant')).to.be.undefined;
 		expect(RedisCache.redisGetCount).to.equal(1);
-		expect(await cache.get('nonexistant2', 'yo')).to.equal('yo');
+		expect(await redisCache.get('nonexistant2', 'yo')).to.equal('yo');
 		expect(RedisCache.redisGetCount).to.equal(2);
-		expect(await cache.get(key)).to.equal(value);
+		expect(await redisCache.get(key)).to.equal(value);
 		expect(RedisCache.redisGetCount).to.equal(2);
 
 		RedisCache.redisGetCount = 0;
-		cache.useLocalCache = false;
-		expect(await cache.get(key)).to.equal(value);
-		expect(await cache.get(key)).to.equal(value);
-		expect(await cache.get(key)).to.equal(value);
-		expect(await cache.get(key)).to.equal(value);
+		redisCache.useLocalCache = false;
+		expect(await redisCache.get(key)).to.equal(value);
+		expect(await redisCache.get(key)).to.equal(value);
+		expect(await redisCache.get(key)).to.equal(value);
+		expect(await redisCache.get(key)).to.equal(value);
 		expect(RedisCache.redisGetCount).to.equal(4);
-		cache.useLocalCache = true;
+		redisCache.useLocalCache = true;
 		// TODO: test using multiple processes
+	});
+
+	it('should correctly use parse', async () => {
+		const redisCache = new RedisCache('test');
+		let parseCount = 0;
+		class T {
+			constructor(obj) {
+				this.obj = obj;
+			}
+
+			toJSON() {
+				return _.toPairs(this.obj);
+			}
+
+			static async fromJSON(obj) {
+				parseCount++;
+				return new T(_.fromPairs(obj));
+			}
+		}
+
+		const key = 'parseTest';
+		const value = new T({a: 'b', c: 'd'});
+		const parsed = JSON.parse(JSON.stringify(value));
+
+		expect(await redisCache.getOrSet(
+			key,
+			() => value,
+			{parse: T.fromJSON},
+		)).to.deep.equal(value);
+		expect(await redisCache.get(
+			key,
+			undefined,
+			{parse: T.fromJSON},
+		)).to.deep.equal(value);
+		expect(await redisCache.getOrSet(
+			key,
+			() => value,
+			{parse: T.fromJSON},
+		)).to.deep.equal(value);
+		redisCache.useLocalCache = false;
+		expect(await redisCache.getOrSet(key, () => value)).to.not.deep.equal(value);
+		expect(await redisCache.getOrSet(key, () => value)).to.deep.equal(parsed);
+		expect(await redisCache.getOrSet(
+			key,
+			() => value,
+			{parse: T.fromJSON},
+		)).to.deep.equal(value);
+		expect(await redisCache.get(key)).to.deep.equal(parsed);
+		expect(await redisCache.get(
+			key,
+			undefined,
+			{parse: T.fromJSON},
+		)).to.deep.equal(value);
+
+		expect(parseCount).to.equal(2);
 	});
 
 	it('should correctly clear the cache', async () => {

@@ -8,6 +8,7 @@ const localCacheTTL = {};
 const processId = process.pid;
 const getting = {};
 const setting = {};
+const getOrSetting = {};
 let globalCache;
 
 async function _withDefault(promise, defaultValue) {
@@ -192,12 +193,7 @@ class RedisCache {
 		if (value === undefined) {
 			const cached = localCache[prefixedKey];
 			if (cached === undefined) return undefined;
-			try {
-				return JSON.parse(cached);
-			}
-			catch (err) {
-				return cached;
-			}
+			return cached;
 		}
 
 		if (value === CLEAR) {
@@ -248,8 +244,7 @@ class RedisCache {
 			redis.publish(channelName, message);
 		}
 
-		const stringified = JSON.stringify(value);
-		localCache[prefixedKey] = stringified;
+		localCache[prefixedKey] = value;
 		if (ttl > 0) {
 			// set ttl
 			clearTimeout(localCacheTTL[prefixedKey]);
@@ -293,12 +288,30 @@ class RedisCache {
 		return value;
 	}
 
+	_getOrSetting(key, value) {
+		const prefixedKey = this._key(key);
+		if (value === undefined) {
+			return getOrSetting[prefixedKey] || setting[prefixedKey];
+		}
+		if (value === DELETE) {
+			delete getOrSetting[prefixedKey];
+			return undefined;
+		}
+
+		getOrSetting[prefixedKey] = value;
+		return value;
+	}
+
 	/**
 	 * gets a value from the cache immediately without waiting
 	 * @param {string} key
 	 * @param {any} defaultValue
+	 * @param {object} options
+	 * 	object of {
+	 * 		parse => function to parse when value is fetched from redis
+	 * 	}
 	 */
-	async getStale(key, defaultValue = undefined) {
+	async getStale(key, defaultValue = undefined, options = {}) {
 		if (this.useLocalCache) {
 			const localValue = this._localCache(key);
 			if (localValue !== undefined) {
@@ -313,7 +326,13 @@ class RedisCache {
 			return value;
 		}
 
-		const promise = this._getWithTTL(key);
+		const promise = this._getWithTTL(key).then(async ([value, ttl]) => {
+			if (value !== undefined && options.parse) {
+				return [await options.parse(value), ttl];
+			}
+			return [value, ttl];
+		});
+
 		this._getting(key, promise);
 		const [value, ttl] = await promise;
 		if (this.useLocalCache) {
@@ -329,14 +348,18 @@ class RedisCache {
 	 * gets a value from the cache
 	 * @param {string} key
 	 * @param {any} defaultValue
+	 * @param {object} options
+	 * 	object of {
+	 * 		parse => function to parse when value is fetched from redis
+	 * 	}
 	 */
-	async get(key, defaultValue = undefined) {
+	async get(key, defaultValue = undefined, options = {}) {
 		const settingPromise = this._setting(key);
 		if (settingPromise) {
 			return _withDefault(settingPromise, defaultValue);
 		}
 
-		return this.getStale(key, defaultValue);
+		return this.getStale(key, defaultValue, options);
 	}
 
 	/**
@@ -354,7 +377,7 @@ class RedisCache {
 	 * @param {any} value
 	 * @param {int|object} options either ttl in ms, or object of {ttl}
 	 */
-	async set(key, value, options = {}) {
+	async set(key, value, options = {}, ret = {}) {
 		let ttl;
 		if (typeof options === 'number') {
 			ttl = options;
@@ -374,12 +397,13 @@ class RedisCache {
 				}
 				await this._set(key, resolvedValue, ttl);
 				this._setting(key, DELETE);
+				ret.__value = resolvedValue;
 				return true;
 			}
 			else if (typeof value === 'function') {
 				// value is a function
 				// call it and set the result
-				return this.set(key, value(key), ttl);
+				return this.set(key, value(key), ttl, ret);
 			}
 
 			// value is normal
@@ -390,9 +414,11 @@ class RedisCache {
 			}
 			await this._set(key, value, ttl);
 			this._setting(key, DELETE);
+			ret.__value = value;
 			return true;
 		}
 		catch (error) {
+			console.error(`[RedisCache] error while setting key ${key}`, error);
 			await this._del(key);
 			this._setting(key, DELETE);
 			return false;
@@ -401,19 +427,19 @@ class RedisCache {
 
 	async _getOrSet(key, value, options = {}) {
 		// key already exists, return it
-		const existingValue = await this.getStale(key);
+		const existingValue = await this.getStale(key, undefined, options);
 		if (existingValue !== undefined) {
 			return existingValue;
 		}
 
 		// no value given, return undefined
 		if (value === undefined) {
-			this._setting(key, Promise.resolve(undefined));
 			return undefined;
 		}
 
-		this.set(key, value, options);
-		return this._setting(key);
+		const ret = {};
+		await this.set(key, value, options, ret);
+		return ret.__value;
 	}
 
 	/**
@@ -421,10 +447,15 @@ class RedisCache {
 	 * this takes care of dogpiling (make sure value is a function to avoid dogpiling)
 	 * @param {string} key key to get
 	 * @param {any} value value to set if the key does not exist
-	 * @param {int|object} options either ttl in ms, or object of {ttl}
+	 * @param {int|object} options
+	 * 	either ttl in ms,
+	 * 	or object of {
+	 * 		ttl => time to live in milliseconds,
+	 * 		parse => function to parse when value is fetched from redis
+	 * 	}
 	 */
 	async getOrSet(key, value, options = {}) {
-		const settingPromise = this._setting(key);
+		const settingPromise = this._getOrSetting(key);
 		if (settingPromise) {
 			// Some other process is still fetching the value
 			// Don't dogpile shit, wait for the other process
@@ -432,7 +463,11 @@ class RedisCache {
 			return settingPromise;
 		}
 
-		return this._setting(key, this._getOrSet(key, value, options));
+		const promise = this._getOrSet(key, value, options);
+		this._getOrSetting(key, promise);
+		const result = await promise;
+		this._getOrSetting(key, DELETE);
+		return result;
 	}
 
 	/**
