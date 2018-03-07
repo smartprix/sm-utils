@@ -1,6 +1,7 @@
 import Redis from 'ioredis';
 
 const DELETE = Symbol('DELETE');
+const CLEAR = Symbol('CLEAR');
 const redisMap = {};
 const localCache = {};
 const localCacheTTL = {};
@@ -17,6 +18,7 @@ async function _withDefault(promise, defaultValue) {
 
 class RedisCache {
 	static globalPrefix = 'a';
+	static redisGetCount = 0;
 
 	constructor(prefix, redisConf = {}) {
 		this.prefix = prefix;
@@ -60,7 +62,7 @@ class RedisCache {
 			}
 		});
 
-		redisIns.on('message', this.handleSubscribeMessage);
+		redisIns.on('message', this.handleSubscribeMessage.bind(this));
 	}
 
 	static handleSubscribeMessage(channel, message) {
@@ -68,24 +70,26 @@ class RedisCache {
 		// the message is ${pid}\v${prefix}\v${command}\v${args.join('\v')}
 		const [pid, prefix, command, key, ...args] = message.split('\v');
 
+		// console.log(`[RedisCache] received subscribe command ${command} ${prefix}:${key}`);
+
 		if (Number(pid) === processId) {
 			// since the message came from the same process, it's already been handled
 			// we don't need to do anything
+			// console.log(`[RedisCache] ignored subscribe command ${command} from same process`);
 			return;
 		}
 
-		if (command === 'delete') {
-			localCache.del(this._localKey(prefix, key))
-				.then(() => {})
-				.catch(e => console.error(e));
+		if (command === 'delete' || command === 'setdel') {
+			this._localCache(prefix, key, DELETE);
+		}
+		else if (command === 'clear') {
+			this._localCache(prefix, '', CLEAR);
 		}
 		else if (command === 'set') {
 			const ttl = Number(args[0]);
 			const value = args[1];
 
-			localCache.set(this._localKey(prefix, key), value, {ttl})
-				.then(() => {})
-				.catch(e => console.error(e));
+			this._localCache(prefix, key, value, ttl);
 		}
 		else {
 			console.error(`[RedisCache] unknown subscribe command ${command}`);
@@ -108,6 +112,7 @@ class RedisCache {
 	}
 
 	async _get(key) {
+		this.constructor.redisGetCount++;
 		const prefixedKey = this._key(key);
 		const value = await this.redis.get(prefixedKey);
 		if (value === null) return undefined;
@@ -116,6 +121,26 @@ class RedisCache {
 		}
 		catch (err) {
 			return value;
+		}
+	}
+
+	async _getWithTTL(key) {
+		this.constructor.redisGetCount++;
+		const prefixedKey = this._key(key);
+		const results = await this.redis.pipeline([
+			['get', prefixedKey],
+			['pttl', prefixedKey],
+		]).exec();
+
+		const value = results[0][1];
+		const ttl = results[1][1];
+
+		if (value === null) return [undefined, ttl];
+		try {
+			return [JSON.parse(value), ttl];
+		}
+		catch (err) {
+			return [value, ttl];
 		}
 	}
 
@@ -151,19 +176,51 @@ class RedisCache {
 		return this.redis.eval(`return #redis.pcall('keys', '${keyGlob}')`, 0);
 	}
 
-	_localCache(key, value, ttl = 0) {
+	static _localCache(prefix, key, value, ttl = 0, redis = null) {
 		// the channel is RC:${globalPrefix} => RC:a
 		// the message is ${pid}\v${prefix}\v${command}\v${args.join('\v')}
 
-		const prefixedKey = this._key(key);
+		const prefixedKey = this._localKey(prefix, key);
 		if (value === undefined) {
-			return localCache[prefixedKey];
+			const cached = localCache[prefixedKey];
+			if (cached === undefined) return undefined;
+			try {
+				return JSON.parse(cached);
+			}
+			catch (err) {
+				return cached;
+			}
 		}
 
-		const channelName = `RC:${this.globalPrefix}`;
+		if (value === CLEAR) {
+			if (redis) {
+				const channelName = `RC:${this.globalPrefix}`;
+				const message = `${processId}\v${prefix}\vclear\vnull`;
+				redis.publish(channelName, message);
+			}
+
+			Object.keys(localCache).forEach((_key) => {
+				if (_key.startsWith(`${prefix}:`)) {
+					// delete ttl
+					if (_key in localCacheTTL) {
+						clearTimeout(localCacheTTL[_key]);
+						delete localCacheTTL[_key];
+					}
+
+					// delete data
+					delete localCache[_key];
+				}
+			});
+
+			return undefined;
+		}
 
 		if (value === DELETE) {
-			this.redis.publish(channelName, `${processId}:${this.prefix}:delete:${key}`);
+			if (redis) {
+				const channelName = `RC:${this.globalPrefix}`;
+				const message = `${processId}\v${prefix}\vdelete\v${key}`;
+				redis.publish(channelName, message);
+			}
 
 			// delete ttl
 			if (key in localCacheTTL) {
@@ -177,6 +234,12 @@ class RedisCache {
 		}
 
 		// set value
+		if (redis) {
+			const channelName = `RC:${this.globalPrefix}`;
+			const message = `${processId}\v${prefix}\vsetdel\v${key}`;
+			redis.publish(channelName, message);
+		}
+
 		const stringified = JSON.stringify(value);
 		localCache[prefixedKey] = stringified;
 		if (ttl > 0) {
@@ -188,6 +251,10 @@ class RedisCache {
 		}
 
 		return value;
+	}
+
+	_localCache(key, value, ttl = 0, publish = true) {
+		return this.constructor._localCache(this.prefix, key, value, ttl, publish && this.redis);
 	}
 
 	_getting(key, value) {
@@ -231,13 +298,15 @@ class RedisCache {
 
 		const gettingPromise = this._getting(key);
 		if (gettingPromise) {
-			return _withDefault(gettingPromise, defaultValue);
+			const [value] = await gettingPromise;
+			if (value === undefined) return defaultValue;
+			return value;
 		}
 
-		const promise = this._get(key);
+		const promise = this._getWithTTL(key);
 		this._getting(key, promise);
-		const value = await promise;
-		this._localCache(key, value);
+		const [value, ttl] = await promise;
+		this._localCache(key, value, ttl, false);
 		this._getting(key, DELETE);
 
 		if (value === undefined) return defaultValue;
@@ -379,6 +448,7 @@ class RedisCache {
 	 * NOTE: this method is expansive, so don't use it unless absolutely necessary
 	 */
 	async clear() {
+		this._localCache('', CLEAR);
 		return this._clear();
 	}
 

@@ -1,4 +1,4 @@
-/* global describe, it */
+/* global describe, it, before */
 /* eslint-disable no-unused-expressions */
 import {expect} from 'chai';
 import {RedisCache} from '../src/index';
@@ -9,6 +9,10 @@ function sleep(val, timeout = 20) {
 }
 
 describe('redis cache library', () => {
+	before(async () => {
+		await cache.clear();
+	});
+
 	it('should get and set values', async () => {
 		const key = 'a';
 		const value = 'this';
@@ -161,6 +165,26 @@ describe('redis cache library', () => {
 		await sum(1, 2);
 		await sum(2, 3);
 		expect(count).to.equal(2);
+	});
+
+	it('should correctly use localCache', async () => {
+		const key = 'localCache';
+		const value = 'rocks!';
+
+		RedisCache.redisGetCount = 0;
+		await cache.set(key, value);
+		expect(await cache.get(key)).to.equal(value);
+		expect(await cache.get(key)).to.equal(value);
+		expect(await cache.get(key)).to.equal(value);
+		expect(await cache.get(key)).to.equal(value);
+		expect(RedisCache.redisGetCount).to.equal(0);
+		expect(await cache.get('nonexistant')).to.be.undefined;
+		expect(RedisCache.redisGetCount).to.equal(1);
+		expect(await cache.get('nonexistant2', 'yo')).to.equal('yo');
+		expect(RedisCache.redisGetCount).to.equal(2);
+		expect(await cache.get(key)).to.equal(value);
+		expect(RedisCache.redisGetCount).to.equal(2);
+		// TODO: test using multiple processes
 	});
 
 	it('should correctly clear the cache', async () => {
