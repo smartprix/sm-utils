@@ -184,6 +184,15 @@ describe('redis cache library', () => {
 		expect(RedisCache.redisGetCount).to.equal(2);
 		expect(await cache.get(key)).to.equal(value);
 		expect(RedisCache.redisGetCount).to.equal(2);
+
+		RedisCache.redisGetCount = 0;
+		cache.useLocalCache = false;
+		expect(await cache.get(key)).to.equal(value);
+		expect(await cache.get(key)).to.equal(value);
+		expect(await cache.get(key)).to.equal(value);
+		expect(await cache.get(key)).to.equal(value);
+		expect(RedisCache.redisGetCount).to.equal(4);
+		cache.useLocalCache = true;
 		// TODO: test using multiple processes
 	});
 

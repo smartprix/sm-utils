@@ -19,6 +19,7 @@ async function _withDefault(promise, defaultValue) {
 class RedisCache {
 	static globalPrefix = 'a';
 	static redisGetCount = 0;
+	static useLocalCache = true;
 
 	constructor(prefix, redisConf = {}) {
 		this.prefix = prefix;
@@ -35,6 +36,13 @@ class RedisCache {
 		};
 
 		this.redis = this.constructor.getRedis(redis);
+
+		if ('useLocalCache' in redisConf) {
+			this.useLocalCache = redisConf.useLocalCache;
+		}
+		else {
+			this.useLocalCache = this.constructor.useLocalCache;
+		}
 	}
 
 	static getRedis(redis) {
@@ -291,9 +299,11 @@ class RedisCache {
 	 * @param {any} defaultValue
 	 */
 	async getStale(key, defaultValue = undefined) {
-		const localValue = this._localCache(key);
-		if (localValue !== undefined) {
-			return localValue;
+		if (this.useLocalCache) {
+			const localValue = this._localCache(key);
+			if (localValue !== undefined) {
+				return localValue;
+			}
 		}
 
 		const gettingPromise = this._getting(key);
@@ -306,7 +316,9 @@ class RedisCache {
 		const promise = this._getWithTTL(key);
 		this._getting(key, promise);
 		const [value, ttl] = await promise;
-		this._localCache(key, value, ttl, false);
+		if (this.useLocalCache) {
+			this._localCache(key, value, ttl, false);
+		}
 		this._getting(key, DELETE);
 
 		if (value === undefined) return defaultValue;
@@ -357,7 +369,9 @@ class RedisCache {
 				// resolve it and then cache it
 				this._setting(key, value);
 				const resolvedValue = await value;
-				this._localCache(key, resolvedValue, ttl);
+				if (this.useLocalCache) {
+					this._localCache(key, resolvedValue, ttl);
+				}
 				await this._set(key, resolvedValue, ttl);
 				this._setting(key, DELETE);
 				return true;
@@ -371,7 +385,9 @@ class RedisCache {
 			// value is normal
 			// just set it in the store
 			this._setting(key, Promise.resolve(value));
-			this._localCache(key, value, ttl);
+			if (this.useLocalCache) {
+				this._localCache(key, value, ttl);
+			}
 			await this._set(key, value, ttl);
 			this._setting(key, DELETE);
 			return true;
@@ -431,7 +447,9 @@ class RedisCache {
 	 * @param {string} key
 	 */
 	async del(key) {
-		this._localCache(key, DELETE);
+		if (this.useLocalCache) {
+			this._localCache(key, DELETE);
+		}
 		return this._del(key);
 	}
 
@@ -448,7 +466,9 @@ class RedisCache {
 	 * NOTE: this method is expansive, so don't use it unless absolutely necessary
 	 */
 	async clear() {
-		this._localCache('', CLEAR);
+		if (this.useLocalCache) {
+			this._localCache('', CLEAR);
+		}
 		return this._clear();
 	}
 
