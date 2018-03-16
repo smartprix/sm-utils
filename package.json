@@ -27,6 +27,7 @@
   "license": "ISC",
   "dependencies": {
     "babel-plugin-transform-es2015-modules-commonjs": "^6.26.0",
+    "bluebird": "^3.5.1",
     "chalk": "2.3.1",
     "chmodr": "1.0.2",
     "chownr": "1.0.1",

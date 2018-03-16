@@ -27,6 +27,26 @@ chars.PRINTABLE = chars.ALPHA_NUMERIC + chars.SYMBOLS;
 const data = {};
 
 /**
+ * Return a random number between 0 and 1
+ *
+ * @return {number} A random number (float) between 0 and 1
+*/
+function random() {
+	return Math.random();
+}
+
+/**
+ * Return a random integer between min and max (both inclusive)
+ *
+ * @param {int} min
+ * @param {int} max
+ * @return {int} A random integer between min and max
+*/
+function randomInt(min, max) {
+	return Math.floor((Math.random() * ((max - min) + 1)) + min);
+}
+
+/**
  * Count the minimum number of bits to represent the provided number
  *
  * This is basically floor(log($number, 2))
@@ -79,6 +99,14 @@ function randomString(options) {
 	// determine mask for valid characters
 	const mask = 256 - (256 % charset.length);
 
+	let randomFunc;
+	if (options.randomBytesFunc) {
+		randomFunc = options.randomBytesFunc;
+	}
+	else {
+		randomFunc = crypto.randomBytes.bind(crypto);
+	}
+
 	// Generate the string
 	while (result.length < length) {
 		// determine number of bytes to generate
@@ -86,7 +114,7 @@ function randomString(options) {
 
 		let randomBuffer;
 		try {
-			randomBuffer = crypto.randomBytes(bytes);
+			randomBuffer = randomFunc(bytes);
 		}
 		catch (e) {
 			continue;
@@ -122,20 +150,23 @@ function shuffle(itemToShuffle, options = {}) {
 		throw new Error('Array expected');
 	}
 
-	let random;
-	if (options.seed) {
+	let randomFunc;
+	if (options.randomFunc) {
+		randomFunc = options.randomFunc;
+	}
+	else if (options.seed) {
 		let seed = options.seed;
-		random = function () {
+		randomFunc = function () {
 			const x = Math.sin(seed++) * 10000;
 			return x - Math.floor(x);
 		};
 	}
 	else {
-		random = Math.random;
+		randomFunc = Math.random;
 	}
 
 	for (let i = array.length - 1; i > 0; i--) {
-		const j = Math.floor(random() * (i + 1));
+		const j = Math.floor(randomFunc() * (i + 1));
 		const temp = array[i];
 		array[i] = array[j];
 		array[j] = temp;
@@ -146,6 +177,40 @@ function shuffle(itemToShuffle, options = {}) {
 	}
 
 	return array;
+}
+
+function seededRandom(seed) {
+	return {
+		seed,
+		index: 0,
+
+		random() {
+			const x = Math.sin(seed + this.index++) * 10000;
+			return x - Math.floor(x);
+		},
+
+		int(min, max) {
+			return Math.floor((this.random() * ((max - min) + 1)) + min);
+		},
+
+		bytes(numBytes) {
+			const result = [];
+			while (numBytes--) {
+				result.push(this.random(0, 255));
+			}
+			return Buffer.from(result);
+		},
+
+		string(options) {
+			options.randomBytesFunc = this.bytes.bind(this);
+			return randomString(options);
+		},
+
+		shuffle(itemToShuffle) {
+			const randomFunc = this.random.bind(this);
+			return shuffle(itemToShuffle, {randomFunc});
+		},
+	};
 }
 
 /**
@@ -779,12 +844,12 @@ function encryptedTimestampedId(options, key) {
 
 	const encrypted = encryptStatic(randomString(3) + time, key);
 	const remaining = length - encrypted.length - 1;
-	let random = '';
+	let randomStr = '';
 	if (remaining) {
-		random = randomString(remaining);
+		randomStr = randomString(remaining);
 	}
 
-	return encrypted + '.' + random;
+	return encrypted + '.' + randomStr;
 }
 
 
@@ -847,6 +912,8 @@ module.exports = {
 	baseConvert,
 	chars,
 
+	random,
+	randomInt,
 	randomString,
 	randomID: randomString,
 	randomId: randomString,
@@ -858,6 +925,7 @@ module.exports = {
 	uuid: randomUUID,
 
 	shuffle,
+	seededRandom,
 
 	nanoSecondsAlpha,
 

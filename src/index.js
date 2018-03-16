@@ -1,3 +1,4 @@
+/* eslint-disable global-require */
 import File from './file';
 import Crypt from './Crypt';
 import Connect from './Connect';
@@ -12,7 +13,8 @@ import cfg from './cfg';
 import view from './view';
 import './lodash_utils';
 
-/* eslint-disable global-require */
+global.Promise = require('bluebird');
+
 module.exports = {
 	file: File,
 	system: System,
