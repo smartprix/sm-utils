@@ -74,7 +74,7 @@ function countBits(number) {
  * @param  {int|Object} options length of the id or object of {length: int, base36: bool}
  * @return {String}             id
  */
-function randomString(options) {
+function randomString(options = {}) {
 	let length;
 	let charset;
 	let result = '';

@@ -1,6 +1,8 @@
+const fs = require('fs');
 const _ = require('lodash');
 
 const config = {};
+const fileCache = {};
 let configRead = false;
 
 // merge configs, takes care of getters while merging
@@ -134,6 +136,31 @@ cfg.file = function (file, options = {}) {
 
 		throw e;
 	}
+};
+
+/**
+ * read the file specified by the key, and then cache it
+ * @param {String} key
+ */
+cfg.read = function (key) {
+	if (key in fileCache) {
+		return fileCache[key];
+	}
+
+	const filePath = cfg(key);
+	if (!filePath) {
+		fileCache[key] = undefined;
+	}
+	else {
+		try {
+			fileCache[key] = fs.readFileSync(filePath);
+		}
+		catch (e) {
+			console.error(`[cfg] can't read file ${key}: ${filePath}`, e);
+		}
+	}
+
+	return fileCache[key];
 };
 
 cfg.is_production = function () {

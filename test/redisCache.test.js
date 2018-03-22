@@ -197,11 +197,11 @@ describe('redis cache library', () => {
 		expect(RedisCache.redisGetCount).to.equal(4);
 		redisCache.useLocalCache = true;
 		// TODO: test using multiple processes
-		await Promise.map(_.range(0, 50000), async () => {
+		await Promise.map(_.range(0, 10000), async () => {
 			expect(await redisCache.getOrSet(key, value)).to.equal(value);
 		});
 
-		await Promise.map(_.range(0, 50000), async () => {
+		await Promise.map(_.range(0, 10000), async () => {
 			expect(await redisCache.getOrSet('ahfhajsd', value)).to.equal(value);
 		});
 	});
