@@ -91,7 +91,7 @@ class Cache {
 	 * avoids dogpiling if the value is a promise or a function returning a promise
 	 * @param {string} key
 	 * @param {any} value
-	 * @param {int|object} options either ttl in ms, or object of {ttl}
+	 * @param {int|object} options either ttl in ms / timestring ('1d 3h'), or object of {ttl}
 	 */
 	async set(key, value, options = {}) {
 		let ttl = (typeof options === 'object') ? options.ttl : options;
@@ -135,7 +135,7 @@ class Cache {
 	 * this takes care of dogpiling (make sure value is a function to avoid dogpiling)
 	 * @param {string} key key to get
 	 * @param {any} value value to set if the key does not exist
-	 * @param {int|object} options either ttl in ms, or object of {ttl}
+	 * @param {int|object} options either ttl in ms / timestring ('1d 3h'), or object of {ttl}
 	 */
 	async getOrSet(key, value, options = {}) {
 		if (this.fetching[key]) {
