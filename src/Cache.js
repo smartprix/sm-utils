@@ -1,4 +1,6 @@
 /* eslint-disable guard-for-in */
+import timestring from 'timestring';
+
 let globalCache;
 
 class Cache {
@@ -92,12 +94,12 @@ class Cache {
 	 * @param {int|object} options either ttl in ms, or object of {ttl}
 	 */
 	async set(key, value, options = {}) {
-		let ttl;
-		if (typeof options === 'number') {
-			ttl = options;
+		let ttl = (typeof options === 'object') ? options.ttl : options;
+		if (typeof ttl === 'string') {
+			ttl = timestring(ttl, 'ms');
 		}
 		else {
-			ttl = options.ttl || 0;
+			ttl = ttl || 0;
 		}
 
 		try {

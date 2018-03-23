@@ -1,4 +1,5 @@
 import Redis from 'ioredis';
+import timestring from 'timestring';
 
 const DELETE = Symbol('DELETE');
 const CLEAR = Symbol('CLEAR');
@@ -375,15 +376,15 @@ class RedisCache {
 	 * avoids dogpiling if the value is a promise or a function returning a promise
 	 * @param {string} key
 	 * @param {any} value
-	 * @param {int|object} options either ttl in ms, or object of {ttl}
+	 * @param {int|object} options either ttl in ms / timestring ('1d 3h'), or object of {ttl}
 	 */
 	async set(key, value, options = {}, ret = {}) {
-		let ttl;
-		if (typeof options === 'number') {
-			ttl = options;
+		let ttl = (typeof options === 'object') ? options.ttl : options;
+		if (typeof ttl === 'string') {
+			ttl = timestring(ttl, 'ms');
 		}
 		else {
-			ttl = options.ttl || 0;
+			ttl = ttl || 0;
 		}
 
 		try {
@@ -448,9 +449,9 @@ class RedisCache {
 	 * @param {string} key key to get
 	 * @param {any} value value to set if the key does not exist
 	 * @param {int|object} options
-	 * 	either ttl in ms,
+	 * 	either ttl in ms or as a timestring ('1d 3h'),
 	 * 	or object of {
-	 * 		ttl => time to live in milliseconds,
+	 * 		ttl => time to live in milliseconds or as a timestring ('1d 3h'),
 	 * 		parse => function to parse when value is fetched from redis
 	 * 	}
 	 */
