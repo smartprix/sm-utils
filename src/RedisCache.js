@@ -5,12 +5,12 @@ const DELETE = Symbol('DELETE');
 const DEL_CONTAINS = Symbol('DEL_CONTAINS');
 const CLEAR = Symbol('CLEAR');
 const redisMap = {};
-const localCache = {};
-const localCacheTTL = {};
+const localCache = new Map();
+const localCacheTTL = new Map();
 const processId = process.pid;
-const getting = {};
-const setting = {};
-const getOrSetting = {};
+const getting = new Map();
+const setting = new Map();
+const getOrSetting = new Map();
 let globalCache;
 
 async function _withDefault(promise, defaultValue) {
@@ -196,7 +196,7 @@ class RedisCache {
 
 		const prefixedKey = this._localKey(prefix, key);
 		if (value === undefined) {
-			const cached = localCache[prefixedKey];
+			const cached = localCache.get(prefixedKey);
 			if (cached === undefined) return undefined;
 			return cached;
 		}
@@ -208,16 +208,16 @@ class RedisCache {
 				redis.publish(channelName, message);
 			}
 
-			Object.keys(localCache).forEach((_key) => {
+			localCache.forEach((_value, _key) => {
 				if (_key.startsWith(`${prefix}:`)) {
 					// delete ttl
-					if (_key in localCacheTTL) {
-						clearTimeout(localCacheTTL[_key]);
-						delete localCacheTTL[_key];
+					if (localCacheTTL.has(_key)) {
+						clearTimeout(localCacheTTL.get(_key));
+						localCacheTTL.delete(_key);
 					}
 
 					// delete data
-					delete localCache[_key];
+					localCache.delete(_key);
 				}
 			});
 
@@ -234,16 +234,16 @@ class RedisCache {
 			// delete all keys
 			if (key === '_all_') key = '';
 
-			Object.keys(localCache).forEach((_key) => {
+			localCache.forEach((_value, _key) => {
 				if (_key.includes(key)) {
 					// delete ttl
-					if (_key in localCacheTTL) {
-						clearTimeout(localCacheTTL[_key]);
-						delete localCacheTTL[_key];
+					if (localCacheTTL.has(_key)) {
+						clearTimeout(localCacheTTL.get(_key));
+						localCacheTTL.delete(_key);
 					}
 
 					// delete data
-					delete localCache[_key];
+					localCache.delete(_key);
 				}
 			});
 
@@ -258,13 +258,13 @@ class RedisCache {
 			}
 
 			// delete ttl
-			if (key in localCacheTTL) {
-				clearTimeout(localCacheTTL[prefixedKey]);
-				delete localCacheTTL[prefixedKey];
+			if (localCacheTTL.has(prefixedKey)) {
+				clearTimeout(localCacheTTL.get(prefixedKey));
+				localCacheTTL.delete(prefixedKey);
 			}
 
 			// delete data
-			delete localCache[prefixedKey];
+			localCache.delete(prefixedKey);
 			return undefined;
 		}
 
@@ -275,13 +275,13 @@ class RedisCache {
 			redis.publish(channelName, message);
 		}
 
-		localCache[prefixedKey] = value;
+		localCache.set(prefixedKey, value);
 		if (ttl > 0) {
 			// set ttl
-			clearTimeout(localCacheTTL[prefixedKey]);
-			localCacheTTL[prefixedKey] = setTimeout(() => {
-				delete localCache[prefixedKey];
-			}, ttl);
+			clearTimeout(localCacheTTL.get(prefixedKey));
+			localCacheTTL.set(prefixedKey, setTimeout(() => {
+				delete localCache.delete(prefixedKey);
+			}, ttl));
 		}
 
 		return value;
@@ -291,46 +291,30 @@ class RedisCache {
 		return this.constructor._localCache(this.prefix, key, value, ttl, publish && this.redis);
 	}
 
-	_getting(key, value) {
+	_fetching(map, key, value) {
 		const prefixedKey = this._key(key);
 		if (value === undefined) {
-			return getting[prefixedKey];
+			return map.get(prefixedKey);
 		}
 		if (value === DELETE) {
-			delete getting[prefixedKey];
+			map.delete(prefixedKey);
 			return undefined;
 		}
 
-		getting[prefixedKey] = value;
+		map.set(prefixedKey, value);
 		return value;
+	}
+
+	_getting(key, value) {
+		return this._fetching(getting, key, value);
 	}
 
 	_setting(key, value) {
-		const prefixedKey = this._key(key);
-		if (value === undefined) {
-			return setting[prefixedKey];
-		}
-		if (value === DELETE) {
-			delete setting[prefixedKey];
-			return undefined;
-		}
-
-		setting[prefixedKey] = value;
-		return value;
+		return this._fetching(setting, key, value);
 	}
 
 	_getOrSetting(key, value) {
-		const prefixedKey = this._key(key);
-		if (value === undefined) {
-			return getOrSetting[prefixedKey] || setting[prefixedKey];
-		}
-		if (value === DELETE) {
-			delete getOrSetting[prefixedKey];
-			return undefined;
-		}
-
-		getOrSetting[prefixedKey] = value;
-		return value;
+		return this._fetching(getOrSetting, key, value);
 	}
 
 	/**
