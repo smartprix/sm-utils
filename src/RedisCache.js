@@ -2,6 +2,7 @@ import Redis from 'ioredis';
 import timestring from 'timestring';
 
 const DELETE = Symbol('DELETE');
+const DEL_CONTAINS = Symbol('DEL_CONTAINS');
 const CLEAR = Symbol('CLEAR');
 const redisMap = {};
 const localCache = {};
@@ -94,6 +95,9 @@ class RedisCache {
 		}
 		else if (command === 'clear') {
 			this._localCache(prefix, '', CLEAR);
+		}
+		else if (command === 'del_contains') {
+			this._localCache(prefix, key, DEL_CONTAINS);
 		}
 		else if (command === 'set') {
 			const ttl = Number(args[0]);
@@ -206,6 +210,32 @@ class RedisCache {
 
 			Object.keys(localCache).forEach((_key) => {
 				if (_key.startsWith(`${prefix}:`)) {
+					// delete ttl
+					if (_key in localCacheTTL) {
+						clearTimeout(localCacheTTL[_key]);
+						delete localCacheTTL[_key];
+					}
+
+					// delete data
+					delete localCache[_key];
+				}
+			});
+
+			return undefined;
+		}
+
+		if (value === DEL_CONTAINS) {
+			if (redis) {
+				const channelName = `RC:${this.globalPrefix}`;
+				const message = `${processId}\v${prefix}\vdel_contains\v${key}`;
+				redis.publish(channelName, message);
+			}
+
+			// delete all keys
+			if (key === '_all_') key = '';
+
+			Object.keys(localCache).forEach((_key) => {
+				if (_key.includes(key)) {
 					// delete ttl
 					if (_key in localCacheTTL) {
 						clearTimeout(localCacheTTL[_key]);
@@ -530,6 +560,32 @@ class RedisCache {
 
 			return this.getOrSet(cacheKey, () => fn(...args), options);
 		};
+	}
+
+	/**
+	 * delete everything from cache if the key includes a particular string
+	 * to delete everything from cache, use `_all_` as string
+	 * @param {string} str
+	 * @return {number} number of keys deleted
+	 */
+	async delContains(str) {
+		if (!str) {
+			throw new Error('str must not be empty');
+		}
+
+		let keyGlob;
+		if (str === '_all_') {
+			keyGlob = `RC:${this.constructor.globalPrefix}:*`;
+		}
+		else {
+			keyGlob = `RC:${this.constructor.globalPrefix}:*${str}*`;
+		}
+
+		this._localCache(str, DEL_CONTAINS);
+		return this.redis.eval(
+			`local j=0; for i, name in ipairs(redis.call('KEYS', '${keyGlob}')) do redis.call('DEL', name); j=i end return j`,
+			0,
+		);
 	}
 
 	static globalCache(redis) {

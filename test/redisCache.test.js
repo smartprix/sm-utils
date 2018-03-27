@@ -268,4 +268,22 @@ describe('redis cache library', () => {
 		expect(await cache.get('b')).to.be.undefined;
 		expect(await cache.size()).to.equal(0);
 	});
+
+	it('should correctly del contains', async () => {
+		const redisCache = new RedisCache('test_delcontains');
+		await redisCache.set('xorm:category:1', {a: 1});
+		await redisCache.set('xorm:category:2', {a: 2});
+		await redisCache.set('xorm:category:3', {a: 3});
+		await redisCache.set('xorm:product:1', {p: 1});
+		await redisCache.set('xorm:product:2', {p: 2});
+
+		expect(await redisCache.size()).to.equal(5);
+		expect(await redisCache.delContains('category')).to.equal(3);
+		expect(await redisCache.size()).to.equal(2);
+		expect(await redisCache.get('xorm:category:1')).to.be.undefined;
+		expect(await redisCache.get('xorm:product:1')).to.be.deep.equal({p: 1});
+		expect(await redisCache.delContains('_all_')).to.equal(2);
+		expect(await redisCache.get('xorm:product:1')).to.be.undefined;
+		expect(await redisCache.size()).to.equal(0);
+	});
 });
