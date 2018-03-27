@@ -158,6 +158,14 @@ class RedisCache {
 		}
 	}
 
+	async _getAuto(key) {
+		if (this.useLocalCache) {
+			return this._getWithTTL(key);
+		}
+
+		return [await this._get(key), 0];
+	}
+
 	async _has(key) {
 		return this.redis.exists(this._key(key));
 	}
@@ -341,7 +349,7 @@ class RedisCache {
 			return value;
 		}
 
-		const promise = this._getWithTTL(key).then(async ([value, ttl]) => {
+		const promise = this._getAuto(key).then(async ([value, ttl]) => {
 			if (value !== undefined && options.parse) {
 				return [await options.parse(value), ttl];
 			}
