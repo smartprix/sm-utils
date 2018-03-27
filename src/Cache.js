@@ -5,46 +5,44 @@ let globalCache;
 
 class Cache {
 	constructor() {
-		this.data = {};
-		this.ttl = {};
-		this.fetching = {};
+		this.data = new Map();
+		this.ttl = new Map();
+		this.fetching = new Map();
 	}
 
 	_set(key, value, ttl = 0) {
 		if (ttl <= 0) {
-			this.data[key] = value;
+			this.data.set(key, value);
 			return;
 		}
 
 		// set value
-		this.data[key] = value;
+		this.data.set(key, value);
 
 		// set ttl
-		clearTimeout(this.ttl[key]);
-		this.ttl[key] = setTimeout(() => this.del(key), ttl);
+		clearTimeout(this.ttl.get(key));
+		this.ttl.set(key, setTimeout(() => this.del(key), ttl));
 	}
 
 	_del(key) {
 		// delete ttl
-		if (key in this.ttl) {
-			clearTimeout(this.ttl[key]);
-			delete this.ttl[key];
+		if (this.ttl.has(key)) {
+			clearTimeout(this.ttl.get(key));
+			this.ttl.delete(key);
 		}
 
 		// delete data
-		delete this.data[key];
+		this.data.delete(key);
 	}
 
 	_clear() {
 		// clear ttl
-		for (const key in this.ttl) {
-			clearTimeout(this.ttl[key]);
-		}
-		this.ttl = {};
+		this.ttl.forEach(value => clearTimeout(value));
+		this.ttl.clear();
 
 		// clear data
-		this.data = {};
-		this.fetching = {};
+		this.data.clear();
+		this.fetching.clear();
 	}
 
 	/**
@@ -53,16 +51,17 @@ class Cache {
 	 * @param {any} defaultValue
 	 */
 	async get(key, defaultValue = undefined) {
-		if (this.fetching[key]) {
+		const fetching = this.fetching.get(key);
+		if (fetching) {
 			// Some other process is still fetching the value
 			// Don't dogpile shit, wait for the other process
 			// to finish it
-			const value = await this.fetching[key];
+			const value = await fetching;
 			if (value === undefined) return defaultValue;
 			return value;
 		}
 
-		const existing = this.data[key];
+		const existing = this.data.get(key);
 		if (existing === undefined) return defaultValue;
 		return existing;
 	}
@@ -73,7 +72,7 @@ class Cache {
 	 * @param {any} defaultValue
 	 */
 	async getStale(key, defaultValue = undefined) {
-		const existing = this.data[key];
+		const existing = this.data.get(key);
 		if (existing === undefined) return defaultValue;
 		return existing;
 	}
@@ -83,7 +82,7 @@ class Cache {
 	 * @param {string} key
 	 */
 	async has(key) {
-		return (key in this.data);
+		return this.data.has(key);
 	}
 
 	/**
@@ -106,10 +105,10 @@ class Cache {
 			if (value && value.then) {
 				// value is a Promise
 				// resolve it and then cache it
-				this.fetching[key] = value;
+				this.fetching.set(key, value);
 				const resolvedValue = await value;
 				this._set(key, resolvedValue, ttl);
-				delete this.fetching[key];
+				this.fetching.delete(key);
 				return true;
 			}
 			else if (typeof value === 'function') {
@@ -125,7 +124,7 @@ class Cache {
 		}
 		catch (error) {
 			this._del(key);
-			delete this.fetching[key];
+			this.fetching.delete(key);
 			return false;
 		}
 	}
@@ -138,22 +137,23 @@ class Cache {
 	 * @param {int|object} options either ttl in ms / timestring ('1d 3h'), or object of {ttl}
 	 */
 	async getOrSet(key, value, options = {}) {
-		if (this.fetching[key]) {
+		const fetching = this.fetching.get(key);
+		if (fetching) {
 			// Some other process is still fetching the value
 			// Don't dogpile shit, wait for the other process
 			// to finish it
-			return this.fetching[key];
+			return fetching;
 		}
 
 		// key already exists, return it
-		const existing = this.data[key];
+		const existing = this.data.get(key);
 		if (existing !== undefined) return existing;
 
 		// no value given, return undefined
 		if (value === undefined) return undefined;
 
 		await this.set(key, value, options);
-		return this.data[key];
+		return this.data.get(key);
 	}
 
 	/**
@@ -175,7 +175,7 @@ class Cache {
 	 * returns the size of the cache (no. of keys)
 	 */
 	async size() {
-		return Object.keys(this.data).length;
+		return this.data.size;
 	}
 
 	/**
