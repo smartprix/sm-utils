@@ -367,6 +367,7 @@ class Connect {
 			username,
 			password,
 		};
+		return this;
 	}
 
 	/**
