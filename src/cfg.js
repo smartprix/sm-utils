@@ -33,6 +33,20 @@ function cfg(key, defaultValue) {
 	return _.get(config, key, defaultValue);
 }
 
+/**
+ * Will read env vars of the format CFG__JSON_KEY__PATH=$VAL
+ * It will set the key 'jsonKey.path' with $VAL
+ * _ to specify where to capitalize for camelCase
+ * __ to seperate the key path
+ */
+function readEnvVariables() {
+	const vals = Object.keys(process.env).filter(val => val.indexOf('CFG__') === 0);
+	vals.forEach((val) => {
+		const key = val.slice(5).split('__').map(el => _.camelCase(el)).join('.');
+		cfg.set(key, process.env[val]);
+	});
+}
+
 function readDefaultConfigFiles() {
 	if (configRead) return;
 	configRead = true;
@@ -46,6 +60,7 @@ function readDefaultConfigFiles() {
 	if (config.$privateConfigFile) {
 		cfg.file(config.$privateConfigFile, {ignoreNotFound: true});
 	}
+	readEnvVariables();
 }
 
 cfg.get = function (key, defaultValue) {
