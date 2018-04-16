@@ -2,6 +2,7 @@
 import {expect} from 'chai';
 import {Queue} from '../src';
 
+/** @type {Queue} */
 let queue;
 
 function sleep(val, timeout = 20) {
@@ -10,7 +11,7 @@ function sleep(val, timeout = 20) {
 
 before(async () => {
 	queue = new Queue('test');
-	await queue.delete(1);
+	await queue.delete(0);
 });
 
 describe('Queue library', () => {
@@ -82,7 +83,7 @@ describe('Queue library', () => {
 
 	it('should be able to attach a processor', async () => {
 		id = await queue.addJob('x');
-		queue.addProcessor(data => 'output:' + data);
+		queue.addProcessor(data => 'output:' + data, 2);
 		await sleep(0, 1000);
 		detail = await Queue.status(id);
 		expect(detail.result).to.equal('output:x');
@@ -100,10 +101,10 @@ describe('Queue library', () => {
 	it('should pause processor', async () => {
 		await queue.pauseProcessor();
 		id = await queue.addJob('z');
-		await sleep(0, 3000);
+		await sleep(0, 5000);
 		detail = await Queue.status(id);
 		expect(detail.state).to.equal('inactive');
-	}).timeout(10000);
+	}).timeout(12000);
 
 	it('should give correct counts', async () => {
 		const inactive = await queue.pendingJobs();
@@ -121,9 +122,15 @@ describe('Queue library', () => {
 		expect(detail.result).to.equal('output:z');
 		expect(detail.state).to.equal('complete');
 	}).timeout(5000);
+
+	it('should return result on completion', async () => {
+		const res = await queue.addAndProcess('s', 0);
+		expect(res).to.equal('output:s');
+	}).timeout(20000);
 });
 
 after(async () => {
+	await queue.delete(0);
 	await Queue.exit();
 });
 
