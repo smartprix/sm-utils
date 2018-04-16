@@ -99,10 +99,11 @@ class Queue {
 	/**
 	 * Add a job to the Queue
 	 * @param {*} input Job data
-	 * @param {Number|String} priority Priority of the job
-	 * @returns {Number} The ID of the job created
+	 * @param {Number|String} [priority=0] Priority of the job
+	 * @param {Boolean} [getResult=false] Return the result of the job instead of the id
+	 * @returns {Number|*} The ID of the job created
 	 */
-	async addJob(input, priority = 0) {
+	async addJob(input, priority = 0, getResult = false) {
 		return new Promise((resolve, reject) => {
 			const options = {
 				noFailure: this.noFailure,
@@ -128,11 +129,33 @@ class Queue {
 				job.removeOnComplete(true);
 			}
 
+			if (getResult) {
+				if (!Queue.queues[this.name].processorAdded) {
+					throw new Error('No processor set, set one or manually process job');
+				}
+				else if (Queue.queues[this.name].processorAdded && this.paused) {
+					throw new Error('Processor is paused, resume first to get result');
+				}
+				job.on('complete', res => resolve(res))
+					.on('failed', errMsg => reject(new Error(errMsg)))
+					.on('remove', () => reject(new Error('Job Removed before completion')));
+			}
+
 			job.save((err) => {
 				if (err) reject(new Error(err));
-				resolve(job.id);
+				else if (!getResult) resolve(job.id);
 			});
 		});
+	}
+
+	/**
+	 * Add a job to the Queue, wait for it to process and return result
+	 * @param {*} input Job data
+	 * @param {Number|String} priority Priority of the job
+	 * @returns {*} result
+	 */
+	async addAndProcess(input, priority = 0) {
+		return this.addJob(input, priority, true);
 	}
 
 	/**
