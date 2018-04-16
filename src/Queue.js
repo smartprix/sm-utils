@@ -1,6 +1,5 @@
 import kue from 'kue';
 import _ from 'lodash';
-import {EventEmitter} from 'events';
 
 async function processorWrapper(job, processor, resolve, reject) {
 	let res;
@@ -71,7 +70,7 @@ class Queue {
 			});
 			if (enableWatchdog)	Queue.jobs.watchStuckJobs(10000);
 			Queue.jobs.on('error', (err) => {
-				console.log('Queue error: ', err.message);
+				console.error('[Queue] ', err);
 			});
 			process.once('SIGTERM', async () => {
 				await Queue.exit();
@@ -92,8 +91,8 @@ class Queue {
 	constructor(name, redis = {port: 6379, host: '127.0.0.1'}, enableWatchdog = false) {
 		this.name = name;
 		if (!Queue.queues[name]) Queue.queues[name] = {processorAdded: false};
-		this.events = new EventEmitter();
-		this.events.setMaxListeners(3);
+		this.paused = undefined;
+		this.kueCtx = undefined;
 		Queue.init(redis, enableWatchdog);
 	}
 
@@ -197,24 +196,15 @@ class Queue {
 		// Increase max event listeners limit
 		Queue.jobs.setMaxListeners(Queue.jobs.getMaxListeners() + concurrency);
 
+		// ctx Can be used to pause and resume worker,
+		// For detailed info : https://github.com/Automattic/kue#pause-processing
 		Queue.jobs.process(this.name, concurrency, async (job, ctx, done) => {
-			this.events.on('pause', (timeout, res, rej) => {
-				// ctx Can be used to pause and resume worker,
-				// For detailed info : https://github.com/Automattic/kue#pause-processing
-				ctx.pause(timeout, (err) => {
-					if (err) rej();
-					else res();
-				});
-			});
-
-			this.events.on('resume', () => {
-				ctx.resume();
-			});
+			if (!this.kueCtx) this.kueCtx = ctx;
 
 			job.log('Start processing');
 			let res;
 			try {
-				res = await processor(job.data.input, ctx);
+				res = await processor(job.data.input);
 			}
 			catch (e) {
 				job.log('Errored: ' + e.message);
@@ -229,6 +219,8 @@ class Queue {
 			job.log('Done');
 			done(null, res);
 		});
+
+		this.paused = false;
 		Queue.queues[this.name].processorAdded = true;
 	}
 
@@ -238,16 +230,32 @@ class Queue {
 	 * @param {Number} [timeout=5000] Time to complete current jobs in ms
 	 */
 	async pauseProcessor(timeout = 5000) {
-		return new Promise((resolve, reject) => {
-			this.events.emit('pause', timeout, resolve, reject);
+		if (!Queue.queues[this.name].processorAdded) throw new Error('No processor present');
+		if (this.paused) return;
+		await new Promise((resolve, reject) => {
+			if (!this.kueCtx) {
+				reject(new Error('Worker context not yet available, please add atleast one job before pausing/resuming'));
+				return;
+			}
+			this.kueCtx.pause(timeout, (err) => {
+				if (err) reject(err);
+				else resolve();
+			});
 		});
+		this.paused = true;
 	}
 
 	/**
 	 * Resume Queue processing
 	 */
 	resumeProcessor() {
-		this.events.emit('resume');
+		if (!Queue.queues[this.name].processorAdded) throw new Error('No processor present');
+		if (!this.paused) return;
+		if (!this.kueCtx) {
+			throw new Error('Worker context not yet available, please add atleast one job before pausing/resuming');
+		}
+		this.kueCtx.resume();
+		this.paused = false;
 	}
 
 	/**
