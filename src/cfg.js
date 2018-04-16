@@ -167,6 +167,10 @@ cfg.is_production = function () {
 	return process.env.NODE_ENV === 'production';
 };
 
+cfg.is_staging = function () {
+	return process.env.NODE_ENV === 'staging';
+};
+
 cfg.is_test = function () {
 	return process.env.NODE_ENV === 'test';
 };
@@ -178,6 +182,7 @@ cfg.is_dev = function () {
 cfg.isProduction = cfg.is_production;
 cfg.isProd = cfg.is_production;
 cfg.is_prod = cfg.is_production;
+cfg.isStaging = cfg.is_staging;
 cfg.isDev = cfg.is_dev;
 cfg.isTest = cfg.is_test;
 
