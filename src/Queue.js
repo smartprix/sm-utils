@@ -89,8 +89,8 @@ class Queue {
 	 * 		Read more here :  https://github.com/Automattic/kue#unstable-redis-connections
 	 */
 	constructor(name, redis = {port: 6379, host: '127.0.0.1'}, enableWatchdog = false) {
-		this.name = name;
-		if (!Queue.queues[name]) Queue.queues[name] = {processorAdded: false};
+		this.name = `${name}-${process.env.NODE_ENV || ''}`;
+		if (!Queue.queues[this.name]) Queue.queues[this.name] = {processorAdded: false};
 		this.paused = undefined;
 		this.kueCtx = undefined;
 		Queue.init(redis, enableWatchdog);
