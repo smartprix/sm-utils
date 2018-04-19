@@ -41,7 +41,7 @@ describe('Queue library', () => {
 		expect(job.state).to.equal('complete');
 	});
 
-	it('should have error and complete state in status', async () => {
+	it('should have complete state in status', async () => {
 		const details = await Queue.status(id1);
 		expect(details.id).to.equal(id1);
 		expect(details.state).to.equal('complete');
@@ -82,25 +82,31 @@ describe('Queue library', () => {
 	});
 
 	it('should be able to attach a processor', async () => {
-		id = await queue.addJob('x');
-		queue.addProcessor(data => 'output:' + data, 2);
+		id = await queue.addJob({data: 'x'});
+		queue.addProcessor(jobData => jobData.data, 2);
 		await sleep(0, 1000);
 		detail = await Queue.status(id);
-		expect(detail.result).to.equal('output:x');
+		expect(detail.result).to.equal('x');
 		expect(detail.state).to.equal('complete');
 	});
 
+	it('should return existing result if job already processed', async () => {
+		const job = await Queue.processJobById(id, jobData => jobData);
+		expect(job.result).to.equal('x');
+		expect(job.state).to.equal('complete');
+	});
+
 	it('should process jobs after attaching processor', async () => {
-		id = await queue.addJob('y');
+		id = await queue.addJob({data: 'y'});
 		await sleep(0, 1000);
 		detail = await Queue.status(id);
-		expect(detail.result).to.equal('output:y');
+		expect(detail.result).to.equal('y');
 		expect(detail.state).to.equal('complete');
 	});
 
 	it('should pause processor', async () => {
 		await queue.pauseProcessor();
-		id = await queue.addJob('z');
+		id = await queue.addJob({data: 'z'});
 		await sleep(0, 5000);
 		detail = await Queue.status(id);
 		expect(detail.state).to.equal('inactive');
@@ -119,13 +125,13 @@ describe('Queue library', () => {
 		queue.resumeProcessor();
 		await sleep(0, 2000);
 		detail = await Queue.status(id);
-		expect(detail.result).to.equal('output:z');
+		expect(detail.result).to.equal('z');
 		expect(detail.state).to.equal('complete');
 	}).timeout(5000);
 
 	it('should return result on completion', async () => {
-		const res = await queue.addAndProcess('s', 0);
-		expect(res).to.equal('output:s');
+		const res = await queue.addAndProcess({data: 's'});
+		expect(res).to.equal('s');
 	}).timeout(20000);
 });
 

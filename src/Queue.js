@@ -3,33 +3,39 @@ import _ from 'lodash';
 
 async function processorWrapper(job, processor, resolve, reject) {
 	let res;
-	try {
-		if (job.state() === 'active') {
-			reject(new Error('Job already processing'));
-			return;
-		}
+	let jobDetails;
+	if (job.state() === 'active') {
+		reject(new Error('Job already processing'));
+		return;
+	}
+	else if (job.state() === 'inactive') {
 		job.active();
 		job.attempt(() => {});
-		res = await processor(job.data.input);
-	}
-	catch (e) {
-		job.error(e.message);
-		job._error = e.message;
-		if (!job.data.options.noFailure) {
-			job.failed();
-			reject(new Error('Job failed ' + e));
-			return;
+		try {
+			res = await processor(job.data.input);
 		}
+		catch (e) {
+			job.error(e.message);
+			job._error = e.message;
+			if (!job.data.options.noFailure) {
+				job.failed();
+				reject(new Error('Job failed ' + e));
+				return;
+			}
+		}
+		if (!_.isNil(res)) {
+			job.result = res;
+			job.set('result', JSON.stringify(res));
+		}
+		job.complete();
+		jobDetails = _.pick(job.toJSON(), ['id', 'type', 'data', 'result', 'state', 'error', 'created_at', 'updated_at', 'attempts']);
+		jobDetails.attempts.made++;
+		jobDetails.attempts.remaining--;
 	}
-	if (!_.isNil(res)) {
-		job.result = res;
-		job.set('result', JSON.stringify(res));
+	// Job is already complete/failed
+	else {
+		jobDetails = _.pick(job.toJSON(), ['id', 'type', 'data', 'result', 'state', 'error', 'created_at', 'updated_at', 'attempts']);
 	}
-	job.complete();
-
-	const jobDetails = _.pick(job.toJSON(), ['id', 'type', 'data', 'result', 'state', 'error', 'created_at', 'updated_at', 'attempts']);
-	jobDetails.attempts.made++;
-	jobDetails.attempts.remaining--;
 	resolve(jobDetails);
 }
 
@@ -99,37 +105,52 @@ class Queue {
 	/**
 	 * Add a job to the Queue
 	 * @param {*} input Job data
-	 * @param {Number|String} [priority=0] Priority of the job
-	 * @param {Boolean} [getResult=false] Return the result of the job instead of the id
+	 * @param {Object} opts
+	 * @param {Number|String} [opts.priority=0] Priority of the job
+	 * @param {Number} [opts.attempts] Number of attempts
+	 * @param {Number} [otps.delay] Delay in between jobs
+	 * @param {Number} [opts.ttl] Time to live for job
+	 * @param {Boolean} [opts.removeOnComplete] Remove job on completion
+	 * @param {Boolean} [opts.noFailure] Mark job as complete even if it fails
 	 * @returns {Number|*} The ID of the job created
 	 */
-	async addJob(input, priority = 0, getResult = false) {
+	async addJob(input, {
+		priority = 0,
+		attempts = this.attempts,
+		delay = this.delay,
+		ttl = this.ttl,
+		removeOnComplete = this.removeOnComplete,
+		noFailure = this.noFailure,
+		_getResult = false,
+		_dummy = undefined,
+	} = {}) {
 		return new Promise((resolve, reject) => {
 			const options = {
-				noFailure: this.noFailure,
+				noFailure,
+				_dummy,
 			};
 			const job = Queue.jobs
 				.create(this.name, {input, options})
 				.priority(priority);
 
 			// default = 1
-			if (this.attempts) {
+			if (attempts) {
 				job.attempts(this.attempts);
 			}
 			// default = 0
-			if (this.delay) {
+			if (delay) {
 				job.delay(this.delay).backoff(true);
 			}
 			// default = 0, i.e. infinite
-			if (this.ttl > 0) {
+			if (ttl > 0) {
 				job.ttl(this.ttl);
 			}
 			// default = false
-			if (this.removeOnComplete) {
+			if (removeOnComplete) {
 				job.removeOnComplete(true);
 			}
 
-			if (getResult) {
+			if (_getResult) {
 				if (!Queue.queues[this.name].processorAdded) {
 					throw new Error('No processor set, set one or manually process job');
 				}
@@ -143,7 +164,7 @@ class Queue {
 
 			job.save((err) => {
 				if (err) reject(new Error(err));
-				else if (!getResult) resolve(job.id);
+				else if (!_getResult) resolve(job.id);
 			});
 		});
 	}
@@ -151,15 +172,22 @@ class Queue {
 	/**
 	 * Add a job to the Queue, wait for it to process and return result
 	 * @param {*} input Job data
-	 * @param {Number|String} priority Priority of the job
+	 * @param {Object} opts
+	 * @param {Number|String} [opts.priority=0] Priority of the job
+	 * @param {Number} [opts.attempts] Number of attempts
+	 * @param {Number} [otps.delay] Delay in between jobs
+	 * @param {Number} [opts.ttl] Time to live for job
+	 * @param {Boolean} [opts.removeOnComplete] Remove job on completion
+	 * @param {Boolean} [opts.noFailure] Mark job as complete even if it fails
 	 * @returns {*} result
 	 */
-	async addAndProcess(input, priority = 0) {
-		return this.addJob(input, priority, true);
+	async addAndProcess(input, opts = {}) {
+		opts._getResult = true;
+		return this.addJob(input, opts);
 	}
 
 	/**
-	 * Set number of retry attempts for any job added after this is called
+	 * Set default number of retry attempts for any job added later
 	 * @param {Number} attempts Number of attempts (>= 0), default = 1
 	 */
 	setAttempts(attempts) {
@@ -167,7 +195,7 @@ class Queue {
 	}
 
 	/**
-	 * Set delay b/w successive jobs
+	 * Set delay b/w successive jobs for any job added later
 	 * @param {Number} delay Delay b/w jobs, milliseconds, default = 0
 	 */
 	setDelay(delay) {
@@ -175,7 +203,7 @@ class Queue {
 	}
 
 	/**
-	 * Set TTL (time to live) for new jobs added from now on,
+	 * Set default TTL (time to live) for new jobs added from now on,
 	 * will fail job if not completed in TTL time
 	 * @param {Number} ttl Time in milliseconds, infinite when 0. default = 0
 	 */
@@ -184,7 +212,7 @@ class Queue {
 	}
 
 	/**
-	 * Sets removeOnComplete for any job added to this Queue from now on
+	 * Sets default removeOnComplete for any job added to this Queue from now on
 	 * @param {Boolean} removeOnComplete default = false
 	 */
 	setRemoveOnCompletion(removeOnComplete) {
@@ -192,7 +220,7 @@ class Queue {
 	}
 
 	/**
-	 * Sets noFailure for any job added to this Queue from now on.
+	 * Sets default noFailure for any job added to this Queue from now on.
 	 * This will mark the job complete even if it fails when true
 	 * @param {Boolean} noFailure default = false
 	 */
@@ -223,7 +251,10 @@ class Queue {
 		// For detailed info : https://github.com/Automattic/kue#pause-processing
 		Queue.jobs.process(this.name, concurrency, async (job, ctx, done) => {
 			if (!this.kueCtx) this.kueCtx = ctx;
-
+			if (job.data.options._dummy) {
+				done(null, true);
+				return;
+			}
 			job.log('Start processing');
 			let res;
 			try {
@@ -243,6 +274,8 @@ class Queue {
 			done(null, res);
 		});
 
+		// We add this so that keuCtx gets set without having to wait for a job to be added
+		this.addJob({}, {_dummy: true, removeOnComplete: true});
 		this.paused = false;
 		Queue.queues[this.name].processorAdded = true;
 	}
@@ -435,7 +468,7 @@ class Queue {
 	}
 
 	/**
-	 * Manualy process a specific Job, ignores any attempts limit set
+	 * Manualy process a specific Job. Returns existing result if job already processed
 	 * @param {Number} jobId Id of the job to be processed
 	 * @param {processorCallback} processor Function to be called to process the job data, without ctx
 	 * @returns {jobDetails} Result of processor function and job object of completed job
