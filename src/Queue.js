@@ -240,7 +240,7 @@ class Queue {
 	 * @param {processorCallback} processor Function to be called to process the job data
 	 * @param {Number} [concurrency=1] The number of jobs this processor can handle parallely
 	 */
-	addProcessor(processor, concurrency = 1) {
+	async addProcessor(processor, concurrency = 1) {
 		if (Queue.queues[this.name].processorAdded) {
 			throw new Error(`Processor already added for queue ${this.name}, can only be set once per queue.`);
 		}
@@ -274,10 +274,10 @@ class Queue {
 			done(null, res);
 		});
 
-		// We add this so that keuCtx gets set without having to wait for a job to be added
-		this.addJob({}, {_dummy: true, removeOnComplete: true});
 		this.paused = false;
 		Queue.queues[this.name].processorAdded = true;
+		// We add this so that keuCtx gets set without having to wait for a job to be added
+		await this.addAndProcess({}, {_dummy: true, removeOnComplete: true});
 	}
 
 	/**
