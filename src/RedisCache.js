@@ -486,6 +486,14 @@ class RedisCache {
 			return settingPromise;
 		}
 
+		// try to get the value from local cache first
+		if (this.useLocalCache) {
+			const localValue = this._localCache(key);
+			if (localValue !== undefined) {
+				return localValue;
+			}
+		}
+
 		const promise = this._getOrSet(key, value, options);
 		this._getOrSetting(key, promise);
 		const result = await promise;

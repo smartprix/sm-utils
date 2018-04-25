@@ -178,22 +178,33 @@ cfg.read = function (key) {
 	return fileCache[key];
 };
 
-cfg.is_production = function () {
+cfg.isProduction = function () {
 	return process.env.NODE_ENV === 'production';
 };
 
-cfg.is_test = function () {
+cfg.isStaging = function () {
+	return process.env.NODE_ENV === 'staging';
+};
+
+cfg.isProductionLike = function () {
+	return (process.env.NODE_ENV === 'production') || (process.env.NODE_ENV === 'staging');
+};
+
+cfg.isTest = function () {
 	return process.env.NODE_ENV === 'test';
 };
 
-cfg.is_dev = function () {
-	return !cfg.is_production();
+cfg.isDev = function () {
+	return (process.env.NODE_ENV !== 'production') && (process.env.NODE_ENV !== 'staging');
 };
 
-cfg.isProduction = cfg.is_production;
-cfg.isProd = cfg.is_production;
-cfg.is_prod = cfg.is_production;
-cfg.isDev = cfg.is_dev;
-cfg.isTest = cfg.is_test;
+cfg.is_production = cfg.isProduction;
+cfg.isProd = cfg.isProduction;
+cfg.is_prod = cfg.isProduction;
+cfg.is_staging = cfg.isStaging;
+cfg.isProdLike = cfg.isProductionLike;
+cfg.is_dev = cfg.isDev;
+cfg.isDevelopment = cfg.isDev;
+cfg.is_test = cfg.isTest;
 
 module.exports = cfg;
