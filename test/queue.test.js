@@ -9,12 +9,17 @@ function sleep(val, timeout = 20) {
 	return new Promise(resolve => setTimeout(() => resolve(val), timeout));
 }
 
+const processor = async (jobData) => {
+	await sleep();
+	return jobData.data;
+};
+
 before(async () => {
 	queue = new Queue('test');
 	await queue.delete(0);
 });
 
-describe('Queue library', () => {
+describe('@queue library', () => {
 	let id1;
 	let id2;
 	let id;
@@ -36,7 +41,7 @@ describe('Queue library', () => {
 	});
 
 	it('should process job', async () => {
-		const job = await Queue.processJobById(id1, jobData => jobData.data);
+		const job = await Queue.processJobById(id1, processor);
 		expect(job.result).to.equal(testData + '1');
 		expect(job.state).to.equal('complete');
 	});
@@ -83,7 +88,7 @@ describe('Queue library', () => {
 
 	it('should be able to attach a processor', async () => {
 		id = await queue.addJob({data: 'x'});
-		queue.addProcessor(jobData => jobData.data, 2);
+		queue.addProcessor(processor, 2);
 		await sleep(0, 1000);
 		detail = await Queue.status(id);
 		expect(detail.result).to.equal('x');
@@ -91,7 +96,7 @@ describe('Queue library', () => {
 	});
 
 	it('should return existing result if job already processed', async () => {
-		const job = await Queue.processJobById(id, jobData => jobData);
+		const job = await Queue.processJobById(id, processor);
 		expect(job.result).to.equal('x');
 		expect(job.state).to.equal('complete');
 	});
@@ -104,20 +109,31 @@ describe('Queue library', () => {
 		expect(detail.state).to.equal('complete');
 	});
 
+	it('should timeout job', async () => {
+		let res = {};
+		try {
+			await queue.addAndProcess({data: 's'}, undefined, 1);
+		}
+		catch (err) {
+			res = err;
+		}
+		expect(res.message).to.equal('Timed out');
+	});
+
 	it('should pause processor', async () => {
 		await queue.pauseProcessor();
 		id = await queue.addJob({data: 'z'});
 		await sleep(0, 5000);
 		detail = await Queue.status(id);
 		expect(detail.state).to.equal('inactive');
-	}).timeout(12000);
+	}).timeout(8000);
 
 	it('should give correct counts', async () => {
 		const inactive = await queue.pendingJobs();
 		const failed = await queue.failedJobs();
 		const completed = await queue.completedJobs();
 		expect(inactive).to.equal(1);
-		expect(failed).to.equal(1);
+		expect(failed).to.equal(2);
 		expect(completed).to.equal(4);
 	});
 
@@ -132,7 +148,7 @@ describe('Queue library', () => {
 	it('should return result on completion', async () => {
 		const res = await queue.addAndProcess({data: 's'});
 		expect(res).to.equal('s');
-	}).timeout(20000);
+	}).timeout(5000);
 });
 
 after(async () => {
