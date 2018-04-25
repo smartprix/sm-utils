@@ -95,23 +95,28 @@ class Queue {
 	 * 		Read more here :  https://github.com/Automattic/kue#unstable-redis-connections
 	 */
 	constructor(name, redis = {port: 6379, host: '127.0.0.1'}, enableWatchdog = false) {
-		this.name = `${name}-${process.env.NODE_ENV || ''}`;
+		this.name = `${name}${process.env.NODE_ENV ? '-' + process.env.NODE_ENV : ''}`;
 		if (!Queue.queues[this.name]) Queue.queues[this.name] = {processorAdded: false};
 		this.paused = undefined;
 		this.kueCtx = undefined;
 		Queue.init(redis, enableWatchdog);
 	}
 
+
+	/**
+	 * @typedef {Object} addOpts
+	 * @property {Number|String} [opts.priority=0] Priority of the job
+	 * @property {Number} [opts.attempts] Number of attempts
+	 * @property {Number} [otps.delay] Delay in between jobs
+	 * @property {Number} [opts.ttl] Time to live for job
+	 * @property {Boolean} [opts.removeOnComplete] Remove job on completion
+	 * @property {Boolean} [opts.noFailure] Mark job as complete even if it fails
+	 */
+
 	/**
 	 * Add a job to the Queue
 	 * @param {*} input Job data
-	 * @param {Object} opts
-	 * @param {Number|String} [opts.priority=0] Priority of the job
-	 * @param {Number} [opts.attempts] Number of attempts
-	 * @param {Number} [otps.delay] Delay in between jobs
-	 * @param {Number} [opts.ttl] Time to live for job
-	 * @param {Boolean} [opts.removeOnComplete] Remove job on completion
-	 * @param {Boolean} [opts.noFailure] Mark job as complete even if it fails
+	 * @param {addOpts} opts
 	 * @returns {Number|*} The ID of the job created
 	 */
 	async addJob(input, {
@@ -122,12 +127,14 @@ class Queue {
 		removeOnComplete = this.removeOnComplete,
 		noFailure = this.noFailure,
 		_getResult = false,
+		_timeout = 180000,
 		_dummy = undefined,
 	} = {}) {
 		return new Promise((resolve, reject) => {
 			const options = {
 				noFailure,
 				_dummy,
+				_timeout,
 			};
 			const job = Queue.jobs
 				.create(this.name, {input, options})
@@ -151,12 +158,6 @@ class Queue {
 			}
 
 			if (_getResult) {
-				if (!Queue.queues[this.name].processorAdded) {
-					throw new Error('No processor set, set one or manually process job');
-				}
-				else if (Queue.queues[this.name].processorAdded && this.paused) {
-					throw new Error('Processor is paused, resume first to get result');
-				}
 				job.on('complete', res => resolve(res))
 					.on('failed', errMsg => reject(new Error(errMsg)))
 					.on('remove', () => reject(new Error('Job Removed before completion')));
@@ -165,24 +166,28 @@ class Queue {
 			job.save((err) => {
 				if (err) reject(new Error(err));
 				else if (!_getResult) resolve(job.id);
+				else if (_timeout) {
+					setTimeout(() => {
+						reject(new Error('Timed out'));
+						job.log('Error: Timed out');
+					}, _timeout);
+				}
 			});
 		});
 	}
 
 	/**
 	 * Add a job to the Queue, wait for it to process and return result
+	 * Preferably set PRIORITY HIGH or it might timeout if lots of other tasks are in queue
+	 * Queue will process job only if timeout is not passed when processing begins
 	 * @param {*} input Job data
-	 * @param {Object} opts
-	 * @param {Number|String} [opts.priority=0] Priority of the job
-	 * @param {Number} [opts.attempts] Number of attempts
-	 * @param {Number} [otps.delay] Delay in between jobs
-	 * @param {Number} [opts.ttl] Time to live for job
-	 * @param {Boolean} [opts.removeOnComplete] Remove job on completion
-	 * @param {Boolean} [opts.noFailure] Mark job as complete even if it fails
+	 * @param {addOpts} opts
+	 * @param {number} [timeout=180000] wait for this time else throw err
 	 * @returns {*} result
 	 */
-	async addAndProcess(input, opts = {}) {
+	async addAndProcess(input, opts = {}, timeout = 180000) {
 		opts._getResult = true;
+		opts._timeout = timeout;
 		return this.addJob(input, opts);
 	}
 
@@ -253,6 +258,12 @@ class Queue {
 			if (!this.kueCtx) this.kueCtx = ctx;
 			if (job.data.options._dummy) {
 				done(null, true);
+				return;
+			}
+			else if (job.data.options._timeout &&
+				(Date.now() - job.created_at) > job.data.options._timeout) {
+				job.log(`Time passed: ${(Date.now() - job.created_at)}, Timeout: ${job.data.options._timeout}`);
+				done(new Error('Timed out'));
 				return;
 			}
 			job.log('Start processing');
