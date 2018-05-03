@@ -243,7 +243,7 @@ class RedisCache {
 			if (key === '_all_') key = '';
 
 			localCache.forEach((_value, _key) => {
-				if (_key.includes(key)) {
+				if (_key.startsWith(`${prefix}:`) && _key.includes(key)) {
 					// delete ttl
 					if (localCacheTTL.has(_key)) {
 						clearTimeout(localCacheTTL.get(_key));
@@ -575,10 +575,10 @@ class RedisCache {
 
 		let keyGlob;
 		if (str === '_all_') {
-			keyGlob = `RC:${this.constructor.globalPrefix}:*`;
+			keyGlob = `RC:${this.constructor.globalPrefix}:${this.prefix}:*`;
 		}
 		else {
-			keyGlob = `RC:${this.constructor.globalPrefix}:*${str}*`;
+			keyGlob = `RC:${this.constructor.globalPrefix}:${this.prefix}:*${str}*`;
 		}
 
 		this._localCache(str, DEL_CONTAINS);

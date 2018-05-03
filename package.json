@@ -19,58 +19,75 @@
     "check-coverage": "true",
     "build": "babel src --out-dir dist",
     "lint": "eslint src",
-    "test-only": "NODE_ENV=test mocha --slow 0 --exit --require babel-register test/*.test.js",
+    "test-only": "NODE_ENV=test mocha --slow 0 --exit --require @babel/register test/*.test.js",
     "-precommit": "npm run build && npm test && npm run check-coverage",
     "prepublishOnly": "npm run build"
   },
   "author": "Hitesh Khandelwal <hitesh@smartprix.com> (http://www.smartprix.com/)",
   "license": "ISC",
   "dependencies": {
-    "babel-plugin-transform-es2015-modules-commonjs": "^6.26.0",
     "bluebird": "^3.5.1",
-    "chalk": "2.3.1",
+    "chalk": "2.4.1",
     "chmodr": "1.0.2",
     "chownr": "1.0.1",
-    "continuation-local-storage": "3.2.1",
     "etc-passwd": "0.1.1",
     "glob": "7.1.2",
     "ioredis": ">= 3.2.2",
-    "jsdoc": "^3.5.5",
     "kue": "^0.11.6",
-    "lodash": "4.17.5",
+    "lodash": "4.17.10",
     "longjohn": "^0.2.12",
-    "lru-cache": "4.1.1",
+    "lru-cache": "4.1.2",
     "mkdirp": "0.5.1",
-    "request": "^2.83.0",
+    "request": "^2.85.0",
     "rimraf": "2.6.2",
-    "socks5-http-client": "^1.0.2",
+    "socks5-http-client": "^1.0.3",
     "socks5-https-client": "^1.2.1",
-    "source-map-support": "0.5.3",
+    "source-map-support": "0.5.5",
     "stack-trace": "0.0.10",
     "thenify-all": "1.6.0",
     "timestring": ">= 5.0.0",
     "tough-cookie-file-store": "^1.2.0"
   },
   "devDependencies": {
-    "babel-cli": "6.26.0",
-    "babel-preset-stage-0": "6.24.1",
+    "@babel/cli": "^7.0.0-beta.46",
+    "@babel/core": "^7.0.0-beta.46",
+    "@babel/plugin-proposal-class-properties": "^7.0.0-beta.46",
+    "@babel/preset-env": "^7.0.0-beta.46",
+    "@babel/register": "^7.0.0-beta.46",
     "chai": "4.1.2",
-    "eslint": "4.17.0",
-    "eslint-config-smartprix": "3.3.1",
-    "ghooks": "2.0.2",
+    "eslint": "4.19.1",
+    "eslint-config-smartprix": "3.4.2",
+    "ghooks": "2.0.4",
     "isparta": "4.0.0",
-    "mocha": "5.0.1"
+    "mocha": "5.1.1",
+    "jsdoc": "^3.5.5"
   },
   "eslintConfig": {
     "extends": "smartprix",
-    "rules": {}
+    "rules": {
+      "vue/script-indent": 0
+    }
   },
   "babel": {
+    "presets": [
+      [
+        "@babel/preset-env",
+        {
+          "targets": {
+            "node": "current"
+          },
+          "modules": "commonjs",
+          "shippedProposals": true
+        }
+      ]
+    ],
     "plugins": [
-      "transform-export-extensions",
-      "transform-class-properties",
-      "transform-object-rest-spread",
-      "transform-es2015-modules-commonjs"
+      [
+        "@babel/plugin-proposal-class-properties",
+        {
+          "loose": true
+        }
+      ]
     ],
     "sourceMaps": true
   },

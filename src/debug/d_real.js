@@ -60,6 +60,7 @@ function trace(error = '') {
 		stack = stackTrace.get(error);
 	}
 
+	// eslint-disable-next-line no-control-regex
 	const h1Length = h1.replace(/\u001b\[\d\d?(;\d\d?)?m/g, '').length;
 
 	if (name.length > process.stdout.columns - h1Length - 3 - name.length) {
