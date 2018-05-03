@@ -243,7 +243,10 @@ class RedisCache {
 			if (key === '_all_') key = '';
 
 			localCache.forEach((_value, _key) => {
-				if (_key.startsWith(`${prefix}:`) && _key.includes(key)) {
+				if (
+					(prefix === '*' || _key.startsWith(`${prefix}:`)) &&
+					_key.includes(key)
+				) {
 					// delete ttl
 					if (localCacheTTL.has(_key)) {
 						clearTimeout(localCacheTTL.get(_key));
