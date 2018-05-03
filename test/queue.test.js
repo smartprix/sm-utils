@@ -9,10 +9,7 @@ function sleep(val, timeout = 20) {
 	return new Promise(resolve => setTimeout(() => resolve(val), timeout));
 }
 
-const processor = async (jobData) => {
-	await sleep();
-	return jobData.data;
-};
+const processor = jobData => jobData.data;
 
 before(async () => {
 	queue = new Queue('test');
@@ -89,7 +86,7 @@ describe('@queue library', () => {
 	it('should be able to attach a processor', async () => {
 		id = await queue.addJob({data: 'x'});
 		queue.addProcessor(processor, 2);
-		await sleep(0, 1000);
+		await sleep(0, 500);
 		detail = await Queue.status(id);
 		expect(detail.result).to.equal('x');
 		expect(detail.state).to.equal('complete');
@@ -112,7 +109,7 @@ describe('@queue library', () => {
 	it('should timeout job', async () => {
 		let res = {};
 		try {
-			await queue.addAndProcess({data: 's'}, undefined, 1);
+			await queue.addAndProcess({data: 's'}, undefined, 0);
 		}
 		catch (err) {
 			res = err;
@@ -123,7 +120,7 @@ describe('@queue library', () => {
 	it('should pause processor', async () => {
 		await queue.pauseProcessor();
 		id = await queue.addJob({data: 'z'});
-		await sleep(0, 5000);
+		await sleep(0, 1000);
 		detail = await Queue.status(id);
 		expect(detail.state).to.equal('inactive');
 	}).timeout(8000);
@@ -139,7 +136,7 @@ describe('@queue library', () => {
 
 	it('should resume processor', async () => {
 		queue.resumeProcessor();
-		await sleep(0, 2000);
+		await sleep(0, 1000);
 		detail = await Queue.status(id);
 		expect(detail.result).to.equal('z');
 		expect(detail.state).to.equal('complete');
