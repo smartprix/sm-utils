@@ -125,9 +125,9 @@ class Queue {
 		delay = this.delay,
 		ttl = this.ttl,
 		removeOnComplete = this.removeOnComplete,
-		noFailure = this.noFailure,
+		noFailure = this.noFailure ? true : undefined,
 		_getResult = false,
-		_timeout = 180000,
+		_timeout = undefined,
 		_dummy = undefined,
 	} = {}) {
 		return new Promise((resolve, reject) => {
@@ -166,7 +166,7 @@ class Queue {
 			job.save((err) => {
 				if (err) reject(new Error(err));
 				else if (!_getResult) resolve(job.id);
-				else if (_timeout) {
+				else if (_timeout !== undefined) {
 					setTimeout(() => {
 						reject(new Error('Timed out'));
 						job.log('Error: Timed out');
@@ -260,7 +260,7 @@ class Queue {
 				done(null, true);
 				return;
 			}
-			else if (job.data.options._timeout &&
+			else if (job.data.options._timeout !== undefined &&
 				(Date.now() - job.created_at) > job.data.options._timeout) {
 				job.log(`Time passed: ${(Date.now() - job.created_at)}, Timeout: ${job.data.options._timeout}`);
 				done(new Error('Timed out'));
