@@ -243,7 +243,10 @@ class RedisCache {
 			if (key === '_all_') key = '';
 
 			localCache.forEach((_value, _key) => {
-				if (_key.includes(key)) {
+				if (
+					(prefix === '*' || _key.startsWith(`${prefix}:`)) &&
+					_key.includes(key)
+				) {
 					// delete ttl
 					if (localCacheTTL.has(_key)) {
 						clearTimeout(localCacheTTL.get(_key));
@@ -488,6 +491,14 @@ class RedisCache {
 			return settingPromise;
 		}
 
+		// try to get the value from local cache first
+		if (this.useLocalCache) {
+			const localValue = this._localCache(key);
+			if (localValue !== undefined) {
+				return localValue;
+			}
+		}
+
 		const promise = this._getOrSet(key, value, options);
 		this._getOrSetting(key, promise);
 		const result = await promise;
@@ -569,10 +580,10 @@ class RedisCache {
 
 		let keyGlob;
 		if (str === '_all_') {
-			keyGlob = `RC:${this.constructor.globalPrefix}:*`;
+			keyGlob = `RC:${this.constructor.globalPrefix}:${this.prefix}:*`;
 		}
 		else {
-			keyGlob = `RC:${this.constructor.globalPrefix}:*${str}*`;
+			keyGlob = `RC:${this.constructor.globalPrefix}:${this.prefix}:*${str}*`;
 		}
 
 		this._localCache(str, DEL_CONTAINS);

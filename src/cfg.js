@@ -33,6 +33,20 @@ function cfg(key, defaultValue) {
 	return _.get(config, key, defaultValue);
 }
 
+/**
+ * Will read env vars of the format CFG__JSON_KEY__PATH=$VAL
+ * It will set the key 'jsonKey.path' with $VAL
+ * _ to specify where to capitalize for camelCase
+ * __ to seperate the key path
+ */
+function readEnvVariables() {
+	const vals = Object.keys(process.env).filter(val => val.indexOf('CFG__') === 0);
+	vals.forEach((val) => {
+		const key = val.slice(5).split('__').map(el => _.camelCase(el)).join('.');
+		cfg.set(key, process.env[val]);
+	});
+}
+
 function readDefaultConfigFiles() {
 	if (configRead) return;
 	configRead = true;
@@ -46,6 +60,7 @@ function readDefaultConfigFiles() {
 	if (config.$privateConfigFile) {
 		cfg.file(config.$privateConfigFile, {ignoreNotFound: true});
 	}
+	readEnvVariables();
 }
 
 cfg.get = function (key, defaultValue) {
@@ -163,27 +178,33 @@ cfg.read = function (key) {
 	return fileCache[key];
 };
 
-cfg.is_production = function () {
+cfg.isProduction = function () {
 	return process.env.NODE_ENV === 'production';
 };
 
-cfg.is_staging = function () {
+cfg.isStaging = function () {
 	return process.env.NODE_ENV === 'staging';
 };
 
-cfg.is_test = function () {
+cfg.isProductionLike = function () {
+	return (process.env.NODE_ENV === 'production') || (process.env.NODE_ENV === 'staging');
+};
+
+cfg.isTest = function () {
 	return process.env.NODE_ENV === 'test';
 };
 
-cfg.is_dev = function () {
-	return !cfg.is_production();
+cfg.isDev = function () {
+	return (process.env.NODE_ENV !== 'production') && (process.env.NODE_ENV !== 'staging');
 };
 
-cfg.isProduction = cfg.is_production;
-cfg.isProd = cfg.is_production;
-cfg.is_prod = cfg.is_production;
-cfg.isStaging = cfg.is_staging;
-cfg.isDev = cfg.is_dev;
-cfg.isTest = cfg.is_test;
+cfg.is_production = cfg.isProduction;
+cfg.isProd = cfg.isProduction;
+cfg.is_prod = cfg.isProduction;
+cfg.is_staging = cfg.isStaging;
+cfg.isProdLike = cfg.isProductionLike;
+cfg.is_dev = cfg.isDev;
+cfg.isDevelopment = cfg.isDev;
+cfg.is_test = cfg.isTest;
 
 module.exports = cfg;

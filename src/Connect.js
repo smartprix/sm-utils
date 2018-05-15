@@ -2,7 +2,7 @@ import path from 'path';
 import _ from 'lodash';
 import request from 'request';
 import FileCookieStore from 'tough-cookie-file-store';
-import SocksHTTPAgent from 'socks5-http-client/lib/Agent';
+import SocksHTTPAgent from 'sm-socks5-http-client/lib/Agent';
 import SocksHTTPSAgent from 'socks5-https-client/lib/Agent';
 import file from './file';
 import Crypt from './Crypt';

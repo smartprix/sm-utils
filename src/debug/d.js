@@ -2,7 +2,7 @@
 const cfg = require('./../cfg');
 
 // noop all the functions in production
-if (cfg.is_production()) {
+if (cfg.isProductionLike()) {
 	const d = function () {};
 	d.dump = function () {};
 	d.trace = function () {};

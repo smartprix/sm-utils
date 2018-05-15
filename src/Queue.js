@@ -1,36 +1,41 @@
 import kue from 'kue';
 import _ from 'lodash';
-import {EventEmitter} from 'events';
 
 async function processorWrapper(job, processor, resolve, reject) {
 	let res;
-	try {
-		if (job.state() === 'active') {
-			reject(new Error('Job already processing'));
-			return;
-		}
+	let jobDetails;
+	if (job.state() === 'active') {
+		reject(new Error('Job already processing'));
+		return;
+	}
+	else if (job.state() === 'inactive') {
 		job.active();
 		job.attempt(() => {});
-		res = await processor(job.data.input);
-	}
-	catch (e) {
-		job.error(e.message);
-		job._error = e.message;
-		if (!job.data.options.noFailure) {
-			job.failed();
-			reject(new Error('Job failed ' + e));
-			return;
+		try {
+			res = await processor(job.data.input);
 		}
+		catch (e) {
+			job.error(e.message);
+			job._error = e.message;
+			if (!job.data.options.noFailure) {
+				job.failed();
+				reject(new Error('Job failed ' + e));
+				return;
+			}
+		}
+		if (!_.isNil(res)) {
+			job.result = res;
+			job.set('result', JSON.stringify(res));
+		}
+		job.complete();
+		jobDetails = _.pick(job.toJSON(), ['id', 'type', 'data', 'result', 'state', 'error', 'created_at', 'updated_at', 'attempts']);
+		jobDetails.attempts.made++;
+		jobDetails.attempts.remaining--;
 	}
-	if (!_.isNil(res)) {
-		job.result = res;
-		job.set('result', JSON.stringify(res));
+	// Job is already complete/failed
+	else {
+		jobDetails = _.pick(job.toJSON(), ['id', 'type', 'data', 'result', 'state', 'error', 'created_at', 'updated_at', 'attempts']);
 	}
-	job.complete();
-
-	const jobDetails = _.pick(job.toJSON(), ['id', 'type', 'data', 'result', 'state', 'error', 'created_at', 'updated_at', 'attempts']);
-	jobDetails.attempts.made++;
-	jobDetails.attempts.remaining--;
 	resolve(jobDetails);
 }
 
@@ -71,7 +76,7 @@ class Queue {
 			});
 			if (enableWatchdog)	Queue.jobs.watchStuckJobs(10000);
 			Queue.jobs.on('error', (err) => {
-				console.log('Queue error: ', err.message);
+				console.error('[Queue] ', err);
 			});
 			process.once('SIGTERM', async () => {
 				await Queue.exit();
@@ -90,54 +95,104 @@ class Queue {
 	 * 		Read more here :  https://github.com/Automattic/kue#unstable-redis-connections
 	 */
 	constructor(name, redis = {port: 6379, host: '127.0.0.1'}, enableWatchdog = false) {
-		this.name = name;
-		if (!Queue.queues[name]) Queue.queues[name] = {processorAdded: false};
-		this.events = new EventEmitter();
-		this.events.setMaxListeners(3);
+		this.name = `${name}${process.env.NODE_ENV ? '-' + process.env.NODE_ENV : ''}`;
+		if (!Queue.queues[this.name]) Queue.queues[this.name] = {processorAdded: false};
+		this.paused = undefined;
+		this.kueCtx = undefined;
 		Queue.init(redis, enableWatchdog);
 	}
+
+
+	/**
+	 * @typedef {Object} addOpts
+	 * @property {Number|String} [opts.priority=0] Priority of the job
+	 * @property {Number} [opts.attempts] Number of attempts
+	 * @property {Number} [otps.delay] Delay in between jobs
+	 * @property {Number} [opts.ttl] Time to live for job
+	 * @property {Boolean} [opts.removeOnComplete] Remove job on completion
+	 * @property {Boolean} [opts.noFailure] Mark job as complete even if it fails
+	 */
 
 	/**
 	 * Add a job to the Queue
 	 * @param {*} input Job data
-	 * @param {Number|String} priority Priority of the job
-	 * @returns {Number} The ID of the job created
+	 * @param {addOpts} opts
+	 * @returns {Number|*} The ID of the job created
 	 */
-	async addJob(input, priority = 0) {
+	async addJob(input, {
+		priority = 0,
+		attempts = this.attempts,
+		delay = this.delay,
+		ttl = this.ttl,
+		removeOnComplete = this.removeOnComplete,
+		noFailure = this.noFailure ? true : undefined,
+		_getResult = false,
+		_timeout = undefined,
+		_dummy = undefined,
+	} = {}) {
 		return new Promise((resolve, reject) => {
 			const options = {
-				noFailure: this.noFailure,
+				noFailure,
+				_dummy,
+				_timeout,
 			};
 			const job = Queue.jobs
 				.create(this.name, {input, options})
 				.priority(priority);
 
 			// default = 1
-			if (this.attempts) {
+			if (attempts) {
 				job.attempts(this.attempts);
 			}
 			// default = 0
-			if (this.delay) {
+			if (delay) {
 				job.delay(this.delay).backoff(true);
 			}
 			// default = 0, i.e. infinite
-			if (this.ttl > 0) {
+			if (ttl > 0) {
 				job.ttl(this.ttl);
 			}
 			// default = false
-			if (this.removeOnComplete) {
+			if (removeOnComplete) {
 				job.removeOnComplete(true);
+			}
+
+			if (_getResult) {
+				job.on('complete', res => resolve(res))
+					.on('failed', errMsg => reject(new Error(errMsg)))
+					.on('remove', () => reject(new Error('Job Removed before completion')));
 			}
 
 			job.save((err) => {
 				if (err) reject(new Error(err));
-				resolve(job.id);
+				else if (!_getResult) resolve(job.id);
+				else if (_timeout !== undefined) {
+					setTimeout(() => {
+						reject(new Error('Timed out'));
+						job.log('Error: Timed out');
+					}, _timeout);
+				}
 			});
 		});
 	}
 
 	/**
-	 * Set number of retry attempts for any job added after this is called
+	 * Add a job to the Queue, wait for it to process and return result
+	 * Preferably set PRIORITY HIGH or it might timeout if lots of other tasks are in queue
+	 * Queue will process job only if timeout is not passed when processing begins
+	 * @param {*} input Job data
+	 * @param {addOpts} opts
+	 * @param {number} [timeout=180000] wait for this time else throw err
+	 * @returns {*} result
+	 */
+	async addAndProcess(input, opts = {}, timeout = 180000) {
+		opts._getResult = true;
+		opts._timeout = timeout;
+		return this.addJob(input, opts);
+	}
+
+	/**
+	 * Set default number of retry attempts for any job added later
 	 * @param {Number} attempts Number of attempts (>= 0), default = 1
 	 */
 	setAttempts(attempts) {
@@ -145,7 +200,7 @@ class Queue {
 	}
 
 	/**
-	 * Set delay b/w successive jobs
+	 * Set delay b/w successive jobs for any job added later
 	 * @param {Number} delay Delay b/w jobs, milliseconds, default = 0
 	 */
 	setDelay(delay) {
@@ -153,7 +208,7 @@ class Queue {
 	}
 
 	/**
-	 * Set TTL (time to live) for new jobs added from now on,
+	 * Set default TTL (time to live) for new jobs added from now on,
 	 * will fail job if not completed in TTL time
 	 * @param {Number} ttl Time in milliseconds, infinite when 0. default = 0
 	 */
@@ -162,7 +217,7 @@ class Queue {
 	}
 
 	/**
-	 * Sets removeOnComplete for any job added to this Queue from now on
+	 * Sets default removeOnComplete for any job added to this Queue from now on
 	 * @param {Boolean} removeOnComplete default = false
 	 */
 	setRemoveOnCompletion(removeOnComplete) {
@@ -170,7 +225,7 @@ class Queue {
 	}
 
 	/**
-	 * Sets noFailure for any job added to this Queue from now on.
+	 * Sets default noFailure for any job added to this Queue from now on.
 	 * This will mark the job complete even if it fails when true
 	 * @param {Boolean} noFailure default = false
 	 */
@@ -190,31 +245,31 @@ class Queue {
 	 * @param {processorCallback} processor Function to be called to process the job data
 	 * @param {Number} [concurrency=1] The number of jobs this processor can handle parallely
 	 */
-	addProcessor(processor, concurrency = 1) {
+	async addProcessor(processor, concurrency = 1) {
 		if (Queue.queues[this.name].processorAdded) {
 			throw new Error(`Processor already added for queue ${this.name}, can only be set once per queue.`);
 		}
 		// Increase max event listeners limit
 		Queue.jobs.setMaxListeners(Queue.jobs.getMaxListeners() + concurrency);
 
+		// ctx Can be used to pause and resume worker,
+		// For detailed info : https://github.com/Automattic/kue#pause-processing
 		Queue.jobs.process(this.name, concurrency, async (job, ctx, done) => {
-			this.events.on('pause', (timeout, res, rej) => {
-				// ctx Can be used to pause and resume worker,
-				// For detailed info : https://github.com/Automattic/kue#pause-processing
-				ctx.pause(timeout, (err) => {
-					if (err) rej();
-					else res();
-				});
-			});
-
-			this.events.on('resume', () => {
-				ctx.resume();
-			});
-
+			if (!this.kueCtx) this.kueCtx = ctx;
+			if (job.data.options._dummy) {
+				done(null, true);
+				return;
+			}
+			else if (job.data.options._timeout !== undefined &&
+				(Date.now() - job.created_at) > job.data.options._timeout) {
+				job.log(`Time passed: ${(Date.now() - job.created_at)}, Timeout: ${job.data.options._timeout}`);
+				done(new Error('Timed out'));
+				return;
+			}
 			job.log('Start processing');
 			let res;
 			try {
-				res = await processor(job.data.input, ctx);
+				res = await processor(job.data.input);
 			}
 			catch (e) {
 				job.log('Errored: ' + e.message);
@@ -229,7 +284,11 @@ class Queue {
 			job.log('Done');
 			done(null, res);
 		});
+
+		this.paused = false;
 		Queue.queues[this.name].processorAdded = true;
+		// We add this so that keuCtx gets set without having to wait for a job to be added
+		await this.addAndProcess({}, {_dummy: true, removeOnComplete: true});
 	}
 
 	/**
@@ -238,16 +297,32 @@ class Queue {
 	 * @param {Number} [timeout=5000] Time to complete current jobs in ms
 	 */
 	async pauseProcessor(timeout = 5000) {
-		return new Promise((resolve, reject) => {
-			this.events.emit('pause', timeout, resolve, reject);
+		if (!Queue.queues[this.name].processorAdded) throw new Error('No processor present');
+		if (this.paused) return;
+		await new Promise((resolve, reject) => {
+			if (!this.kueCtx) {
+				reject(new Error('Worker context not yet available, please add atleast one job before pausing/resuming'));
+				return;
+			}
+			this.kueCtx.pause(timeout, (err) => {
+				if (err) reject(err);
+				else resolve();
+			});
 		});
+		this.paused = true;
 	}
 
 	/**
 	 * Resume Queue processing
 	 */
 	resumeProcessor() {
-		this.events.emit('resume');
+		if (!Queue.queues[this.name].processorAdded) throw new Error('No processor present');
+		if (!this.paused) return;
+		if (!this.kueCtx) {
+			throw new Error('Worker context not yet available, please add atleast one job before pausing/resuming');
+		}
+		this.kueCtx.resume();
+		this.paused = false;
 	}
 
 	/**
@@ -404,7 +479,7 @@ class Queue {
 	}
 
 	/**
-	 * Manualy process a specific Job, ignores any attempts limit set
+	 * Manualy process a specific Job. Returns existing result if job already processed
 	 * @param {Number} jobId Id of the job to be processed
 	 * @param {processorCallback} processor Function to be called to process the job data, without ctx
 	 * @returns {jobDetails} Result of processor function and job object of completed job
