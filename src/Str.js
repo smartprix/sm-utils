@@ -100,6 +100,39 @@ function trimToNext(str, pos, char = ' ') {
 	return _.trimEnd(str, char);
 }
 
+const numberLocaleCache = {};
+function _getNumberLocale(options) {
+	const {locale = 'en', currency = undefined, decimals = 0} = options;
+	const localeKey = `${locale}${currency}${decimals}`;
+	if (!(localeKey in numberLocaleCache)) {
+		numberLocaleCache[localeKey] = new Intl.NumberFormat(locale, {
+			style: currency ? 'currency' : 'decimal',
+			currency,
+			minimumFractionDigits: decimals,
+			maximumFractionDigits: decimals,
+		});
+	}
+
+	return numberLocaleCache[localeKey];
+}
+
+/**
+ * Format a number according to a particular locale
+ * Similar to Number.toLocaleFormat, except being significantly faster
+ *
+ * @param {number} number the number to format
+ * @param {object|string} options string of locale
+ * 	or object of {locale: 'en-IN', currency: 'INR', decimals: 0}
+ * @returns {string} formatted number
+ */
+function numberFormat(number, options = {}) {
+	if (typeof options === 'string') {
+		options = {locale: options};
+	}
+
+	return _getNumberLocale(options).format(number);
+}
+
 export default {
 	invertCase,
 	isVowel,
@@ -108,4 +141,5 @@ export default {
 	pluralize,
 	transform,
 	trimToNext,
+	numberFormat,
 };

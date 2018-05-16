@@ -291,7 +291,9 @@ class RedisCache {
 			// set ttl
 			clearTimeout(localCacheTTL.get(prefixedKey));
 			localCacheTTL.set(prefixedKey, setTimeout(() => {
-				delete localCache.delete(prefixedKey);
+				clearTimeout(localCacheTTL.get(prefixedKey));
+				localCacheTTL.delete(prefixedKey);
+				localCache.delete(prefixedKey);
 			}, ttl));
 		}
 
