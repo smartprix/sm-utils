@@ -178,4 +178,13 @@ describe('crypt library', () => {
 		expect(await Crypt.javaObfuscate(original)).to.equal(obfuscated);
 		expect(await Crypt.javaUnobfuscate(obfuscated)).to.equal(original);
 	});
+
+	it('should generate the same output for seededRandom', () => {
+		const seededGenerator = Crypt.seededRandom(2341);
+		expect(seededGenerator.string({length: 13})).to.equal('UK7NmbKCXfWw0');
+		expect(seededGenerator.shuffle([1, 2, 3, 4])).to.deep.equal([2, 1, 4, 3]);
+		expect(seededGenerator.int(0, 100)).to.equal(84);
+		expect(seededGenerator.random()).to.equal(0.8101538523824274);
+		expect(seededGenerator.bytes(2)).to.deep.equal(Buffer.from([234, 238]));
+	});
 });
