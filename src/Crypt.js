@@ -196,12 +196,12 @@ function seededRandom(seed) {
 		bytes(numBytes) {
 			const result = [];
 			while (numBytes--) {
-				result.push(this.random(0, 255));
+				result.push(this.int(0, 255));
 			}
 			return Buffer.from(result);
 		},
 
-		string(options) {
+		string(options = {}) {
 			options.randomBytesFunc = this.bytes.bind(this);
 			return randomString(options);
 		},
