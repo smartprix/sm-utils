@@ -26,7 +26,6 @@
   "author": "Hitesh Khandelwal <hitesh@smartprix.com> (http://www.smartprix.com/)",
   "license": "ISC",
   "dependencies": {
-    "bluebird": "^3.5.1",
     "chalk": "2.4.1",
     "chmodr": "1.0.2",
     "chownr": "1.0.1",

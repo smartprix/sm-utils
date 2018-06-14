@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import numberToWords from './numberToWords';
 
 function invertCase(str) {
 	let output = '';
@@ -142,4 +143,5 @@ export default {
 	transform,
 	trimToNext,
 	numberFormat,
+	numberToWords,
 };

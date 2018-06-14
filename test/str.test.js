@@ -25,4 +25,10 @@ describe('str library', () => {
 		expect(Str.numberFormat(123456.3443, {decimals: 2})).to.equal('123,456.34');
 		expect(Str.numberFormat(123456.3443, {decimals: 2, currency: 'USD'})).to.equal('$123,456.34');
 	});
+
+	it('should correctly convert number to words', () => {
+		expect(Str.numberToWords(12)).to.equal('twelve');
+		expect(Str.numberToWords(5555555)).to.equal('five million, five hundred and fifty-five thousand, five hundred and fifty-five');
+		expect(Str.numberToWords(100000000)).to.equal('one hundred million');
+	});
 });

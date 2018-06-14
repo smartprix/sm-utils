@@ -11,9 +11,9 @@ import Str from './Str';
 import baseConvert from './base_convert';
 import cfg from './cfg';
 import view from './view';
+import Vachan from './Vachan';
+import DeQueue from './DeQueue';
 import './lodash_utils';
-
-global.Promise = require('bluebird');
 
 module.exports = {
 	file: File,
@@ -31,4 +31,6 @@ module.exports = {
 	System,
 	Lock,
 	Str,
+	Vachan,
+	DeQueue,
 };

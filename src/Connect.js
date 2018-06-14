@@ -673,7 +673,13 @@ class Connect {
 	 * It creates and returns a promise based on the information
 	 * passed to and parameters of this object.
 	 *
-	 * @return {Promise}
+	 * Response contains {body, url, timeTaken, cached, statusCode}
+	 * url is the final url downloaded after following all redirects
+	 * cached is false is the response was downloaded, true if returned from a cached file
+	 * timeTaken is time taken (in ms) for the request
+	 * body contains the actual response body
+	 *
+	 * @return {Promise} a promise that resolves to response
 	 */
 	fetch() {
 		if (this.promise) return this.promise;

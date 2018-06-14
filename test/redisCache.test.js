@@ -2,7 +2,7 @@
 /* eslint-disable no-unused-expressions */
 import {expect} from 'chai';
 import _ from 'lodash';
-import {RedisCache} from '../src/index';
+import {RedisCache, Vachan} from '../src/index';
 
 const cache = new RedisCache('test');
 function sleep(val, timeout = 20) {
@@ -197,11 +197,11 @@ describe('redis cache library', () => {
 		expect(RedisCache.redisGetCount).to.equal(4);
 		redisCache.useLocalCache = true;
 		// TODO: test using multiple processes
-		await Promise.map(_.range(0, 10000), async () => {
+		await Vachan.map(_.range(0, 10000), async () => {
 			expect(await redisCache.getOrSet(key, value)).to.equal(value);
 		});
 
-		await Promise.map(_.range(0, 10000), async () => {
+		await Vachan.map(_.range(0, 10000), async () => {
 			expect(await redisCache.getOrSet('ahfhajsd', value)).to.equal(value);
 		});
 	});
