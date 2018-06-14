@@ -38,12 +38,16 @@ function random() {
 /**
  * Return a random integer between min and max (both inclusive)
  *
- * @param {int} min
- * @param {int} max
+ * @param {int} num If max is not passed, num is max and min is 0
+ * @param {int} [max]
  * @return {int} A random integer between min and max
 */
-function randomInt(min, max) {
-	return Math.floor((Math.random() * ((max - min) + 1)) + min);
+function randomInt(num, max) {
+	if (max === undefined) {
+		max = num;
+		num = 0;
+	}
+	return Math.floor((Math.random() * ((max - num) + 1)) + num);
 }
 
 /**
@@ -189,19 +193,23 @@ function seededRandom(seed) {
 			return x - Math.floor(x);
 		},
 
-		int(min, max) {
-			return Math.floor((this.random() * ((max - min) + 1)) + min);
+		int(num, max = undefined) {
+			if (max === undefined) {
+				max = num;
+				num = 0;
+			}
+			return Math.floor((this.random() * ((max - num) + 1)) + num);
 		},
 
 		bytes(numBytes) {
 			const result = [];
 			while (numBytes--) {
-				result.push(this.random(0, 255));
+				result.push(this.int(0, 255));
 			}
 			return Buffer.from(result);
 		},
 
-		string(options) {
+		string(options = {}) {
 			options.randomBytesFunc = this.bytes.bind(this);
 			return randomString(options);
 		},
