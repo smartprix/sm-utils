@@ -75,8 +75,9 @@ function countBits(number) {
  * If options is an integer it will treated as length.
  * By default, length is 20 and charset is ALPHA_NUMERIC
  *
- * @param  {int|Object} options length of the id or object of {length: int, base36: bool}
- * @return {String}             id
+ * @param  {int|Object} options
+ * 	length of the id or object of {length: int, base36: bool, charset: CHARSET}
+ * @return {String} id
  */
 function randomString(options = {}) {
 	let length;
@@ -89,7 +90,12 @@ function randomString(options = {}) {
 
 	if (typeof options === 'object') {
 		length = options.length || 20;
-		charset = options.charset || chars.ALPHA_NUMERIC;
+		if (options.base36) {
+			charset = chars.BASE_36;
+		}
+		else {
+			charset = options.charset || chars.ALPHA_NUMERIC;
+		}
 	}
 	else if (typeof options === 'number') {
 		length = options;

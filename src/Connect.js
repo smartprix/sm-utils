@@ -33,10 +33,10 @@ const userAgents = {
 function makeProxyUrl(proxy) {
 	let url = proxy.address.replace('http://', '');
 	if (proxy.port) {
-		url = proxy.address.split(':')[0] + ':' + proxy.port;
+		url = url.split(':')[0] + ':' + proxy.port;
 	}
 	if (proxy.auth && proxy.auth.username) {
-		url = `${encodeURIComponent(proxy.auth.username)}:${encodeURIComponent(proxy.auth.password)}@${proxy.address}`;
+		url = `${encodeURIComponent(proxy.auth.username)}:${encodeURIComponent(proxy.auth.password)}@${url}`;
 	}
 
 	return `http://${url}`;
@@ -307,9 +307,16 @@ class Connect {
 	 * @param  {Number} timeoutInMs timeout value in milliseconds
 	 * @return {Connect}            self
 	 */
-	timeoutMilli(timeoutInMs) {
+	timeoutMs(timeoutInMs) {
 		this.requestTimeout = timeoutInMs;
 		return this;
+	}
+
+	/**
+	 * alias for timeoutMs
+	 */
+	timeoutMilli(timeoutInMs) {
+		return this.timeoutMs(timeoutInMs);
 	}
 
 	/**
@@ -363,10 +370,18 @@ class Connect {
 	 * @return {Connect}         self
 	 */
 	httpAuth(username, password) {
-		this.options.auth = {
-			username,
-			password,
-		};
+		if (typeof username === 'string') {
+			// username & password are strings
+			this.options.auth = {
+				username,
+				password,
+			};
+		}
+		else if (username.username) {
+			// username argument is an object of {username, password}
+			this.options.auth = username;
+		}
+
 		return this;
 	}
 
@@ -436,10 +451,17 @@ class Connect {
 	 * @return {Connect}         self
 	 */
 	proxyAuth(username, password) {
-		this.options.proxy.auth = {
-			username,
-			password,
-		};
+		if (typeof username === 'string') {
+			// username & password are strings
+			this.options.proxy.auth = {
+				username,
+				password,
+			};
+		}
+		else if (username.username) {
+			// username argument is an object of {username, password}
+			this.options.proxy.auth = username;
+		}
 
 		return this;
 	}
@@ -629,6 +651,7 @@ class Connect {
 			response.url = response.request.uri.href || this.options.url;
 			response.timeTaken = Date.now() - startTime;
 			response.cached = false;
+			response.status = response.statusCode;
 
 			const promises = [];
 
@@ -653,13 +676,11 @@ class Connect {
 			this.timeoutTimer = setTimeout(() => {
 				try {
 					req.abort();
-
-					const e = new Error('Request Timed Out');
-					e.code = 'ETIMEDOUT';
-					e.timeTaken = Date.now() - startTime;
-					reject(e);
 				}
 				catch (err) {
+					// ignore errors
+				}
+				finally {
 					const e = new Error('Request Timed Out');
 					e.code = 'ETIMEDOUT';
 					e.timeTaken = Date.now() - startTime;
@@ -702,6 +723,7 @@ class Connect {
 					const response = {
 						body: cachedContents,
 						statusCode: 200,
+						status: 200,
 						url: this.options.url,
 						timeTaken: 0,
 						cached: true,
