@@ -22,6 +22,7 @@ const userAgents = {
 	safariMobile: 'Mozilla/6.0 (iPhone; CPU iPhone OS 8_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/8.0 Mobile/10A5376e Safari/8536.25',
 	tablet: 'Mozilla/5.0 (iPad; CPU OS 5_0 like Mac OS X) AppleWebKit/534.46 (KHTML, like Gecko) Version/5.0.2 Mobile/9A5248d Safari/6533.18.5',
 	ipad: 'Mozilla/5.0 (iPad; CPU OS 5_0 like Mac OS X) AppleWebKit/534.46 (KHTML, like Gecko) Version/5.0.2 Mobile/9A5248d Safari/6533.18.5',
+	windows: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
 };
 
 /**
@@ -180,6 +181,7 @@ class Connect {
 	 */
 	referer(referer) {
 		this.header('Referer', referer);
+		return this;
 	}
 
 	/**
@@ -200,6 +202,7 @@ class Connect {
 	 */
 	contentType(contentType) {
 		this.header('Content-Type', contentType);
+		return this;
 	}
 
 	/**
