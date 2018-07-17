@@ -198,6 +198,7 @@ class RedisCache {
 		return this.redis.eval(`return #redis.pcall('keys', '${keyGlob}')`, 0);
 	}
 
+	// eslint-disable-next-line max-statements
 	static _localCache(prefix, key, value, ttl = 0, redis = null) {
 		// the channel is RC:${globalPrefix} => RC:a
 		// the message is ${pid}\v${prefix}\v${command}\v${args.join('\v')}
@@ -239,24 +240,46 @@ class RedisCache {
 				redis.publish(channelName, message);
 			}
 
-			// delete all keys
-			if (key === '_all_') key = '';
-
-			localCache.forEach((_value, _key) => {
-				if (
-					(prefix === '*' || _key.startsWith(`${prefix}:`)) &&
-					_key.includes(key)
-				) {
-					// delete ttl
-					if (localCacheTTL.has(_key)) {
-						clearTimeout(localCacheTTL.get(_key));
-						localCacheTTL.delete(_key);
-					}
-
-					// delete data
-					localCache.delete(_key);
+			const delKey = (_key) => {
+				// delete ttl
+				if (localCacheTTL.has(_key)) {
+					clearTimeout(localCacheTTL.get(_key));
+					localCacheTTL.delete(_key);
 				}
-			});
+
+				// delete data
+				localCache.delete(_key);
+			};
+
+			if (key.includes('*')) {
+				let keyRegex;
+				if (prefix === '*') {
+					keyRegex = new RegExp(key.replace('*', '.*'));
+				}
+				else {
+					keyRegex = new RegExp(`^${this.prefix}:.*${key.replace('*', '.*')}`);
+				}
+
+				localCache.forEach((_value, _key) => {
+					if (keyRegex.test(_key)) {
+						delKey(_key);
+					}
+				});
+			}
+			else {
+				// delete all keys
+				if (key === '_all_') key = '';
+
+				const anyPrefix = (prefix === '*');
+				localCache.forEach((_value, _key) => {
+					if (
+						(anyPrefix || _key.startsWith(`${prefix}:`)) &&
+						_key.includes(key)
+					) {
+						delKey(_key);
+					}
+				});
+			}
 
 			return undefined;
 		}
@@ -581,6 +604,9 @@ class RedisCache {
 		let keyGlob;
 		if (str === '_all_') {
 			keyGlob = `RC:${this.constructor.globalPrefix}:${this.prefix}:*`;
+		}
+		else if (this.prefix === '*') {
+			keyGlob = `RC:${this.constructor.globalPrefix}:*${str}*`;
 		}
 		else {
 			keyGlob = `RC:${this.constructor.globalPrefix}:${this.prefix}:*${str}*`;
