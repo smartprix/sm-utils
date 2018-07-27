@@ -78,8 +78,12 @@ class Queue {
 			Queue.jobs.on('error', (err) => {
 				console.error('[Queue] ', err);
 			});
+			process.once('SIGINT', async () => {
+				await this.exit();
+				process.exit(0);
+			});
 			process.once('SIGTERM', async () => {
-				await Queue.exit();
+				await this.exit();
 				process.exit(0);
 			});
 		}
@@ -127,10 +131,11 @@ class Queue {
 		removeOnComplete = this.removeOnComplete,
 		noFailure = this.noFailure ? true : undefined,
 		_getResult = false,
-		_timeout = undefined,
-		_dummy = undefined,
+		_timeout,
+		_dummy,
 	} = {}) {
 		return new Promise((resolve, reject) => {
+			let completed = false;
 			const options = {
 				noFailure,
 				_dummy,
@@ -158,18 +163,35 @@ class Queue {
 			}
 
 			if (_getResult) {
-				job.on('complete', res => resolve(res))
-					.on('failed', errMsg => reject(new Error(errMsg)))
-					.on('remove', () => reject(new Error('Job Removed before completion')));
+				job.on('complete', (res) => {
+					completed = true;
+					resolve(res);
+				})
+					.on('failed', (errMsg) => {
+						if (!completed) {
+							completed = true;
+							reject(new Error(errMsg));
+						}
+					})
+					.on('remove', () => {
+						if (!completed) {
+							completed = true;
+							reject(new Error('Job Removed before completion'));
+						}
+					});
 			}
 
 			job.save((err) => {
 				if (err) reject(new Error(err));
 				else if (!_getResult) resolve(job.id);
-				else if (_timeout !== undefined) {
+				else if (!_.isNil(_timeout)) {
 					setTimeout(() => {
-						reject(new Error('Timed out'));
-						job.log('Error: Timed out');
+						if (!completed) {
+							completed = true;
+							job.log('Error: Timed out');
+							job.failed();
+							reject(new Error('Timed out'));
+						}
 					}, _timeout);
 				}
 			});
@@ -288,7 +310,11 @@ class Queue {
 		this.paused = false;
 		Queue.queues[this.name].processorAdded = true;
 		// We add this so that keuCtx gets set without having to wait for a job to be added
-		await this.addAndProcess({}, {_dummy: true, removeOnComplete: true});
+		await this.addAndProcess({}, {
+			_dummy: true,
+			priority: Number.MAX_SAFE_INTEGER,
+			removeOnComplete: true,
+		}, 5000);
 	}
 
 	/**
@@ -511,6 +537,7 @@ class Queue {
 
 			// eslint-disable-next-line no-unused-vars
 			Queue.jobs.shutdown(timeout, (err) => {
+				console.log('[Queue (sm-utils)] Shut down redis queue');
 				resolve(true);
 			});
 		});
