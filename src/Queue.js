@@ -109,7 +109,8 @@ class Queue {
 
 	/**
 	 * @typedef {Object} addOpts
-	 * @property {Number|String} [opts.priority=0] Priority of the job
+	 * @property {Number|String} [opts.priority=0] Priority of the job, lower number is better
+	 * Options are : low: 10, normal: 0, medium: -5, high: -10, critical: -15 | Or any integer
 	 * @property {Number} [opts.attempts] Number of attempts
 	 * @property {Number} [otps.delay] Delay in between jobs
 	 * @property {Number} [opts.ttl] Time to live for job
@@ -309,12 +310,17 @@ class Queue {
 
 		this.paused = false;
 		Queue.queues[this.name].processorAdded = true;
-		// We add this so that keuCtx gets set without having to wait for a job to be added
-		await this.addAndProcess({}, {
-			_dummy: true,
-			priority: Number.MAX_SAFE_INTEGER,
-			removeOnComplete: true,
-		}, 5000);
+		try {
+			// We add this so that keuCtx gets set without having to wait for a job to be added
+			await this.addAndProcess({}, {
+				_dummy: true,
+				priority: Number.MIN_SAFE_INTEGER,
+				removeOnComplete: true,
+			}, 10000);
+		}
+		catch (err) {
+			console.error('[Queue] Could not set kue ctx');
+		}
 	}
 
 	/**
