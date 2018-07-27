@@ -1,5 +1,6 @@
 import kue from 'kue';
 import _ from 'lodash';
+import System from './System';
 
 async function processorWrapper(job, processor, resolve, reject) {
 	let res;
@@ -76,15 +77,7 @@ class Queue {
 			});
 			if (enableWatchdog)	Queue.jobs.watchStuckJobs(10000);
 			Queue.jobs.on('error', (err) => {
-				console.error('[Queue] ', err);
-			});
-			process.once('SIGINT', async () => {
-				await this.exit();
-				process.exit(0);
-			});
-			process.once('SIGTERM', async () => {
-				await this.exit();
-				process.exit(0);
+				console.error(`[Queue] ${err}`);
 			});
 		}
 	}
@@ -531,23 +524,25 @@ class Queue {
 	/**
 	 * Function shuts down the Queue gracefully.
 	 * Waits for active jobs to complete until timeout, then marks them failed.
-	 * @param {Number} [timeout=5000] Time in milliseconds, default = 5000
+	 * @param {Number} [timeout=10000] Time in milliseconds, default = 10000
 	 * @returns {Boolean}
 	 */
-	static async exit(timeout = 5000) {
+	static async exit(timeout = 10000) {
 		return new Promise((resolve) => {
 			if (Queue.jobs === undefined) {
 				resolve(true);
-				return;
 			}
-
-			// eslint-disable-next-line no-unused-vars
-			Queue.jobs.shutdown(timeout, (err) => {
-				console.log('[Queue (sm-utils)] Shut down redis queue');
-				resolve(true);
-			});
+			else {
+				console.log('[Queue] Shutting down redis queue');
+				// eslint-disable-next-line no-unused-vars
+				Queue.jobs.shutdown(timeout, (err) => {
+					Queue.jobs = undefined;
+					resolve(true);
+				});
+			}
 		});
 	}
 }
+System.onExit(Queue.exit);
 
 export default Queue;
