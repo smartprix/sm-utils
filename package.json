@@ -48,18 +48,18 @@
     "tough-cookie-file-store": "^1.2.0"
   },
   "devDependencies": {
-    "@babel/cli": "^7.0.0-beta.51",
-    "@babel/core": "^7.0.0-beta.51",
-    "@babel/plugin-proposal-class-properties": "^7.0.0-beta.51",
-    "@babel/preset-env": "^7.0.0-beta.51",
-    "@babel/register": "^7.0.0-beta.51",
+    "@babel/cli": "^7.0.0-beta.54",
+    "@babel/core": "^7.0.0-beta.54",
+    "@babel/plugin-proposal-class-properties": "^7.0.0-beta.54",
+    "@babel/preset-env": "^7.0.0-beta.54",
+    "@babel/register": "^7.0.0-beta.54",
     "chai": "4.1.2",
-    "eslint": "5.0.1",
+    "eslint": "5.2.0",
     "eslint-config-smartprix": "3.4.2",
     "ghooks": "2.0.4",
     "isparta": "4.1.0",
-    "mocha": "5.2.0",
-    "jsdoc": "^3.5.5"
+    "jsdoc": "^3.5.5",
+    "mocha": "5.2.0"
   },
   "eslintConfig": {
     "extends": "smartprix",

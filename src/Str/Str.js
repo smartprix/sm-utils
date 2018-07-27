@@ -134,6 +134,56 @@ function numberFormat(number, options = {}) {
 	return _getNumberLocale(options).format(number);
 }
 
+/**
+ * Space clean a string
+ * Converts consecutive multiple spaces / tabs / newlines in the string into a single space
+ * @param {string} str
+ */
+function spaceClean(str) {
+	if (!str) return '';
+	return str.replace(/(?:\s|&nbsp;|&#32;)+/ig, ' ').trim();
+}
+
+/**
+ *
+ * @param {string} str the string to remove tags from
+ * @param {object} options object containing:
+ * 	allowed: array of allowed tags eg. ['p', 'b', 'span'], default: []
+ * 	blocked: array of blocked tags eg. ['p'], default: []
+ * 	replaceWith: replace the removed tags with this string, default: ''
+ * 	WIP
+ */
+// function stripTags(str, options = {}) {
+// 	if (!str) return '';
+
+// 	const tags = /<\/?([a-z][a-z0-9]*)\b[^>]*>/gi;
+// 	const commentsAndPhpTags = /<!--[\s\S]*?-->|<\?(?:php)?[\s\S]*?\?>/gi;
+
+// 	const replaceWith = options.replaceWith || '';
+// 	const
+
+// 	let after = str;
+// 	const replaceTags = function ($0, $1) {
+
+// 		if (allowed.includes($1.toLowerCase())) return $0;
+// 		return allowed.indexOf('<' + $1.toLowerCase() + '>') > -1 ? $0 : ''
+// 	};
+
+// 	while (true) {
+// 		const before = after;
+// 		after = before
+// 			.replace(commentsAndPhpTags, replaceWith)
+// 			.replace(tags, function ($0, $1) {
+// 				return allowed.indexOf('<' + $1.toLowerCase() + '>') > -1 ? $0 : ''
+// 			});
+
+// 		// return once no more tags are removed
+// 		if (before === after) {
+// 			return after
+// 		}
+// 	}
+// }
+
 export default {
 	invertCase,
 	isVowel,
@@ -144,4 +194,5 @@ export default {
 	trimToNext,
 	numberFormat,
 	numberToWords,
+	spaceClean,
 };

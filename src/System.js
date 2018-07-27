@@ -1,5 +1,6 @@
-const childProcess = require('child_process');
-const passwd = require('etc-passwd');
+import childProcess from 'child_process';
+import passwd from 'etc-passwd';
+import Vachan from './Vachan';
 
 let oldUmask = -1;
 let hrtimeDelta;
@@ -223,6 +224,70 @@ function exit(code) {
 	return process.exit(0);
 }
 
+const exitHandlers = [];
+function _exitHandler() {
+	const promises = [];
+	exitHandlers.forEach((handler) => {
+		let result;
+		try {
+			result = handler.callback();
+		}
+		catch (e) {
+			console.error(e);
+		}
+
+		if (result && result.then) {
+			promises.push(Vachan.timeout(result, handler.timeout));
+		}
+	});
+
+	let promisesPending = promises.length;
+	if (!promisesPending) {
+		process.exit(0);
+	}
+
+	promises.forEach((promise) => {
+		promise.then(() => {
+			promisesPending--;
+			if (!promisesPending) {
+				process.exit(0);
+			}
+		}, (e) => {
+			promisesPending--;
+			console.error(e);
+			if (!promisesPending) {
+				process.exit(0);
+			}
+		});
+	});
+}
+
+/**
+ * Add an exit handler that runs when process receives an exit signal
+ * callback can be an async function, process will exit when all handlers have completed
+ * @param {function} callback function to call on exit
+ * @param {number|object} options can be {timeout} or a number
+ *  timeout: Milliseconds before timing out (default 10000)
+ */
+function onExit(callback, options = {}) {
+	if (typeof options === 'number') {
+		options = {timeout: options};
+	}
+
+	const timeout = options.timeout || 10000;
+
+	exitHandlers.push({
+		callback,
+		timeout,
+	});
+
+	// only set handlers first time
+	if (exitHandlers.length === 1) {
+		process.once('SIGINT', _exitHandler);
+		process.once('SIGTERM', _exitHandler);
+	}
+}
+
 module.exports = {
 	exec,
 	execFile,
@@ -240,4 +305,5 @@ module.exports = {
 	sleep,
 	tick,
 	exit,
+	onExit,
 };
