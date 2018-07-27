@@ -146,10 +146,20 @@ describe('@queue library', () => {
 		const res = await queue.addAndProcess({data: 's'});
 		expect(res).to.equal('s');
 	}).timeout(5000);
+
+	it('should delete all jobs', async () => {
+		await queue.delete(0);
+		const inactive = await queue.inactiveJobs();
+		const completed = await queue.completedJobs();
+		const failed = await queue.failedJobs();
+		const delayed = await queue.delayedJobs();
+		const active = await queue.activeJobs();
+
+		expect(inactive + completed + failed + delayed + active).to.equal(0);
+	});
 });
 
 after(async () => {
-	await queue.delete(0);
-	await Queue.exit();
+	await Queue.exit(100);
 });
 
