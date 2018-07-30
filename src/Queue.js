@@ -543,6 +543,7 @@ class Queue {
 		});
 	}
 }
+
 System.onExit(Queue.exit);
 
 export default Queue;

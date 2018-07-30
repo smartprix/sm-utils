@@ -53,11 +53,11 @@ describe('system functions', () => {
 		let test1 = 1;
 		let test2 = 2;
 		let exited = false;
-		const orginalExit = process.exit;
+		const orginalExit = System._globalData.processExit;
 		const originalError = console.error;
 
 		before(() => {
-			process.exit = () => { exited = true };
+			System._globalData.processExit = () => { exited = true };
 			console.error = (err) => {
 				errorTest += err.message;
 			};

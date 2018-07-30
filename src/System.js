@@ -5,6 +5,17 @@ import Vachan from './Vachan';
 let oldUmask = -1;
 let hrtimeDelta;
 
+// assign properties to global to avoid issues in case of multiple sm-utils in node_modules
+const globalDataKey = Symbol('SmUtilsSystem');
+if (!global[globalDataKey]) {
+	global[globalDataKey] = {};
+}
+const globalData = global[globalDataKey];
+
+globalData.processExit = globalData.processExit || process.exit.bind(process);
+globalData.onExitHandlers = globalData.onExitHandlers || [];
+globalData.exitCalled = globalData.exitCalled || false;
+
 function execWrapper(method, args) {
 	return new Promise((resolve, reject) => {
 		let cp;
@@ -209,7 +220,7 @@ function tick() {
 }
 
 /**
- * exit and kill the process
+ * exit and kill the process gracefully (after completing all onExit handlers)
  * code can be an exit code or a message (string)
  * if a message is given then it will be logged to console before exiting
  *
@@ -217,16 +228,40 @@ function tick() {
  */
 function exit(code) {
 	if (code === undefined || Number.isInteger(code)) {
-		return process.exit(code);
+		// eslint-disable-next-line no-use-before-define
+		return _exitHandler({exitCode: code});
 	}
 
 	console.log(code);		// eslint-disable-line
-	return process.exit(0);
+	// eslint-disable-next-line no-use-before-define
+	return _exitHandler({exitCode: code});
 }
 
-const exitHandlers = [];
-function _exitHandler() {
+/**
+ * force exit the process
+ * no onExit handler will run when force exiting a process
+ * same as original process.exit (which we override)
+ *
+ * @param {int|String} code exit code or the message to be logged
+ */
+function forceExit(code) {
+	if (code === undefined || Number.isInteger(code)) {
+		return globalData.processExit(code);
+	}
+
+	console.log(code);		// eslint-disable-line
+	return globalData.processExit(0);
+}
+
+function _exitHandler(options = {}) {
+	if (globalData.exitCalled) {
+		return;
+	}
+	globalData.exitCalled = true;
+
 	const promises = [];
+	const exitHandlers = globalData.onExitHandlers;
+
 	exitHandlers.forEach((handler) => {
 		let result;
 		try {
@@ -237,26 +272,26 @@ function _exitHandler() {
 		}
 
 		if (result && result.then) {
-			promises.push(Vachan.timeout(result, handler.timeout));
+			promises.push(Vachan.timeout(result, handler.options.timeout));
 		}
 	});
 
 	let promisesPending = promises.length;
 	if (!promisesPending) {
-		process.exit(0);
+		forceExit(options.exitCode || 0);
 	}
 
 	promises.forEach((promise) => {
 		promise.then(() => {
 			promisesPending--;
 			if (!promisesPending) {
-				process.exit(0);
+				forceExit(options.exitCode || 0);
 			}
 		}, (e) => {
 			promisesPending--;
 			console.error(e);
 			if (!promisesPending) {
-				process.exit(0);
+				forceExit(options.exitCode || 0);
 			}
 		});
 	});
@@ -273,22 +308,34 @@ function onExit(callback, options = {}) {
 	if (typeof options === 'number') {
 		options = {timeout: options};
 	}
+	else if (!options || typeof options !== 'object') {
+		throw new TypeError('Incorrect options format, must be an object or a number');
+	}
 
-	const timeout = options.timeout || 10000;
+	// set default timeout of 10s
+	options.timeout = options.timeout || 10000;
 
+	const exitHandlers = globalData.onExitHandlers;
 	exitHandlers.push({
 		callback,
-		timeout,
+		options,
 	});
 
 	// only set handlers first time
 	if (exitHandlers.length === 1) {
 		process.once('SIGINT', _exitHandler);
 		process.once('SIGTERM', _exitHandler);
+
+		// override process.exit to not immediately exit
+		// but to exit after waiting for exit handlers to complete
+		// this is because some other library might call process.exit
+		// which we have no control over (like graceful-http-shutdown)
+		process.exit = exit;
 	}
 }
 
 module.exports = {
+	_globalData: globalData,
 	exec,
 	execFile,
 	execOut,
@@ -305,5 +352,6 @@ module.exports = {
 	sleep,
 	tick,
 	exit,
+	forceExit,
 	onExit,
 };
