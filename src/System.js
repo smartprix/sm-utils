@@ -6,10 +6,10 @@ let oldUmask = -1;
 let hrtimeDelta;
 
 // assign properties to global to avoid issues in case of multiple sm-utils in node_modules
-const globalDataKey = Symbol('SmUtilsSystem');
-if (!global[globalDataKey]) {
-	global[globalDataKey] = {};
-}
+// NOTE: don't change globalDataKey or globalData properties
+// it should be consistent across multiple sm-utils versions
+const globalDataKey = '_SmUtils_System';
+if (!global[globalDataKey]) global[globalDataKey] = {};
 const globalData = global[globalDataKey];
 
 globalData.processExit = globalData.processExit || process.exit.bind(process);
