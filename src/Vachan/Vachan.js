@@ -1,17 +1,6 @@
 
 import {promiseMap, promiseMapKeys, promiseMapValues} from './promiseMap';
-import PLazy from './lazy';
-
-class TimeoutError extends Error {
-	constructor(message = 'Timed Out') {
-		super(message);
-		this.code = 'E_TIMEOUT';
-	}
-
-	static ms(interval) {
-		return new TimeoutError(`Promise timed out after ${interval} ms`);
-	}
-}
+import PromisePlus from './lazy';
 
 /* Promise utility functions */
 class Vachan {
@@ -77,7 +66,7 @@ class Vachan {
 	 * @returns {Promise} a lazy promise
 	 */
 	static lazy(executor) {
-		return new PLazy(executor);
+		return new PromisePlus(executor, {lazy: true});
 	}
 
 	/**
@@ -85,7 +74,7 @@ class Vachan {
 	 * a lazy promise defers execution till .then() or .catch() is called
 	 */
 	static lazyFrom(asyncFunction) {
-		return PLazy.from(asyncFunction);
+		return PromisePlus.from(asyncFunction, {lazy: true});
 	}
 
 	/**
@@ -111,11 +100,12 @@ class Vachan {
 	 * @returns {Promise} Returns a Promise.
 	 */
 	static finally(promise, onFinally) {
+		if (!onFinally) return promise;
+
 		if (promise.finally) {
 			return promise.finally(onFinally);
 		}
 
-		onFinally = onFinally || (() => {});
 		return promise.then(
 			val => Promise.resolve(onFinally()).then(() => val),
 			err => Promise.resolve(onFinally()).then(() => {
@@ -130,19 +120,13 @@ class Vachan {
 	 * @param {Promise|function} promise A Promise or an async function
 	 * @param {object|number} options can be {timeout} or a number
 	 *  timeout: Milliseconds before timing out
+	 *  onTimeout: a function which will be called on timeout
 	 */
 	static timeout(promise, options = {}) {
-		return new Promise((resolve, reject) => {
-			const timeout = (typeof options === 'number') ? options : options.timeout;
-
-			const timer = setTimeout(() => {
-				reject(TimeoutError.ms(timeout));
-			}, timeout);
-
-			Vachan.finally(
-				Vachan.identity(promise).then(resolve, reject),
-				() => { clearTimeout(timer) },
-			);
+		const timeout = (typeof options === 'number') ? options : options.timeout;
+		return PromisePlus.from(promise, {
+			timeout,
+			onTimeout: options.onTimeout,
 		});
 	}
 
@@ -155,9 +139,11 @@ class Vachan {
 	 * @param {object|number} options can be {interval, timeout} or a number
 	 * 	interval: Number of milliseconds to wait before retrying condition (default 50)
 	 *  timeout: will reject the promise on timeout (in ms)
+	 *  retryOnError: Retry the condition on error (default false)
 	 */
 	static waitFor(conditionFn, options = {}) {
-		const promise = new Promise((resolve, reject) => {
+		let timer;
+		return new PromisePlus((resolve, reject) => {
 			const interval = (typeof options === 'number') ? options : (options.interval || 50);
 			const check = () => {
 				Vachan.identity(conditionFn).then((val) => {
@@ -165,18 +151,26 @@ class Vachan {
 						resolve();
 					}
 					else {
-						setTimeout(check, interval);
+						timer = setTimeout(check, interval);
 					}
-				}).catch(reject);
+				}).catch((err) => {
+					if (options.retryOnError) {
+						// We need to retry the condition on error, so ignore and reset the timer
+						clearTimeout(timer);
+						timer = setTimeout(check, interval);
+					}
+					else {
+						reject(err);
+					}
+				});
 			};
 
 			check();
+		}, {
+			timeout: options.timeout,
+		}).finally(() => {
+			if (timer) clearTimeout(timer);
 		});
-
-		if (options.timeout) {
-			return Vachan.timeout(promise, options.timeout);
-		}
-		return promise;
 	}
 
 	/**
