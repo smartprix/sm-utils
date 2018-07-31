@@ -15,10 +15,6 @@ import Vachan from './Vachan';
 import DeQueue from './DeQueue';
 import './lodash_utils';
 
-Promise.map = Vachan.map;
-Promise.mapKeys = Vachan.mapKeys;
-Promise.mapValues = Vachan.mapValues;
-
 module.exports = {
 	file: File,
 	system: System,
