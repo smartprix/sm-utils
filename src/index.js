@@ -13,7 +13,6 @@ import cfg from './cfg';
 import view from './view';
 import Vachan from './Vachan';
 import DeQueue from './DeQueue';
-import './lodash_utils';
 
 module.exports = {
 	file: File,

@@ -3,7 +3,6 @@ import zlib from 'zlib';
 import {promisify} from 'util';
 import _ from 'lodash';
 
-import './lodash_utils';
 import baseConvert from './base_convert';
 import Str from './Str';
 
@@ -769,7 +768,7 @@ function verifyPassword(password, hashed) {
 	if (hashed === hashPassword(password, {salt})) return true;
 	if (hashed === hashPassword(password.trim(), {salt})) return true;
 	if (hashed === hashPassword(_.upperFirst(password), {salt})) return true;
-	if (hashed === hashPassword(_.invertCase(password), {salt})) return true;
+	if (hashed === hashPassword(Str.invertCase(password), {salt})) return true;
 
 	return false;
 }

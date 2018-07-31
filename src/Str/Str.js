@@ -189,6 +189,15 @@ function rot47(str) {
 	return s.join('');
 }
 
+function tryParseJson(str) {
+	try {
+		return JSON.parse(str);
+	}
+	catch (e) {
+		return null;
+	}
+}
+
 /**
  *
  * @param {string} str the string to remove tags from
@@ -242,4 +251,5 @@ export default {
 	spaceClean,
 	rot13,
 	rot47,
+	tryParseJson,
 };
