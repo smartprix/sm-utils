@@ -145,6 +145,51 @@ function spaceClean(str) {
 }
 
 /**
+ * Rotate a string by 13 characters
+ *
+ * @param {String} str the string to be rotated
+ * @returns {String} rotated string
+ */
+function rot13(str) {
+	const s = [];
+	for (let i = 0; i < str.length; i++) {
+		const j = str.charCodeAt(i);
+		if (((j >= 65) && (j <= 77)) || ((j >= 97) && (j <= 109))) {
+			s[i] = String.fromCharCode(j + 13);
+		}
+		else if (((j >= 78) && (j <= 90)) || ((j >= 110) && (j <= 122))) {
+			s[i] = String.fromCharCode(j - 13);
+		}
+		else {
+			s[i] = String.fromCharCode(j);
+		}
+	}
+
+	return s.join('');
+}
+
+/**
+ * Rotate a string by 47 characters
+ *
+ * @param {String} str the string to be rotated
+ * @returns {String} rotated string
+ */
+function rot47(str) {
+	const s = [];
+	for (let i = 0; i < str.length; i++) {
+		const j = str.charCodeAt(i);
+		if ((j >= 33) && (j <= 126)) {
+			s[i] = String.fromCharCode(33 + ((j + 14) % 94));
+		}
+		else {
+			s[i] = String.fromCharCode(j);
+		}
+	}
+
+	return s.join('');
+}
+
+/**
  *
  * @param {string} str the string to remove tags from
  * @param {object} options object containing:
@@ -195,4 +240,6 @@ export default {
 	numberFormat,
 	numberToWords,
 	spaceClean,
+	rot13,
+	rot47,
 };

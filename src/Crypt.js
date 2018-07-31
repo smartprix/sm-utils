@@ -5,6 +5,7 @@ import _ from 'lodash';
 
 import './lodash_utils';
 import baseConvert from './base_convert';
+import Str from './Str';
 
 const gzinflate = promisify(zlib.inflateRaw);
 const gzdeflate = promisify(zlib.deflateRaw);
@@ -866,28 +867,6 @@ function encryptedTimestampedId(options, key) {
 	return encrypted + '.' + randomStr;
 }
 
-
-/**
- * Rotate a string by 47 characters
- *
- * @param {String} str the string to be rotated
- * @returns {String}   rotated string
- */
-function rot47(str) {
-	const s = [];
-	for (let i = 0; i < str.length; i++) {
-		const j = str.charCodeAt(i);
-		if ((j >= 33) && (j <= 126)) {
-			s[i] = String.fromCharCode(33 + ((j + 14) % 94));
-		}
-		else {
-			s[i] = String.fromCharCode(j);
-		}
-	}
-
-	return s.join('');
-}
-
 /**
  * Legacy obfuscation method
  *
@@ -897,7 +876,7 @@ function rot47(str) {
 async function javaObfuscate(str) {
 	if (!str) return '';
 	try {
-		return base64Encode(await gzdeflate(Buffer.from(rot47(str), 'latin1')));
+		return base64Encode(await gzdeflate(Buffer.from(Str.rot47(str), 'latin1')));
 	}
 	catch (e) {
 		return '';
@@ -915,7 +894,7 @@ async function javaUnobfuscate(str) {
 	if (!str) return '';
 
 	try {
-		return rot47((await gzinflate(base64Decode(str, 'buffer'))).toString('latin1'));
+		return Str.rot47((await gzinflate(base64Decode(str, 'buffer'))).toString('latin1'));
 	}
 	catch (e) {
 		return '';
@@ -981,7 +960,8 @@ module.exports = {
 
 	encryptedTimestampedId,
 
-	rot47,
+	rot13: Str.rot13,
+	rot47: Str.rot47,
 	javaObfuscate,
 	javaUnobfuscate,
 };
