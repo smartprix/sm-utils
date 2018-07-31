@@ -13,6 +13,7 @@ import cfg from './cfg';
 import view from './view';
 import Vachan from './Vachan';
 import DeQueue from './DeQueue';
+import Require from './Require';
 
 module.exports = {
 	file: File,
@@ -32,4 +33,5 @@ module.exports = {
 	Str,
 	Vachan,
 	DeQueue,
+	Require,
 };
