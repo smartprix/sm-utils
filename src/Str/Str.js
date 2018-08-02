@@ -205,38 +205,49 @@ function tryParseJson(str) {
  * 	allowed: array of allowed tags eg. ['p', 'b', 'span'], default: []
  * 	blocked: array of blocked tags eg. ['p'], default: []
  * 	replaceWith: replace the removed tags with this string, default: ''
- * 	WIP
+ *
+ * if allowed is not given and blocked is given
+ * then by default all tags not mentioned in blocked are allowed
+ *
+ * @returns {string} resulting string by removing all tags mentioned
  */
-// function stripTags(str, options = {}) {
-// 	if (!str) return '';
+function stripTags(str, options = {}) {
+	if (!str) return '';
 
-// 	const tags = /<\/?([a-z][a-z0-9]*)\b[^>]*>/gi;
-// 	const commentsAndPhpTags = /<!--[\s\S]*?-->|<\?(?:php)?[\s\S]*?\?>/gi;
+	const tags = /<\/?([a-z][a-z0-9]*)\b[^>]*>/gi;
+	const commentsAndPhpTags = /<!--[\s\S]*?-->|<\?(?:php)?[\s\S]*?\?>/gi;
 
-// 	const replaceWith = options.replaceWith || '';
-// 	const
+	const replaceWith = options.replaceWith || '';
+	const allowed = options.allowed;
+	const blocked = options.blocked;
 
-// 	let after = str;
-// 	const replaceTags = function ($0, $1) {
+	const replaceTags = function ($0, $1) {
+		if (blocked) {
+			// tag is blocked
+			if (blocked.includes($1.toLowerCase())) return replaceWith;
+			// allowed is not given and blocked is, that means all tags are allowed
+			if (!allowed) return $0;
+		}
+		// tag is allowed
+		if (allowed && allowed.includes($1.toLowerCase())) return $0;
+		// by default all tags are blocked
+		return replaceWith;
+	};
 
-// 		if (allowed.includes($1.toLowerCase())) return $0;
-// 		return allowed.indexOf('<' + $1.toLowerCase() + '>') > -1 ? $0 : ''
-// 	};
+	let after = String(str);
+	// eslint-disable-next-line no-constant-condition
+	while (true) {
+		const before = after;
+		after = before
+			.replace(commentsAndPhpTags, replaceWith)
+			.replace(tags, replaceTags);
 
-// 	while (true) {
-// 		const before = after;
-// 		after = before
-// 			.replace(commentsAndPhpTags, replaceWith)
-// 			.replace(tags, function ($0, $1) {
-// 				return allowed.indexOf('<' + $1.toLowerCase() + '>') > -1 ? $0 : ''
-// 			});
-
-// 		// return once no more tags are removed
-// 		if (before === after) {
-// 			return after
-// 		}
-// 	}
-// }
+		// return once no more tags are removed
+		if (before === after) {
+			return after;
+		}
+	}
+}
 
 export default {
 	invertCase,
@@ -252,4 +263,5 @@ export default {
 	rot13,
 	rot47,
 	tryParseJson,
+	stripTags,
 };
