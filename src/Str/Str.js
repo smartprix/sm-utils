@@ -249,6 +249,16 @@ function stripTags(str, options = {}) {
 	}
 }
 
+/**
+ * Escape a string for including in regular expressions
+ * @param {string} str string to escape
+ * @returns {string} escaped string
+ */
+function escapeRegex(str) {
+	if (!str) return '';
+	return String(str).replace(/[-[\]{}()*+!<=:?./\\^$|#,]/g, '\\$&');
+}
+
 export default {
 	invertCase,
 	isVowel,
@@ -264,4 +274,5 @@ export default {
 	rot47,
 	tryParseJson,
 	stripTags,
+	escapeRegex,
 };
