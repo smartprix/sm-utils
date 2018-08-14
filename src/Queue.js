@@ -79,6 +79,8 @@ class Queue {
 			Queue.jobs.on('error', (err) => {
 				console.error(`[Queue] ${err}`);
 			});
+
+			System.onExit(Queue.exit);
 		}
 	}
 
@@ -87,7 +89,7 @@ class Queue {
 	 * The redis and enableWatchdog settings are required only the first time to init
 	 * Can also be set beforehand by calling Queue.init()
 	 * @param {String} name Name of the queue
-	 * @param {Object} [redis={port: 6379, host: '127.0.0.1'}] Redist connection settings object
+	 * @param {Object} [redis={port: 6379, host: '127.0.0.1'}] Redis connection settings object
 	 * @param {Boolean} [enableWatchdog=false] Will watch for stuck jobs due to any connection issues
 	 * 		Read more here :  https://github.com/Automattic/kue#unstable-redis-connections
 	 */
@@ -543,7 +545,5 @@ class Queue {
 		});
 	}
 }
-
-System.onExit(Queue.exit);
 
 export default Queue;
