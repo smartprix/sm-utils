@@ -1,6 +1,11 @@
 import _ from 'lodash';
 import numberToWords from './numberToWords';
 
+/**
+ * String utilities
+ * @module Str
+ */
+
 function invertCase(str) {
 	let output = '';
 	let code = '';

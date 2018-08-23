@@ -1,5 +1,5 @@
 /* eslint-disable global-require */
-import File from './file';
+import File from './File';
 import Crypt from './Crypt';
 import Connect from './Connect';
 import Cache from './Cache';
@@ -8,9 +8,7 @@ import RedisCache from './RedisCache';
 import System from './System';
 import Lock from './Lock';
 import Str from './Str';
-import baseConvert from './base_convert';
 import cfg from './cfg';
-import view from './view';
 import Vachan from './Vachan';
 import DeQueue from './DeQueue';
 import Require from './Require';
@@ -19,9 +17,8 @@ module.exports = {
 	file: File,
 	system: System,
 	crypt: Crypt,
-	view,
 	cfg,
-	baseConvert,
+	baseConvert: Crypt.baseConvert,
 	File,
 	Crypt,
 	Connect,

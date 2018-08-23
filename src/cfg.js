@@ -1,6 +1,11 @@
 const fs = require('fs');
 const _ = require('lodash');
 
+/**
+ * Config made simple
+ * @module cfg
+ */
+
 const config = {};
 const fileCache = {};
 let configRead = false;
@@ -27,6 +32,11 @@ function merge(conf, confPrivate) {
 	return conf;
 }
 
+/**
+ * Reads a config value
+ * @param {String} key key to read, can be nested like `a.b.c`
+ * @param {*} defaultValue value to return if key is not found
+ */
 function cfg(key, defaultValue) {
 	// eslint-disable-next-line no-use-before-define
 	readDefaultConfigFiles();
@@ -38,6 +48,7 @@ function cfg(key, defaultValue) {
  * It will set the key 'jsonKey.path' with $VAL
  * _ to specify where to capitalize for camelCase
  * __ to seperate the key path
+ * @private
  */
 function readEnvVariables() {
 	const vals = Object.keys(process.env).filter(val => val.indexOf('CFG__') === 0);

@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>Connect.js - Documentation</title>
+    <title>DeQueue.js - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -33,7 +33,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">Connect.js</h1>
+    <h1 class="page-title">DeQueue.js</h1>
     
 
     
@@ -43,782 +43,548 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import path from 'path';
-import _ from 'lodash';
-import request from 'request';
-import FileCookieStore from 'tough-cookie-file-store';
-import SocksHTTPAgent from 'sm-socks5-http-client/lib/Agent';
-import SocksHTTPSAgent from 'socks5-https-client/lib/Agent';
-import File from './File';
-import Crypt from './Crypt';
-
-const userAgents = {
-	chrome: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
-	edge: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.79 Safari/537.36 Edge/14.14393',
-	firefox: 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:54.0) Gecko/20100101 Firefox/54.0',
-	ie: 'Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko',
-	operaMini: 'Opera/9.80 (Android; Opera Mini/8.0.1807/36.1609; U; en) Presto/2.12.423 Version/12.16',
-	googlebot: 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
-	googlebotMobile: '​Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.96 Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
-	mobile: 'Mozilla/5.0 (Linux; Android 6.0.1; SM-G920V Build/MMB29K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.98 Mobile Safari/537.36',
-	chromeMobile: 'Mozilla/5.0 (Linux; Android 6.0.1; SM-G920V Build/MMB29K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.98 Mobile Safari/537.36',
-	android: 'Mozilla/5.0 (Linux; Android 6.0.1; SM-G920V Build/MMB29K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.98 Mobile Safari/537.36',
-	iphone: 'Mozilla/6.0 (iPhone; CPU iPhone OS 8_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/8.0 Mobile/10A5376e Safari/8536.25',
-	safariMobile: 'Mozilla/6.0 (iPhone; CPU iPhone OS 8_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/8.0 Mobile/10A5376e Safari/8536.25',
-	tablet: 'Mozilla/5.0 (iPad; CPU OS 5_0 like Mac OS X) AppleWebKit/534.46 (KHTML, like Gecko) Version/5.0.2 Mobile/9A5248d Safari/6533.18.5',
-	ipad: 'Mozilla/5.0 (iPad; CPU OS 5_0 like Mac OS X) AppleWebKit/534.46 (KHTML, like Gecko) Version/5.0.2 Mobile/9A5248d Safari/6533.18.5',
-	windows: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
-};
+            <pre class="prettyprint source linenums"><code>/* eslint-disable max-lines, no-mixed-operators, complexity, max-statements */
+// taken from: https://github.com/Salakar/denque
+// LICENSE: http://www.apache.org/licenses/LICENSE-2.0
 
 /**
- * Returns proxy url based on the proxy options.
- *
- * @param  {Object} proxy proxy options
- * @return {String} proxy url based on the options
- * @private
+ * Custom implementation of a double ended queue.
  */
-function makeProxyUrl(proxy) {
-	let url = proxy.address.replace('http://', '');
-	if (proxy.port) {
-		url = url.split(':')[0] + ':' + proxy.port;
-	}
-	if (proxy.auth &amp;&amp; proxy.auth.username) {
-		url = `${encodeURIComponent(proxy.auth.username)}:${encodeURIComponent(proxy.auth.password)}@${url}`;
+class DeQueue {
+	constructor(array) {
+		this._head = 0;
+		this._tail = 0;
+		this._capacityMask = 0x3;
+		this._list = new Array(4);
+		if (Array.isArray(array)) {
+			this._fromArray(array);
+		}
 	}
 
-	return `http://${url}`;
-}
-
-/**
- * Simple &amp; Powerful HTTP request client.
- */
-class Connect {
 	/**
-	 * Creates a new Connect object.
-	 * @constructor
+	 * Returns the item at the specified index from the list.
+	 * 0 is the first element, 1 is the second, and so on...
+	 * Elements at negative values are that many from the end: -1 is one before the end
+	 * (the last element), -2 is two before the end (one before last), etc.
+	 * @param index
+	 * @returns {*}
 	 */
-	constructor() {
-		/** Timeout period for the request in milliseconds */
-		this.requestTimeout = 120 * 1000;
-		/** Various options (or parameters) defining the Connection */
-		this.options = {
-			url: null,
-			method: 'GET',
-			headers: {
-				'User-Agent': userAgents.chrome,
-				Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-				'Accept-Language': 'en-US,en;q=0.8',
-			},
-			cookies: {},
-			jar: null,
-			followRedirect: true,
-			maxRedirects: 6,
-			gzip: true,
-			// timeout: 120 * 1000,
-			strictSSL: false,
-			proxy: {},
-			// tunnel: true,
-			fields: {},
-		};
+	peekAt(index) {
+		let i = index;
+		// expect a number or return undefined
+		if ((i !== (i | 0))) {
+			return undefined;
+		}
+
+		const len = this.size();
+		if (i >= len || i &lt; -len) return undefined;
+		if (i &lt; 0) i += len;
+		i = (this._head + i) &amp; this._capacityMask;
+		return this._list[i];
 	}
 
 	/**
-	 * Set the url for the connection.
+	 * Alias for peakAt()
+	 * @param i
+	 * @returns {*}
+	 */
+	get(i) {
+		return this.peekAt(i);
+	}
+
+	/**
+	 * Sets the queue value at a particular index
 	 *
-	 * @param {String} url self-descriptive
-	 * @return {Connect} self
+	 * @param {int} index
+	 * @param {*} value
+	 * @returns {*}
 	 */
-	url(url) {
-		this.options.url = url;
-		return this;
+	set(index, value) {
+		let i = index;
+		// expect a number or return undefined
+		if ((i !== (i | 0))) {
+			throw new Error('index must be a number');
+		}
+
+		const len = this.size();
+		if (i >= len || i &lt; -len) {
+			throw new Error('index out of bounds');
+		}
+		if (i &lt; 0) i += len;
+		i = (this._head + i) &amp; this._capacityMask;
+		const old = this._list[i];
+		this._list[i] = value;
+		return old;
 	}
 
 	/**
-	 * @static
-	 * Creates and returns a new Connect object with the given url.
-	 *
-	 * @param  {String} url self-descriptive
-	 * @return {Connect}    A new Connect object with url set to the given url
+	 * Returns the first item in the list without removing it.
+	 * @returns {*}
 	 */
-	static url(url) {
-		const connect = new this();
-		connect.url(url);
-		return connect;
+	peek() {
+		if (this._head === this._tail) return undefined;
+		return this._list[this._head];
 	}
 
 	/**
-	* @static
-	 * Returns a new cookie jar.
-	 *
-	 * @return {CookieJar} A cookie jar
+	 * Alias for peek()
+	 * @returns {*}
 	 */
-	static newCookieJar(...args) {
-		return request.jar(...args);
+	peekFront() {
+		return this.peek();
 	}
 
 	/**
-	 * Set or unset the followRedirect option for the connection.
-	 *
-	 * @param  {Boolean} shouldFollowRedirect boolean representing whether to follow redirect or not
-	 * @return {Connect}                      self
+	 * Alias for peek()
+	 * @returns {*}
 	 */
-	followRedirect(shouldFollowRedirect) {
-		this.options.followRedirect = shouldFollowRedirect;
-		return this;
+	head() {
+		return this.peek();
 	}
 
 	/**
-	 * Set value of a header parameter for the connection.
-	 *
-	 * @param  {String} headerName name of the header parameter whose value is to be set
-	 * @param  {*} headerValue     value to be set
-	 * @return {Connect}           self
+	 * Returns the item that is at the back of the queue without removing it.
+	 * Uses peekAt(-1)
 	 */
-	header(headerName, headerValue) {
-		if (typeof headerName === 'string') {
-			this.options.headers[headerName] = headerValue;
+	peekBack() {
+		return this.peekAt(-1);
+	}
+
+	/**
+	 * Alias for peekBack()
+	 * @returns {*}
+	 */
+	tail() {
+		return this.peekBack();
+	}
+
+	/**
+	 * Return the number of items on the list, or 0 if empty.
+	 * @returns {number}
+	 */
+	size() {
+		if (this._head === this._tail) return 0;
+		if (this._head &lt; this._tail) return this._tail - this._head;
+		return (this._capacityMask + 1) - (this._head - this._tail);
+	}
+
+	/**
+	 * alias for this.size()
+	 */
+	get length() {
+		return this.size();
+	}
+
+	/**
+	 * Add an item at the beginning of the list.
+	 * @param item
+	 */
+	unshift(item) {
+		if (item === undefined) return this.size();
+		const len = this._list.length;
+		this._head = (this._head + (len - 1)) &amp; this._capacityMask;
+		this._list[this._head] = item;
+
+		if (this._tail === this._head) this._growArray();
+		if (this._head &lt; this._tail) return this._tail - this._head;
+		return (this._capacityMask + 1) - (this._head - this._tail);
+	}
+
+	/**
+	 * Remove and return the first item on the list
+	 * Returns undefined if the list is empty.
+	 * @returns {*}
+	 */
+	shift() {
+		const head = this._head;
+		if (head === this._tail) return undefined;
+		const item = this._list[head];
+		this._list[head] = undefined;
+		this._head = (head + 1) &amp; this._capacityMask;
+		if (
+			head &lt; 2 &amp;&amp;
+			this._tail > 10000 &amp;&amp;
+			this._tail &lt;= this._list.length >>> 2
+		) this._shrinkArray();
+		return item;
+	}
+
+	/**
+	 * Alias for shift()
+	 */
+	dequeue() {
+		return this.shift();
+	}
+
+	/**
+	 * Add an item to the bottom of the list.
+	 * @param item
+	 */
+	push(item) {
+		if (item === undefined) return this.size();
+		const tail = this._tail;
+		this._list[tail] = item;
+		this._tail = (tail + 1) &amp; this._capacityMask;
+		if (this._tail === this._head) {
+			this._growArray();
+		}
+
+		if (this._head &lt; this._tail) return this._tail - this._head;
+		return (this._capacityMask + 1) - (this._head - this._tail);
+	}
+
+	/**
+	 * Alias for push()
+	 */
+	enqueue() {
+		return this.push();
+	}
+
+	/**
+	 * Remove and return the last item on the list.
+	 * Returns undefined if the list is empty.
+	 * @returns {*}
+	 */
+	pop() {
+		const tail = this._tail;
+		if (tail === this._head) return undefined;
+		const len = this._list.length;
+		this._tail = (tail + (len - 1)) &amp; this._capacityMask;
+		const item = this._list[this._tail];
+		this._list[this._tail] = undefined;
+		if (this._head &lt; 2 &amp;&amp; tail > 10000 &amp;&amp; tail &lt;= len >>> 2) this._shrinkArray();
+		return item;
+	}
+
+	/**
+	 * Remove and return the item at the specified index from the list.
+	 * Returns undefined if the list is empty.
+	 * @param index
+	 * @returns {*}
+	 */
+	removeOne(index) {
+		let i = index;
+		// expect a number or return undefined
+		if ((i !== (i | 0))) {
+			return undefined;
+		}
+		if (this._head === this._tail) return undefined;
+		const size = this.size();
+		const len = this._list.length;
+		if (i >= size || i &lt; -size) return undefined;
+		if (i &lt; 0) i += size;
+		i = (this._head + i) &amp; this._capacityMask;
+		const item = this._list[i];
+		let k;
+		if (index &lt; size / 2) {
+			for (k = index; k > 0; k--) {
+				this._list[i] = this._list[i = (i - 1 + len) &amp; this._capacityMask];
+			}
+			this._list[i] = undefined;
+			this._head = (this._head + 1 + len) &amp; this._capacityMask;
 		}
 		else {
-			_.assign(this.options.headers, headerName);
-		}
-
-		return this;
-	}
-
-	/**
-	 * Set value of the headers for the connection.
-	 *
-	 * @param  {Object} headers object representing the headers for the connection
-	 * @return {Connect}        self
-	 */
-	headers(headers) {
-		_.assign(this.options.headers, headers);
-		return this;
-	}
-
-	/**
-	 * Set the body of the connection object.
-	 *
-	 * @param  {*} body                    value for body
-	 * @param  {String} [contentType=null] string representing the content type of the body
-	 * @return {Connect}                   self
-	 */
-	body(body, contentType = null) {
-		if (_.isPlainObject(body)) {
-			body = JSON.stringify(body);
-			contentType = 'json';
-		}
-
-		if (contentType === 'json' || this.isJSON()) {
-			this.header('Content-Type', 'application/json');
-			if (typeof body !== 'string') {
-				body = JSON.stringify(body);
+			for (k = size - 1 - index; k > 0; k--) {
+				this._list[i] = this._list[i = (i + 1 + len) &amp; this._capacityMask];
 			}
+			this._list[i] = undefined;
+			this._tail = (this._tail - 1 + len) &amp; this._capacityMask;
+		}
+		return item;
+	}
+
+	/**
+	 * Remove number of items from the specified index from the list.
+	 * Returns array of removed items.
+	 * Returns undefined if the list is empty.
+	 * @param index
+	 * @param count
+	 * @returns {array}
+	 */
+	remove(index, count) {
+		if (count === 1 || !count) {
+			return this.removeOne(index);
 		}
 
-		this.options.body = body;
-		return this;
-	}
-
-	/**
-	 * Set the 'Referer' field in the headers.
-	 *
-	 * @param  {String} referer referer value
-	 */
-	referer(referer) {
-		this.header('Referer', referer);
-		return this;
-	}
-
-	/**
-	 * Set the 'User-Agent' field in the headers.
-	 *
-	 * @param  {String} userAgent name of the user-agent or its value
-	 * @return {Connect}          self
-	 */
-	userAgent(userAgent) {
-		this.header('User-Agent', userAgents[userAgent] || userAgent);
-		return this;
-	}
-
-	/**
-	 * Set the 'Content-Type' field in the headers.
-	 *
-	 * @param  {String} contentType value for content-type
-	 */
-	contentType(contentType) {
-		this.header('Content-Type', contentType);
-		return this;
-	}
-
-	/**
-	 * Returns whether the content-type is JSON or not
-	 *
-	 * @return {Boolean} true, if content-type is JSON; false, otherwise
-	 */
-	isJSON() {
-		return this.options.headers['Content-Type'] === 'application/json';
-	}
-
-	/**
-	 * Sets the value of a cookie.
-	 * Can be used to enable global cookies, if cookieName is set to true
-	 * and cookieValue is undefined (or is not passed as an argument).
-	 * Can also be used to set multiple cookies by passing in an object
-	 * representing the cookies and their values as key:value pairs.
-	 *
-	 * @param  {String|Boolean|Object} cookieName  represents the name of the
-	 * cookie to be set, or the cookies object
-	 * @param  {Object} cookieValue                cookie value to be set
-	 * @return {Connect}                           self
-	 */
-	cookie(cookieName, cookieValue) {
-		if (cookieName === true &amp;&amp; cookieValue === undefined) {
-			this.globalCookies();
+		let i = index;
+		let removed;
+		let delCount = count;
+		// expect a number or return undefined
+		if ((i !== (i | 0))) {
+			return undefined;
 		}
-		if (typeof cookieName === 'string') {
-			this.options.cookies[cookieName] = cookieValue;
+		if (this._head === this._tail) return undefined;
+		const size = this.size();
+		const len = this._list.length;
+		if (i >= size || i &lt; -size || count &lt; 1) return undefined;
+		if (i &lt; 0) i += size;
+		if (i === 0 &amp;&amp; i + count >= size) {
+			removed = this.toArray();
+			this.clear();
+			return removed;
 		}
-		else {
-			_.assign(this.options.cookies, cookieName);
+		if (i + count > size) count = size - i;
+		let k;
+		removed = new Array(count);
+		for (k = 0; k &lt; count; k++) {
+			removed[k] = this._list[(this._head + i + k) &amp; this._capacityMask];
 		}
-
-		return this;
-	}
-
-	/**
-	 * Sets multiple cookies.
-	 * Can be used to enable global cookies, if cookies is set to true.
-	 *
-	 * @param  {Object|Boolean} cookies object representing the cookies
-	 * and their values as key:value pairs.
-	 * @return {Connect}                self
-	 */
-	cookies(cookies) {
-		if (cookies === true) {
-			this.globalCookies();
-		}
-		else {
-			_.assign(this.options.cookies, cookies);
-		}
-
-		return this;
-	}
-
-	/**
-	 * Enable global cookies.
-	 *
-	 * @param  {Boolean} [enableGlobalCookies=true] self-descriptive
-	 * @return {Connect}                            self
-	 */
-	globalCookies(enableGlobalCookies = true) {
-		this.options.jar = enableGlobalCookies;
-		return this;
-	}
-
-	/**
-	 * Set the value of cookie jar based on a file (cookie store).
-	 *
-	 * @param  {String} fileName name of (or path to) the file
-	 * @return {Connect}         self
-	 */
-	cookieFile(fileName) {
-		const cookieJar = request.jar(new FileCookieStore(fileName));
-		this.options.jar = cookieJar;
-		return this;
-	}
-
-	/**
-	 * Set the value of cookie jar.
-	 *
-	 * @param  {CookieJar} cookieJar value to be set
-	 * @return {Connect}             self
-	 */
-	cookieJar(cookieJar) {
-		this.options.jar = cookieJar;
-		return this;
-	}
-
-	/**
-	 * Set request timeout.
-	 *
-	 * @param  {Number} timeout timeout value in seconds
-	 * @return {Connect}        self
-	 */
-	timeout(timeout) {
-		this.requestTimeout = timeout * 1000;
-		return this;
-	}
-
-	/**
-	 * Set request timeout.
-	 *
-	 * @param  {Number} timeoutInMs timeout value in milliseconds
-	 * @return {Connect}            self
-	 */
-	timeoutMs(timeoutInMs) {
-		this.requestTimeout = timeoutInMs;
-		return this;
-	}
-
-	/**
-	 * alias for timeoutMs
-	 */
-	timeoutMilli(timeoutInMs) {
-		return this.timeoutMs(timeoutInMs);
-	}
-
-	/**
-	 * Set value of a field in the options.
-	 * Can also be used to set multiple fields by passing in an object
-	 * representing the field-names and their values as key:value pairs.
-	 *
-	 * @param  {String|Object} fieldName name of the field to be set, or the fields object
-	 * @param  {*} fieldValue            value to be set
-	 * @return {Connect}                 self
-	 */
-	field(fieldName, fieldValue) {
-		if (typeof fieldName === 'string') {
-			this.options.fields[fieldName] = fieldValue;
-		}
-		else {
-			_.assign(this.options.fields, fieldName);
-		}
-
-		return this;
-	}
-
-	/**
-	 * Set multiple fields.
-	 *
-	 * @param  {Object} fields object representing the field-names and their
-	 * values as key:value pairs
-	 * @return {Connect}       self
-	 */
-	fields(fields) {
-		_.assign(this.options.fields, fields);
-		return this;
-	}
-
-	/**
-	 * Set the request method for the connection.
-	 *
-	 * @param  {String} method one of the HTTP request methods ('GET', 'PUT', 'POST', etc.)
-	 * @return {Connect}       self
-	 */
-	method(method) {
-		this.options.method = (method || 'GET').toUpperCase();
-		return this;
-	}
-
-	/**
-	 * Set username and password for authentication.
-	 *
-	 * @param  {String} username self-descriptive
-	 * @param  {String} password self-descriptive
-	 * @return {Connect}         self
-	 */
-	httpAuth(username, password) {
-		if (typeof username === 'string') {
-			// username &amp; password are strings
-			this.options.auth = {
-				username,
-				password,
-			};
-		}
-		else if (username.username) {
-			// username argument is an object of {username, password}
-			this.options.auth = username;
-		}
-
-		return this;
-	}
-
-	/**
-	 * Set proxy address (or options).
-	 *
-	 * @param  {String|Object} proxy proxy address, or object representing proxy options
-	 * @return {Connect}             self
-	 */
-	proxy(proxy) {
-		// actual proxy is added at the end using _addProxy
-		// this is because we need the url (http or https) to add the proxy
-		// and url might be added after this method
-		if (typeof proxy === 'string') {
-			_.assign(this.options.proxy, {
-				address: proxy,
-				port: null,
-				type: 'http',
-			});
-		}
-		else {
-			this.options.proxy = proxy;
-		}
-
-		return this;
-	}
-
-	/**
-	 * Set address and port for an http proxy.
-	 *
-	 * @param  {String} proxyAddress self-descriptive
-	 * @param  {Number} proxyPort    self-descriptive
-	 * @return {Connect}             self
-	 */
-	httpProxy(proxyAddress, proxyPort) {
-		_.assign(this.options.proxy, {
-			address: proxyAddress,
-			port: proxyPort,
-			type: 'http',
-		});
-
-		return this;
-	}
-
-	/**
-	 * Set address and port for a socks proxy.
-	 *
-	 * @param  {String} proxyAddress self-descriptive
-	 * @param  {Number} proxyPort    self-descriptive
-	 * @return {Connect}             self
-	 */
-	socksProxy(proxyAddress, proxyPort) {
-		_.assign(this.options.proxy, {
-			address: proxyAddress,
-			port: proxyPort,
-			type: 'socks',
-		});
-
-		return this;
-	}
-
-	/**
-	 * Set username and password for proxy.
-	 *
-	 * @param  {String} username self-descriptive
-	 * @param  {String} password self-descriptive
-	 * @return {Connect}         self
-	 */
-	proxyAuth(username, password) {
-		if (typeof username === 'string') {
-			// username &amp; password are strings
-			this.options.proxy.auth = {
-				username,
-				password,
-			};
-		}
-		else if (username.username) {
-			// username argument is an object of {username, password}
-			this.options.proxy.auth = username;
-		}
-
-		return this;
-	}
-
-	/**
-	 * Set request method to 'GET'.
-	 *
-	 * @return {Connect} self
-	 */
-	get() {
-		this.method('GET');
-		return this;
-	}
-
-	/**
-	 * Set request method to 'POST'.
-	 *
-	 * @return {Connect} self
-	 */
-	post() {
-		this.method('POST');
-		return this;
-	}
-
-	/**
-	 * Set request method to 'PUT'.
-	 *
-	 * @return {Connect} self
-	 */
-	put() {
-		this.method('PUT');
-		return this;
-	}
-
-	/**
-	 * Set cache directory for the connection.
-	 *
-	 * @param  {String} dir name or path to the directory
-	 * @return {Connect}    self
-	 */
-	cacheDir(dir) {
-		this.resposeCacheDir = dir;
-		return this;
-	}
-
-	/**
-	 * Set if the body is to be returned as a buffer
-	 *
-	 * @param  {Boolean} [returnAsBuffer=true] self-descriptive
-	 * @return {Connect}                       self
-	 */
-	asBuffer(returnAsBuffer = true) {
-		this.options.encoding = returnAsBuffer ? null : undefined;
-		return this;
-	}
-
-	/**
-	 * Set the path for file for saving the response.
-	 *
-	 * @param  {String} filePath self-descriptive
-	 * @return {Connect}         self
-	 */
-	save(filePath) {
-		// get response as buffer
-		this.asBuffer();
-		this.saveFilePath = filePath;
-		return this;
-	}
-
-	/**
-	 * Add proxy based on the proxy options. Proxy is added,
-	 * if and only if proxy address has been previously set.
-	 * If no proxy type is previously set, 'http' is taken as
-	 * the default proxy type.
-	 *
-	 * NOTE: This function is for internal use
-	 * @private
-	 */
-	_addProxy() {
-		const proxy = this.options.proxy;
-		if (!proxy) return;
-		if (typeof proxy === 'string') return;
-
-		this.options.proxy = null;
-		if (!proxy.address) return;
-
-		const proxyType = proxy.type || 'http';
-
-		if (proxyType === 'http' || proxyType === 'https') {
-			this.options.proxy = makeProxyUrl(proxy);
-		}
-		else if (proxyType === 'socks' || proxyType === 'socks5') {
-			if (_.startsWith(this.options.url, 'https://')) {
-				this.options.agentClass = SocksHTTPSAgent;
+		i = (this._head + i) &amp; this._capacityMask;
+		if (index + count === size) {
+			this._tail = (this._tail - count + len) &amp; this._capacityMask;
+			for (k = count; k > 0; k--) {
+				this._list[i = (i + 1 + len) &amp; this._capacityMask] = undefined;
 			}
-			else {
-				this.options.agentClass = SocksHTTPAgent;
-			}
-
-			const agentOptions = {};
-			agentOptions.socksHost = proxy.address.split(':')[0];
-			agentOptions.socksPort = proxy.port || proxy.address.split(':')[1] || 1080;
-			if (proxy.auth &amp;&amp; proxy.auth.username) {
-				agentOptions.socksUsername = proxy.auth.username;
-				agentOptions.socksPassword = proxy.auth.password;
-			}
-
-			this.options.agentOptions = agentOptions;
+			return removed;
 		}
-	}
-
-	/**
-	 * Add the options 'fields' to the options body, form or qs
-	 * on the basis of the request method.
-	 *
-	 * NOTE: This function is for internal use
-	 * @private
-	 */
-	_addFields() {
-		if (!this.options.fields) return;
-		if (_.isEmpty(this.options.fields)) return;
-
-		const method = this.options.method;
-		if (method === 'POST' || method === 'PUT') {
-			if (this.isJSON()) {
-				this.options.body = JSON.stringify(this.options.fields);
+		if (index === 0) {
+			this._head = (this._head + count + len) &amp; this._capacityMask;
+			for (k = count - 1; k > 0; k--) {
+				this._list[i = (i + 1 + len) &amp; this._capacityMask] = undefined;
 			}
-			else {
-				this.options.form = this.options.fields;
+			return removed;
+		}
+		if (index &lt; size / 2) {
+			this._head = (this._head + index + count + len) &amp; this._capacityMask;
+			for (k = index; k > 0; k--) {
+				this.unshift(this._list[i = (i - 1 + len) &amp; this._capacityMask]);
+			}
+			i = (this._head - 1 + len) &amp; this._capacityMask;
+			while (delCount > 0) {
+				this._list[i = (i - 1 + len) &amp; this._capacityMask] = undefined;
+				delCount--;
 			}
 		}
 		else {
-			this.options.qs = this.options.qs || {};
-			_.assign(this.options.qs, this.options.fields);
+			this._tail = i;
+			i = (i + count + len) &amp; this._capacityMask;
+			for (k = size - (count + index); k > 0; k--) {
+				this.push(this._list[i++]);
+			}
+			i = this._tail;
+			while (delCount > 0) {
+				this._list[i = (i + 1 + len) &amp; this._capacityMask] = undefined;
+				delCount--;
+			}
 		}
+		if (this._head &lt; 2 &amp;&amp; this._tail > 10000 &amp;&amp; this._tail &lt;= len >>> 2) this._shrinkArray();
+		return removed;
 	}
 
 	/**
-	 * Add cookies in the options to the header.
+	 * Native splice implementation.
+	 * Remove number of items from the specified index from the list and/or add new elements.
+	 * Returns array of removed items or empty array if count == 0.
+	 * Returns undefined if the list is empty.
 	 *
-	 * NOTE: This function is for internal use
-	 * @private
+	 * @param index
+	 * @param count
+	 * @param {...*} [elements]
+	 * @returns {array}
 	 */
-	_addCookies() {
-		if (!this.options.cookies) return;
-
-		const cookies = [];
-		_.forEach(this.options.cookies, (value, key) => {
-			cookies.push(`${key}=${value}`);
-		});
-
-		if (cookies.length) {
-			this.header('Cookie', cookies.join('; '));
+	splice(index, count, ...args) {
+		if (!args.length) {
+			return this.remove(index, count);
 		}
-	}
 
+		let i = index;
+		// expect a number or return undefined
+		if ((i !== (i | 0))) {
+			return undefined;
+		}
+		const size = this.size();
+		if (i &lt; 0) i += size;
+		if (i > size) return undefined;
 
-	/**
-	 * It resolves or rejects the promise object. It is
-	 * used by fetch() to make the promise.
-	 *
-	 * NOTE: This function is for internal use
-	 * @private
-	 */
-	_makeFetchPromise(resolve, reject, cacheFilePath) {
-		this._addProxy();
-		this._addFields();
-		this._addCookies();
-
-		const startTime = Date.now();
-		const req = request(this.options, (error, response, body) => {
-			if (this.timeoutTimer) {
-				clearTimeout(this.timeoutTimer);
-				this.timeoutTimer = null;
+		let k;
+		let temp;
+		let removed;
+		let argLen = args.length;
+		const len = this._list.length;
+		let argumentsIndex = 0;
+		if (!size || i &lt; size / 2) {
+			temp = new Array(i);
+			for (k = 0; k &lt; i; k++) {
+				temp[k] = this._list[(this._head + k) &amp; this._capacityMask];
 			}
-
-			if (error) {
-				error.timeTaken = Date.now() - startTime;
-				reject(error);
-				return;
-			}
-			else if (response.statusCode === 407) {
-				const e = new Error('407 Proxy Authentication Required');
-				e.code = 'EPROXYAUTH';
-				e.timeTaken = Date.now() - startTime;
-				reject(e);
-				return;
-			}
-
-			response.body = body;
-			response.url = response.request.uri.href || this.options.url;
-			response.timeTaken = Date.now() - startTime;
-			response.cached = false;
-			response.status = response.statusCode;
-
-			const promises = [];
-
-			if (this.saveFilePath) {
-				promises.push(File(this.saveFilePath).write(response.body));
-			}
-			if (cacheFilePath &amp;&amp; response.statusCode === 200) {
-				promises.push(File(cacheFilePath).write(response.body));
-			}
-
-			if (promises.length) {
-				Promise.all(promises)
-					.then(() => { resolve(response) })
-					.catch(() => { resolve(response) });
-			}
-			else {
-				resolve(response);
-			}
-		});
-
-		if (this.requestTimeout) {
-			this.timeoutTimer = setTimeout(() => {
-				try {
-					req.abort();
+			if (count === 0) {
+				removed = [];
+				if (i > 0) {
+					this._head = (this._head + i + len) &amp; this._capacityMask;
 				}
-				catch (err) {
-					// ignore errors
-				}
-				finally {
-					const e = new Error('Request Timed Out');
-					e.code = 'ETIMEDOUT';
-					e.timeTaken = Date.now() - startTime;
-					reject(e);
-				}
-			}, this.requestTimeout);
-		}
-	}
-
-	/**
-	 * It creates and returns a promise based on the information
-	 * passed to and parameters of this object.
-	 *
-	 * Response contains {body, url, timeTaken, cached, statusCode}
-	 * url is the final url downloaded after following all redirects
-	 * cached is false is the response was downloaded, true if returned from a cached file
-	 * timeTaken is time taken (in ms) for the request
-	 * body contains the actual response body
-	 *
-	 * @return {Promise} a promise that resolves to response
-	 */
-	fetch() {
-		if (this.promise) return this.promise;
-
-		if (this.timeoutTimer) {
-			clearTimeout(this.timeoutTimer);
-			this.timeoutTimer = null;
-		}
-
-		this.promise = new Promise((resolve, reject) => {
-			let cacheFilePath = null;
-
-			if (this.resposeCacheDir) {
-				const cacheKey = Crypt.md5(
-					JSON.stringify(_.pick(this.options, ['url', 'method', 'fields']))
-				);
-
-				cacheFilePath = path.join(this.resposeCacheDir, cacheKey);
-				File(cacheFilePath).read().then((cachedContents) => {
-					const response = {
-						body: cachedContents,
-						statusCode: 200,
-						status: 200,
-						url: this.options.url,
-						timeTaken: 0,
-						cached: true,
-					};
-
-					resolve(response);
-				}).catch(() => {
-					// Ignore Errors
-					this._makeFetchPromise(resolve, reject, cacheFilePath);
-				});
 			}
 			else {
-				this._makeFetchPromise(resolve, reject, cacheFilePath);
+				removed = this.remove(i, count);
+				this._head = (this._head + i + len) &amp; this._capacityMask;
 			}
-		});
-
-		return this.promise;
+			while (argLen > argumentsIndex) {
+				this.unshift(args[--argLen]);
+			}
+			for (k = i; k > 0; k--) {
+				this.unshift(temp[k - 1]);
+			}
+		}
+		else {
+			temp = new Array(size - (i + count));
+			const leng = temp.length;
+			for (k = 0; k &lt; leng; k++) {
+				temp[k] = this._list[(this._head + i + count + k) &amp; this._capacityMask];
+			}
+			if (count === 0) {
+				removed = [];
+				if (i !== size) {
+					this._tail = (this._head + i + len) &amp; this._capacityMask;
+				}
+			}
+			else {
+				removed = this.remove(i, count);
+				this._tail = (this._tail - leng + len) &amp; this._capacityMask;
+			}
+			while (argumentsIndex &lt; argLen) {
+				this.push(args[argumentsIndex++]);
+			}
+			for (k = 0; k &lt; leng; k++) {
+				this.push(temp[k]);
+			}
+		}
+		return removed;
 	}
 
 	/**
-	 * It is used for method chaining.
-	 *
-	 * @param  {function} successCallback function to be called if the Promise is fulfilled
-	 * @param  {function} errorCallback   function to be called if the Promise is rejected
-	 * @return {Promise}                  a Promise in pending state
+	 * Soft clear - does not reset capacity.
 	 */
-	then(successCallback, errorCallback) {
-		return this.fetch().then(successCallback, errorCallback);
+	clear() {
+		this._head = 0;
+		this._tail = 0;
 	}
 
 	/**
-	 * It is also used for method chaining, but handles rejected cases only.
-	 *
-	 * @param  {function} errorCallback   function to be called if the Promise is rejected
-	 * @return {Promise}                  a Promise in pending state
+	 * Returns true or false whether the list is empty.
+	 * @returns {boolean}
 	 */
-	catch(errorCallback) {
-		return this.fetch().catch(errorCallback);
+	isEmpty() {
+		return this._head === this._tail;
+	}
+
+	/**
+	 * Returns an array of all queue items.
+	 * @returns {Array}
+	 */
+	toArray() {
+		return this._copyArray(false);
+	}
+
+	/**
+	 * Returns an iterator of all queue items.
+	 * @returns {iterator}
+	 */
+	* [Symbol.iterator]() {
+		const list = this._list;
+		const len = list.length;
+		let i;
+		if (this._head > this._tail) {
+			for (i = this._head; i &lt; len; i++) yield list[i];
+			for (i = 0; i &lt; this._tail; i++) yield list[i];
+		}
+		else {
+			for (i = this._head; i &lt; this._tail; i++) yield list[i];
+		}
+	}
+
+	forEach(callback) {
+		let i = 0;
+		for (const value of this) {
+			callback(value, i++, this);
+		}
+	}
+
+	map(callback) {
+		let i = 0;
+		const result = [];
+		for (const value of this) {
+			result.push(callback(value, i++, this));
+		}
+		return result;
+	}
+
+	filter(callback) {
+		let i = 0;
+		const result = [];
+		callback = callback || Boolean;
+		for (const value of this) {
+			if (callback(value, i++, this)) {
+				result.push(value);
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * -------------
+	 *   INTERNALS
+	 * -------------
+	 */
+
+	/**
+	 * Fills the queue with items from an array
+	 * For use in the constructor
+	 * @param array
+	 * @private
+	 */
+	_fromArray(array) {
+		for (let i = 0; i &lt; array.length; i++) this.push(array[i]);
+	}
+
+	/**
+	 *
+	 * @param fullCopy
+	 * @returns {Array}
+	 * @private
+	 */
+	_copyArray(fullCopy) {
+		const newArray = [];
+		const list = this._list;
+		const len = list.length;
+		let i;
+		if (fullCopy || this._head > this._tail) {
+			for (i = this._head; i &lt; len; i++) newArray.push(list[i]);
+			for (i = 0; i &lt; this._tail; i++) newArray.push(list[i]);
+		}
+		else {
+			for (i = this._head; i &lt; this._tail; i++) newArray.push(list[i]);
+		}
+		return newArray;
+	}
+
+	/**
+	 * Grows the internal list array.
+	 * @private
+	 */
+	_growArray() {
+		if (this._head) {
+			// copy existing data, head to end, then beginning to tail.
+			this._list = this._copyArray(true);
+			this._head = 0;
+		}
+
+		// head is at 0 and array is now full, safe to extend
+		this._tail = this._list.length;
+
+		this._list.length *= 2;
+		this._capacityMask = (this._capacityMask &lt;&lt; 1) | 1;
+	}
+
+	/**
+	 * Shrinks the internal list array.
+	 * @private
+	 */
+	_shrinkArray() {
+		this._list.length >>>= 1;
+		this._capacityMask >>>= 1;
 	}
 }
 
-export default Connect;
+export default DeQueue;
 </code></pre>
         </article>
     </section>

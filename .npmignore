@@ -8,3 +8,4 @@ garbage
 docs
 yarn.lock
 .editorconfig
+jsdoc.json

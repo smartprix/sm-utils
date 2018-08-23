@@ -3,6 +3,11 @@ import passwd from 'etc-passwd';
 import Vachan from '../Vachan';
 import gracefulServerShutdown from './gracefulServerShutdown';
 
+/**
+ * System and process utilities
+ * @module System
+ */
+
 let oldUmask = -1;
 let hrtimeDelta;
 

@@ -3,6 +3,9 @@ import timestring from 'timestring';
 
 let globalCache;
 
+/**
+ * Local cache with dogpile prevention
+ */
 class Cache {
 	constructor() {
 		this.data = new Map();

@@ -19,6 +19,9 @@ async function _withDefault(promise, defaultValue) {
 	return value;
 }
 
+/**
+ * Cache backed by Redis
+ */
 class RedisCache {
 	static globalPrefix = 'a';
 	static redisGetCount = 0;

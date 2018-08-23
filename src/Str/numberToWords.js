@@ -1,3 +1,5 @@
+/** @module Str */
+
 /**
  * Convert a number into words
  *

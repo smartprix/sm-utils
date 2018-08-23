@@ -5,7 +5,7 @@
 /**
  * Custom implementation of a double ended queue.
  */
-export default class DeQueue {
+class DeQueue {
 	constructor(array) {
 		this._head = 0;
 		this._tail = 0;
@@ -538,3 +538,5 @@ export default class DeQueue {
 		this._capacityMask >>>= 1;
 	}
 }
+
+export default DeQueue;

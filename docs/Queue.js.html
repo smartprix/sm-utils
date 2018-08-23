@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>Connect.js - Documentation</title>
+    <title>Queue.js - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -33,7 +33,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">Connect.js</h1>
+    <h1 class="page-title">Queue.js</h1>
     
 
     
@@ -43,782 +43,558 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import path from 'path';
+            <pre class="prettyprint source linenums"><code>import kue from 'kue';
 import _ from 'lodash';
-import request from 'request';
-import FileCookieStore from 'tough-cookie-file-store';
-import SocksHTTPAgent from 'sm-socks5-http-client/lib/Agent';
-import SocksHTTPSAgent from 'socks5-https-client/lib/Agent';
-import File from './File';
-import Crypt from './Crypt';
+import System from './System';
 
-const userAgents = {
-	chrome: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
-	edge: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.79 Safari/537.36 Edge/14.14393',
-	firefox: 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:54.0) Gecko/20100101 Firefox/54.0',
-	ie: 'Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko',
-	operaMini: 'Opera/9.80 (Android; Opera Mini/8.0.1807/36.1609; U; en) Presto/2.12.423 Version/12.16',
-	googlebot: 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
-	googlebotMobile: '​Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.96 Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
-	mobile: 'Mozilla/5.0 (Linux; Android 6.0.1; SM-G920V Build/MMB29K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.98 Mobile Safari/537.36',
-	chromeMobile: 'Mozilla/5.0 (Linux; Android 6.0.1; SM-G920V Build/MMB29K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.98 Mobile Safari/537.36',
-	android: 'Mozilla/5.0 (Linux; Android 6.0.1; SM-G920V Build/MMB29K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.98 Mobile Safari/537.36',
-	iphone: 'Mozilla/6.0 (iPhone; CPU iPhone OS 8_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/8.0 Mobile/10A5376e Safari/8536.25',
-	safariMobile: 'Mozilla/6.0 (iPhone; CPU iPhone OS 8_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/8.0 Mobile/10A5376e Safari/8536.25',
-	tablet: 'Mozilla/5.0 (iPad; CPU OS 5_0 like Mac OS X) AppleWebKit/534.46 (KHTML, like Gecko) Version/5.0.2 Mobile/9A5248d Safari/6533.18.5',
-	ipad: 'Mozilla/5.0 (iPad; CPU OS 5_0 like Mac OS X) AppleWebKit/534.46 (KHTML, like Gecko) Version/5.0.2 Mobile/9A5248d Safari/6533.18.5',
-	windows: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
-};
-
-/**
- * Returns proxy url based on the proxy options.
- *
- * @param  {Object} proxy proxy options
- * @return {String} proxy url based on the options
- * @private
- */
-function makeProxyUrl(proxy) {
-	let url = proxy.address.replace('http://', '');
-	if (proxy.port) {
-		url = url.split(':')[0] + ':' + proxy.port;
+async function processorWrapper(job, processor, resolve, reject) {
+	let res;
+	let jobDetails;
+	if (job.state() === 'active') {
+		reject(new Error('Job already processing'));
+		return;
 	}
-	if (proxy.auth &amp;&amp; proxy.auth.username) {
-		url = `${encodeURIComponent(proxy.auth.username)}:${encodeURIComponent(proxy.auth.password)}@${url}`;
+	else if (job.state() === 'inactive') {
+		job.active();
+		job.attempt(() => {});
+		try {
+			res = await processor(job.data.input);
+		}
+		catch (e) {
+			job.error(e.message);
+			job._error = e.message;
+			if (!job.data.options.noFailure) {
+				job.failed();
+				reject(new Error('Job failed ' + e));
+				return;
+			}
+		}
+		if (!_.isNil(res)) {
+			job.result = res;
+			job.set('result', JSON.stringify(res));
+		}
+		job.complete();
+		jobDetails = _.pick(job.toJSON(), ['id', 'type', 'data', 'result', 'state', 'error', 'created_at', 'updated_at', 'attempts']);
+		jobDetails.attempts.made++;
+		jobDetails.attempts.remaining--;
 	}
+	// Job is already complete/failed
+	else {
+		jobDetails = _.pick(job.toJSON(), ['id', 'type', 'data', 'result', 'state', 'error', 'created_at', 'updated_at', 'attempts']);
+	}
+	resolve(jobDetails);
+}
 
-	return `http://${url}`;
+async function iterateOverJobs(queue, jobType, numOfJobs, olderThan, action) {
+	const now = Date.now();
+	return new Promise((resolve, reject) => {
+		kue.Job.rangeByType(queue, jobType, 0, numOfJobs, 'asc', async (err, jobs) => {
+			if (err) {
+				reject(new Error('Could not fetch jobs: ' + err));
+				return;
+			}
+			for (let i = 0; i &lt; jobs.length; i++) {
+				if (now - jobs[i].created_at > olderThan) {
+					jobs[i].log(`Doing ${action}`);
+					jobs[i][action](() => {});
+				}
+				else break;
+			}
+			resolve();
+		});
+	});
 }
 
 /**
- * Simple &amp; Powerful HTTP request client.
+ * Job Queue
  */
-class Connect {
-	/**
-	 * Creates a new Connect object.
-	 * @constructor
-	 */
-	constructor() {
-		/** Timeout period for the request in milliseconds */
-		this.requestTimeout = 120 * 1000;
-		/** Various options (or parameters) defining the Connection */
-		this.options = {
-			url: null,
-			method: 'GET',
-			headers: {
-				'User-Agent': userAgents.chrome,
-				Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-				'Accept-Language': 'en-US,en;q=0.8',
-			},
-			cookies: {},
-			jar: null,
-			followRedirect: true,
-			maxRedirects: 6,
-			gzip: true,
-			// timeout: 120 * 1000,
-			strictSSL: false,
-			proxy: {},
-			// tunnel: true,
-			fields: {},
-		};
-	}
+class Queue {
+	static jobs;
+	static queues = {};
 
 	/**
-	 * Set the url for the connection.
-	 *
-	 * @param {String} url self-descriptive
-	 * @return {Connect} self
+	 * Initialise the redis connection
+	 * @param {Object} [redis={port: 6379, host: '127.0.0.1'}] Redist connection settings object
+	 * @param {Boolean} [enableWatchdog=false] Will watch for stuck jobs due to any connection issues
+	 * Read more here :  https://github.com/Automattic/kue#unstable-redis-connections
 	 */
-	url(url) {
-		this.options.url = url;
-		return this;
-	}
-
-	/**
-	 * @static
-	 * Creates and returns a new Connect object with the given url.
-	 *
-	 * @param  {String} url self-descriptive
-	 * @return {Connect}    A new Connect object with url set to the given url
-	 */
-	static url(url) {
-		const connect = new this();
-		connect.url(url);
-		return connect;
-	}
-
-	/**
-	* @static
-	 * Returns a new cookie jar.
-	 *
-	 * @return {CookieJar} A cookie jar
-	 */
-	static newCookieJar(...args) {
-		return request.jar(...args);
-	}
-
-	/**
-	 * Set or unset the followRedirect option for the connection.
-	 *
-	 * @param  {Boolean} shouldFollowRedirect boolean representing whether to follow redirect or not
-	 * @return {Connect}                      self
-	 */
-	followRedirect(shouldFollowRedirect) {
-		this.options.followRedirect = shouldFollowRedirect;
-		return this;
-	}
-
-	/**
-	 * Set value of a header parameter for the connection.
-	 *
-	 * @param  {String} headerName name of the header parameter whose value is to be set
-	 * @param  {*} headerValue     value to be set
-	 * @return {Connect}           self
-	 */
-	header(headerName, headerValue) {
-		if (typeof headerName === 'string') {
-			this.options.headers[headerName] = headerValue;
-		}
-		else {
-			_.assign(this.options.headers, headerName);
-		}
-
-		return this;
-	}
-
-	/**
-	 * Set value of the headers for the connection.
-	 *
-	 * @param  {Object} headers object representing the headers for the connection
-	 * @return {Connect}        self
-	 */
-	headers(headers) {
-		_.assign(this.options.headers, headers);
-		return this;
-	}
-
-	/**
-	 * Set the body of the connection object.
-	 *
-	 * @param  {*} body                    value for body
-	 * @param  {String} [contentType=null] string representing the content type of the body
-	 * @return {Connect}                   self
-	 */
-	body(body, contentType = null) {
-		if (_.isPlainObject(body)) {
-			body = JSON.stringify(body);
-			contentType = 'json';
-		}
-
-		if (contentType === 'json' || this.isJSON()) {
-			this.header('Content-Type', 'application/json');
-			if (typeof body !== 'string') {
-				body = JSON.stringify(body);
-			}
-		}
-
-		this.options.body = body;
-		return this;
-	}
-
-	/**
-	 * Set the 'Referer' field in the headers.
-	 *
-	 * @param  {String} referer referer value
-	 */
-	referer(referer) {
-		this.header('Referer', referer);
-		return this;
-	}
-
-	/**
-	 * Set the 'User-Agent' field in the headers.
-	 *
-	 * @param  {String} userAgent name of the user-agent or its value
-	 * @return {Connect}          self
-	 */
-	userAgent(userAgent) {
-		this.header('User-Agent', userAgents[userAgent] || userAgent);
-		return this;
-	}
-
-	/**
-	 * Set the 'Content-Type' field in the headers.
-	 *
-	 * @param  {String} contentType value for content-type
-	 */
-	contentType(contentType) {
-		this.header('Content-Type', contentType);
-		return this;
-	}
-
-	/**
-	 * Returns whether the content-type is JSON or not
-	 *
-	 * @return {Boolean} true, if content-type is JSON; false, otherwise
-	 */
-	isJSON() {
-		return this.options.headers['Content-Type'] === 'application/json';
-	}
-
-	/**
-	 * Sets the value of a cookie.
-	 * Can be used to enable global cookies, if cookieName is set to true
-	 * and cookieValue is undefined (or is not passed as an argument).
-	 * Can also be used to set multiple cookies by passing in an object
-	 * representing the cookies and their values as key:value pairs.
-	 *
-	 * @param  {String|Boolean|Object} cookieName  represents the name of the
-	 * cookie to be set, or the cookies object
-	 * @param  {Object} cookieValue                cookie value to be set
-	 * @return {Connect}                           self
-	 */
-	cookie(cookieName, cookieValue) {
-		if (cookieName === true &amp;&amp; cookieValue === undefined) {
-			this.globalCookies();
-		}
-		if (typeof cookieName === 'string') {
-			this.options.cookies[cookieName] = cookieValue;
-		}
-		else {
-			_.assign(this.options.cookies, cookieName);
-		}
-
-		return this;
-	}
-
-	/**
-	 * Sets multiple cookies.
-	 * Can be used to enable global cookies, if cookies is set to true.
-	 *
-	 * @param  {Object|Boolean} cookies object representing the cookies
-	 * and their values as key:value pairs.
-	 * @return {Connect}                self
-	 */
-	cookies(cookies) {
-		if (cookies === true) {
-			this.globalCookies();
-		}
-		else {
-			_.assign(this.options.cookies, cookies);
-		}
-
-		return this;
-	}
-
-	/**
-	 * Enable global cookies.
-	 *
-	 * @param  {Boolean} [enableGlobalCookies=true] self-descriptive
-	 * @return {Connect}                            self
-	 */
-	globalCookies(enableGlobalCookies = true) {
-		this.options.jar = enableGlobalCookies;
-		return this;
-	}
-
-	/**
-	 * Set the value of cookie jar based on a file (cookie store).
-	 *
-	 * @param  {String} fileName name of (or path to) the file
-	 * @return {Connect}         self
-	 */
-	cookieFile(fileName) {
-		const cookieJar = request.jar(new FileCookieStore(fileName));
-		this.options.jar = cookieJar;
-		return this;
-	}
-
-	/**
-	 * Set the value of cookie jar.
-	 *
-	 * @param  {CookieJar} cookieJar value to be set
-	 * @return {Connect}             self
-	 */
-	cookieJar(cookieJar) {
-		this.options.jar = cookieJar;
-		return this;
-	}
-
-	/**
-	 * Set request timeout.
-	 *
-	 * @param  {Number} timeout timeout value in seconds
-	 * @return {Connect}        self
-	 */
-	timeout(timeout) {
-		this.requestTimeout = timeout * 1000;
-		return this;
-	}
-
-	/**
-	 * Set request timeout.
-	 *
-	 * @param  {Number} timeoutInMs timeout value in milliseconds
-	 * @return {Connect}            self
-	 */
-	timeoutMs(timeoutInMs) {
-		this.requestTimeout = timeoutInMs;
-		return this;
-	}
-
-	/**
-	 * alias for timeoutMs
-	 */
-	timeoutMilli(timeoutInMs) {
-		return this.timeoutMs(timeoutInMs);
-	}
-
-	/**
-	 * Set value of a field in the options.
-	 * Can also be used to set multiple fields by passing in an object
-	 * representing the field-names and their values as key:value pairs.
-	 *
-	 * @param  {String|Object} fieldName name of the field to be set, or the fields object
-	 * @param  {*} fieldValue            value to be set
-	 * @return {Connect}                 self
-	 */
-	field(fieldName, fieldValue) {
-		if (typeof fieldName === 'string') {
-			this.options.fields[fieldName] = fieldValue;
-		}
-		else {
-			_.assign(this.options.fields, fieldName);
-		}
-
-		return this;
-	}
-
-	/**
-	 * Set multiple fields.
-	 *
-	 * @param  {Object} fields object representing the field-names and their
-	 * values as key:value pairs
-	 * @return {Connect}       self
-	 */
-	fields(fields) {
-		_.assign(this.options.fields, fields);
-		return this;
-	}
-
-	/**
-	 * Set the request method for the connection.
-	 *
-	 * @param  {String} method one of the HTTP request methods ('GET', 'PUT', 'POST', etc.)
-	 * @return {Connect}       self
-	 */
-	method(method) {
-		this.options.method = (method || 'GET').toUpperCase();
-		return this;
-	}
-
-	/**
-	 * Set username and password for authentication.
-	 *
-	 * @param  {String} username self-descriptive
-	 * @param  {String} password self-descriptive
-	 * @return {Connect}         self
-	 */
-	httpAuth(username, password) {
-		if (typeof username === 'string') {
-			// username &amp; password are strings
-			this.options.auth = {
-				username,
-				password,
-			};
-		}
-		else if (username.username) {
-			// username argument is an object of {username, password}
-			this.options.auth = username;
-		}
-
-		return this;
-	}
-
-	/**
-	 * Set proxy address (or options).
-	 *
-	 * @param  {String|Object} proxy proxy address, or object representing proxy options
-	 * @return {Connect}             self
-	 */
-	proxy(proxy) {
-		// actual proxy is added at the end using _addProxy
-		// this is because we need the url (http or https) to add the proxy
-		// and url might be added after this method
-		if (typeof proxy === 'string') {
-			_.assign(this.options.proxy, {
-				address: proxy,
-				port: null,
-				type: 'http',
+	static init(redis, enableWatchdog) {
+		if (!Queue.jobs) {
+			Queue.jobs = kue.createQueue({
+				redis,
 			});
+			if (enableWatchdog)	Queue.jobs.watchStuckJobs(10000);
+			Queue.jobs.on('error', (err) => {
+				console.error(`[Queue] ${err}`);
+			});
+
+			System.onExit(Queue.exit);
 		}
-		else {
-			this.options.proxy = proxy;
-		}
-
-		return this;
 	}
 
 	/**
-	 * Set address and port for an http proxy.
-	 *
-	 * @param  {String} proxyAddress self-descriptive
-	 * @param  {Number} proxyPort    self-descriptive
-	 * @return {Connect}             self
+	 * Class constructor : Create a new Queue
+	 * The redis and enableWatchdog settings are required only the first time to init
+	 * Can also be set beforehand by calling Queue.init()
+	 * @param {String} name Name of the queue
+	 * @param {Object} [redis={port: 6379, host: '127.0.0.1'}] Redis connection settings object
+	 * @param {Boolean} [enableWatchdog=false] Will watch for stuck jobs due to any connection issues
+	 * 		Read more here :  https://github.com/Automattic/kue#unstable-redis-connections
 	 */
-	httpProxy(proxyAddress, proxyPort) {
-		_.assign(this.options.proxy, {
-			address: proxyAddress,
-			port: proxyPort,
-			type: 'http',
-		});
-
-		return this;
+	constructor(name, redis = {port: 6379, host: '127.0.0.1'}, enableWatchdog = false) {
+		this.name = `${name}${process.env.NODE_ENV ? '-' + process.env.NODE_ENV : ''}`;
+		if (!Queue.queues[this.name]) Queue.queues[this.name] = {processorAdded: false};
+		this.paused = undefined;
+		this.kueCtx = undefined;
+		Queue.init(redis, enableWatchdog);
 	}
 
-	/**
-	 * Set address and port for a socks proxy.
-	 *
-	 * @param  {String} proxyAddress self-descriptive
-	 * @param  {Number} proxyPort    self-descriptive
-	 * @return {Connect}             self
-	 */
-	socksProxy(proxyAddress, proxyPort) {
-		_.assign(this.options.proxy, {
-			address: proxyAddress,
-			port: proxyPort,
-			type: 'socks',
-		});
-
-		return this;
-	}
 
 	/**
-	 * Set username and password for proxy.
-	 *
-	 * @param  {String} username self-descriptive
-	 * @param  {String} password self-descriptive
-	 * @return {Connect}         self
+	 * @typedef {Object} addOpts
+	 * @property {Number|String} [opts.priority=0] Priority of the job, lower number is better
+	 * Options are : low: 10, normal: 0, medium: -5, high: -10, critical: -15 | Or any integer
+	 * @property {Number} [opts.attempts] Number of attempts
+	 * @property {Number} [otps.delay] Delay in between jobs
+	 * @property {Number} [opts.ttl] Time to live for job
+	 * @property {Boolean} [opts.removeOnComplete] Remove job on completion
+	 * @property {Boolean} [opts.noFailure] Mark job as complete even if it fails
 	 */
-	proxyAuth(username, password) {
-		if (typeof username === 'string') {
-			// username &amp; password are strings
-			this.options.proxy.auth = {
-				username,
-				password,
+
+	/**
+	 * Add a job to the Queue
+	 * @param {*} input Job data
+	 * @param {addOpts} opts
+	 * @returns {Number|*} The ID of the job created
+	 */
+	async addJob(input, {
+		priority = 0,
+		attempts = this.attempts,
+		delay = this.delay,
+		ttl = this.ttl,
+		removeOnComplete = this.removeOnComplete,
+		noFailure = this.noFailure ? true : undefined,
+		_getResult = false,
+		_timeout,
+		_dummy,
+	} = {}) {
+		return new Promise((resolve, reject) => {
+			let completed = false;
+			const options = {
+				noFailure,
+				_dummy,
+				_timeout,
 			};
-		}
-		else if (username.username) {
-			// username argument is an object of {username, password}
-			this.options.proxy.auth = username;
-		}
+			const job = Queue.jobs
+				.create(this.name, {input, options})
+				.priority(priority);
 
-		return this;
-	}
-
-	/**
-	 * Set request method to 'GET'.
-	 *
-	 * @return {Connect} self
-	 */
-	get() {
-		this.method('GET');
-		return this;
-	}
-
-	/**
-	 * Set request method to 'POST'.
-	 *
-	 * @return {Connect} self
-	 */
-	post() {
-		this.method('POST');
-		return this;
-	}
-
-	/**
-	 * Set request method to 'PUT'.
-	 *
-	 * @return {Connect} self
-	 */
-	put() {
-		this.method('PUT');
-		return this;
-	}
-
-	/**
-	 * Set cache directory for the connection.
-	 *
-	 * @param  {String} dir name or path to the directory
-	 * @return {Connect}    self
-	 */
-	cacheDir(dir) {
-		this.resposeCacheDir = dir;
-		return this;
-	}
-
-	/**
-	 * Set if the body is to be returned as a buffer
-	 *
-	 * @param  {Boolean} [returnAsBuffer=true] self-descriptive
-	 * @return {Connect}                       self
-	 */
-	asBuffer(returnAsBuffer = true) {
-		this.options.encoding = returnAsBuffer ? null : undefined;
-		return this;
-	}
-
-	/**
-	 * Set the path for file for saving the response.
-	 *
-	 * @param  {String} filePath self-descriptive
-	 * @return {Connect}         self
-	 */
-	save(filePath) {
-		// get response as buffer
-		this.asBuffer();
-		this.saveFilePath = filePath;
-		return this;
-	}
-
-	/**
-	 * Add proxy based on the proxy options. Proxy is added,
-	 * if and only if proxy address has been previously set.
-	 * If no proxy type is previously set, 'http' is taken as
-	 * the default proxy type.
-	 *
-	 * NOTE: This function is for internal use
-	 * @private
-	 */
-	_addProxy() {
-		const proxy = this.options.proxy;
-		if (!proxy) return;
-		if (typeof proxy === 'string') return;
-
-		this.options.proxy = null;
-		if (!proxy.address) return;
-
-		const proxyType = proxy.type || 'http';
-
-		if (proxyType === 'http' || proxyType === 'https') {
-			this.options.proxy = makeProxyUrl(proxy);
-		}
-		else if (proxyType === 'socks' || proxyType === 'socks5') {
-			if (_.startsWith(this.options.url, 'https://')) {
-				this.options.agentClass = SocksHTTPSAgent;
+			// default = 1
+			if (attempts) {
+				job.attempts(this.attempts);
 			}
-			else {
-				this.options.agentClass = SocksHTTPAgent;
+			// default = 0
+			if (delay) {
+				job.delay(this.delay).backoff(true);
+			}
+			// default = 0, i.e. infinite
+			if (ttl > 0) {
+				job.ttl(this.ttl);
+			}
+			// default = false
+			if (removeOnComplete) {
+				job.removeOnComplete(true);
 			}
 
-			const agentOptions = {};
-			agentOptions.socksHost = proxy.address.split(':')[0];
-			agentOptions.socksPort = proxy.port || proxy.address.split(':')[1] || 1080;
-			if (proxy.auth &amp;&amp; proxy.auth.username) {
-				agentOptions.socksUsername = proxy.auth.username;
-				agentOptions.socksPassword = proxy.auth.password;
+			if (_getResult) {
+				job.on('complete', (res) => {
+					completed = true;
+					resolve(res);
+				})
+					.on('failed', (errMsg) => {
+						if (!completed) {
+							completed = true;
+							reject(new Error(errMsg));
+						}
+					})
+					.on('remove', () => {
+						if (!completed) {
+							completed = true;
+							reject(new Error('Job Removed before completion'));
+						}
+					});
 			}
 
-			this.options.agentOptions = agentOptions;
-		}
-	}
-
-	/**
-	 * Add the options 'fields' to the options body, form or qs
-	 * on the basis of the request method.
-	 *
-	 * NOTE: This function is for internal use
-	 * @private
-	 */
-	_addFields() {
-		if (!this.options.fields) return;
-		if (_.isEmpty(this.options.fields)) return;
-
-		const method = this.options.method;
-		if (method === 'POST' || method === 'PUT') {
-			if (this.isJSON()) {
-				this.options.body = JSON.stringify(this.options.fields);
-			}
-			else {
-				this.options.form = this.options.fields;
-			}
-		}
-		else {
-			this.options.qs = this.options.qs || {};
-			_.assign(this.options.qs, this.options.fields);
-		}
-	}
-
-	/**
-	 * Add cookies in the options to the header.
-	 *
-	 * NOTE: This function is for internal use
-	 * @private
-	 */
-	_addCookies() {
-		if (!this.options.cookies) return;
-
-		const cookies = [];
-		_.forEach(this.options.cookies, (value, key) => {
-			cookies.push(`${key}=${value}`);
+			job.save((err) => {
+				if (err) reject(new Error(err));
+				else if (!_getResult) resolve(job.id);
+				else if (!_.isNil(_timeout)) {
+					setTimeout(() => {
+						if (!completed) {
+							completed = true;
+							job.log('Error: Timed out');
+							job.failed();
+							reject(new Error('Timed out'));
+						}
+					}, _timeout);
+				}
+			});
 		});
-
-		if (cookies.length) {
-			this.header('Cookie', cookies.join('; '));
-		}
 	}
 
+	/**
+	 * Add a job to the Queue, wait for it to process and return result
+	 * Preferably set PRIORITY HIGH or it might timeout if lots of other tasks are in queue
+	 * Queue will process job only if timeout is not passed when processing begins
+	 * @param {*} input Job data
+	 * @param {addOpts} opts
+	 * @param {number} [timeout=180000] wait for this time else throw err
+	 * @returns {*} result
+	 */
+	async addAndProcess(input, opts = {}, timeout = 180000) {
+		opts._getResult = true;
+		opts._timeout = timeout;
+		return this.addJob(input, opts);
+	}
 
 	/**
-	 * It resolves or rejects the promise object. It is
-	 * used by fetch() to make the promise.
-	 *
-	 * NOTE: This function is for internal use
-	 * @private
+	 * Set default number of retry attempts for any job added later
+	 * @param {Number} attempts Number of attempts (>= 0), default = 1
 	 */
-	_makeFetchPromise(resolve, reject, cacheFilePath) {
-		this._addProxy();
-		this._addFields();
-		this._addCookies();
+	setAttempts(attempts) {
+		this.attempts = attempts;
+	}
 
-		const startTime = Date.now();
-		const req = request(this.options, (error, response, body) => {
-			if (this.timeoutTimer) {
-				clearTimeout(this.timeoutTimer);
-				this.timeoutTimer = null;
-			}
+	/**
+	 * Set delay b/w successive jobs for any job added later
+	 * @param {Number} delay Delay b/w jobs, milliseconds, default = 0
+	 */
+	setDelay(delay) {
+		this.delay = delay;
+	}
 
-			if (error) {
-				error.timeTaken = Date.now() - startTime;
-				reject(error);
+	/**
+	 * Set default TTL (time to live) for new jobs added from now on,
+	 * will fail job if not completed in TTL time
+	 * @param {Number} ttl Time in milliseconds, infinite when 0. default = 0
+	 */
+	setTTL(ttl) {
+		this.ttl = ttl;
+	}
+
+	/**
+	 * Sets default removeOnComplete for any job added to this Queue from now on
+	 * @param {Boolean} removeOnComplete default = false
+	 */
+	setRemoveOnCompletion(removeOnComplete) {
+		this.removeOnComplete = removeOnComplete;
+	}
+
+	/**
+	 * Sets default noFailure for any job added to this Queue from now on.
+	 * This will mark the job complete even if it fails when true
+	 * @param {Boolean} noFailure default = false
+	 */
+	setNoFailure(noFailure) {
+		this.noFailure = noFailure;
+	}
+
+	/**
+	 * An async function which will be called to process the job data
+	 * @callback processorCallback
+	 * @param {*} jobData The information saved in the job during adding of job
+	 * @returns {*} Will be saved in return field in JobDetails
+	 */
+
+	/**
+	 * Attach a processor to the Queue which will keep getting jobs as it completes them
+	 * @param {processorCallback} processor Function to be called to process the job data
+	 * @param {Number} [concurrency=1] The number of jobs this processor can handle parallely
+	 */
+	async addProcessor(processor, concurrency = 1) {
+		if (Queue.queues[this.name].processorAdded) {
+			throw new Error(`Processor already added for queue ${this.name}, can only be set once per queue.`);
+		}
+		// Increase max event listeners limit
+		Queue.jobs.setMaxListeners(Queue.jobs.getMaxListeners() + concurrency);
+
+		// ctx Can be used to pause and resume worker,
+		// For detailed info : https://github.com/Automattic/kue#pause-processing
+		Queue.jobs.process(this.name, concurrency, async (job, ctx, done) => {
+			if (!this.kueCtx) this.kueCtx = ctx;
+			if (job.data.options._dummy) {
+				done(null, true);
 				return;
 			}
-			else if (response.statusCode === 407) {
-				const e = new Error('407 Proxy Authentication Required');
-				e.code = 'EPROXYAUTH';
-				e.timeTaken = Date.now() - startTime;
-				reject(e);
+			else if (job.data.options._timeout !== undefined &amp;&amp;
+				(Date.now() - job.created_at) > job.data.options._timeout) {
+				job.log(`Time passed: ${(Date.now() - job.created_at)}, Timeout: ${job.data.options._timeout}`);
+				done(new Error('Timed out'));
 				return;
 			}
-
-			response.body = body;
-			response.url = response.request.uri.href || this.options.url;
-			response.timeTaken = Date.now() - startTime;
-			response.cached = false;
-			response.status = response.statusCode;
-
-			const promises = [];
-
-			if (this.saveFilePath) {
-				promises.push(File(this.saveFilePath).write(response.body));
+			job.log('Start processing');
+			let res;
+			try {
+				res = await processor(job.data.input);
 			}
-			if (cacheFilePath &amp;&amp; response.statusCode === 200) {
-				promises.push(File(cacheFilePath).write(response.body));
+			catch (e) {
+				job.log('Errored: ' + e.message);
+				if (job.data.options.noFailure) {
+					job.error(e);
+				}
+				else {
+					done(new Error(this.name + ' Job failed: ' + e.message));
+					return;
+				}
 			}
-
-			if (promises.length) {
-				Promise.all(promises)
-					.then(() => { resolve(response) })
-					.catch(() => { resolve(response) });
-			}
-			else {
-				resolve(response);
-			}
+			job.log('Done');
+			done(null, res);
 		});
 
-		if (this.requestTimeout) {
-			this.timeoutTimer = setTimeout(() => {
-				try {
-					req.abort();
-				}
-				catch (err) {
-					// ignore errors
-				}
-				finally {
-					const e = new Error('Request Timed Out');
-					e.code = 'ETIMEDOUT';
-					e.timeTaken = Date.now() - startTime;
-					reject(e);
-				}
-			}, this.requestTimeout);
+		this.paused = false;
+		Queue.queues[this.name].processorAdded = true;
+		try {
+			// We add this so that keuCtx gets set without having to wait for a job to be added
+			await this.addAndProcess({}, {
+				_dummy: true,
+				priority: Number.MIN_SAFE_INTEGER,
+				removeOnComplete: true,
+			}, 10000);
+		}
+		catch (err) {
+			console.error('[Queue] Could not set kue ctx');
 		}
 	}
 
 	/**
-	 * It creates and returns a promise based on the information
-	 * passed to and parameters of this object.
-	 *
-	 * Response contains {body, url, timeTaken, cached, statusCode}
-	 * url is the final url downloaded after following all redirects
-	 * cached is false is the response was downloaded, true if returned from a cached file
-	 * timeTaken is time taken (in ms) for the request
-	 * body contains the actual response body
-	 *
-	 * @return {Promise} a promise that resolves to response
+	 * Pause Queue processing
+	 * Gives timeout time to all workers to complete their current jobs then stops them
+	 * @param {Number} [timeout=5000] Time to complete current jobs in ms
 	 */
-	fetch() {
-		if (this.promise) return this.promise;
+	async pauseProcessor(timeout = 5000) {
+		if (!Queue.queues[this.name].processorAdded) throw new Error('No processor present');
+		if (this.paused) return;
+		await new Promise((resolve, reject) => {
+			if (!this.kueCtx) {
+				reject(new Error('Worker context not yet available, please add atleast one job before pausing/resuming'));
+				return;
+			}
+			this.kueCtx.pause(timeout, (err) => {
+				if (err) reject(err);
+				else resolve();
+			});
+		});
+		this.paused = true;
+	}
 
-		if (this.timeoutTimer) {
-			clearTimeout(this.timeoutTimer);
-			this.timeoutTimer = null;
+	/**
+	 * Resume Queue processing
+	 */
+	resumeProcessor() {
+		if (!Queue.queues[this.name].processorAdded) throw new Error('No processor present');
+		if (!this.paused) return;
+		if (!this.kueCtx) {
+			throw new Error('Worker context not yet available, please add atleast one job before pausing/resuming');
 		}
+		this.kueCtx.resume();
+		this.paused = false;
+	}
 
-		this.promise = new Promise((resolve, reject) => {
-			let cacheFilePath = null;
+	/**
+	 * Return count of jobs in Queue of JobType
+	 * @param {String} queue Queue name
+	 * @param {String} jobType One of {'inactive', 'delayed' ,'active', 'complete', 'failed'}
+	 * @returns {Number} count
+	 */
+	static async getCount(queue, jobType) {
+		return new Promise((resolve, reject) => {
+			Queue.jobs[jobType + 'Count'](queue, (err, total) => {
+				if (err) reject(new Error('Could not get total ' + jobType + ' jobs: ' + err));
+				else resolve(total);
+			});
+		});
+	}
+	/**
+	 * Return count of inactive jobs in Queue
+	 * @returns {Number} inactiveCount
+	 */
+	async inactiveJobs() {
+		return Queue.getCount(this.name, 'inactive');
+	}
 
-			if (this.resposeCacheDir) {
-				const cacheKey = Crypt.md5(
-					JSON.stringify(_.pick(this.options, ['url', 'method', 'fields']))
-				);
+	/**
+	 * Alias for inactiveJobs
+	 */
+	pendingJobs() {
+		return this.inactiveJobs();
+	}
 
-				cacheFilePath = path.join(this.resposeCacheDir, cacheKey);
-				File(cacheFilePath).read().then((cachedContents) => {
-					const response = {
-						body: cachedContents,
-						statusCode: 200,
-						status: 200,
-						url: this.options.url,
-						timeTaken: 0,
-						cached: true,
-					};
+	/**
+	 * Return count of completed jobs in Queue
+	 * Might return 0 if removeOnComplete was true
+	 * @returns {Number} completeCount
+	 */
+	async completedJobs() {
+		return Queue.getCount(this.name, 'complete');
+	}
 
-					resolve(response);
-				}).catch(() => {
-					// Ignore Errors
-					this._makeFetchPromise(resolve, reject, cacheFilePath);
+	/**
+	 * Return count of failed jobs in Queue
+	 * @returns {Number} failedCount
+	 */
+	async failedJobs() {
+		return Queue.getCount(this.name, 'failed');
+	}
+
+	/**
+	 * Return count of delayed jobs in Queue
+	 * @returns {Number} delayedCount
+	 */
+	async delayedJobs() {
+		return Queue.getCount(this.name, 'delayed');
+	}
+
+	/**
+	 * Return count of active jobs in Queue
+	 * @returns {Number} activeCount
+	 */
+	async activeJobs() {
+		return Queue.getCount(this.name, 'active');
+	}
+
+	/**
+	 * Internal data object
+	 * @typedef {Object} internalData
+	 * @property {*} input Input data given to job
+	 * @property {Object} options Internal options used to set noFailure and extra properties
+	 */
+
+	/**
+	 * Job status object.
+	 * @typedef {Object} jobDetails
+	 * @property {Number} id
+	 * @property {String} type Name of the Queue
+	 * @property {internalData} data Internal data object, includes input and options
+	 * @property {*} result Result of the processor callback
+	 * @property {String} state One of {'inactive', 'delayed' ,'active', 'complete', 'failed'}
+	 * @property {*} error
+	 * @property {Number} created_at unix time stamp
+	 * @property {Number} updated_at unix time stamp
+	 * @property {Object} attempts Attempts Object
+	 */
+
+	/**
+	 * Process a single job in the Queue and mark it complete or failed,
+	 * for when you want to manually process jobs
+	 * @param {processorCallback} processor Function to be called to process the job data, without ctx
+	 * @returns {jobDetails} Job object of completed job
+	 */
+	async processJob(processor) {
+		return new Promise((resolve, reject) => {
+			kue.Job.rangeByType(this.name, 'inactive', 0, 1, 'asc', async (err, jobs) => {
+				if (jobs.length === 0 || err) {
+					reject(new Error('Queue empty ' + err));
+				}
+				const job = jobs[0];
+				await processorWrapper(job, processor, resolve, reject);
+			});
+		});
+	}
+
+	/**
+	 * Cleanup function to be called during startup,
+	 * resets active jobs older than specified time
+	 * @param {Number} [olderThan=5000] Time in milliseconds, default = 5000
+	 */
+	async cleanup(olderThan = 5000) {
+		const n = await Queue.getCount(this.name, 'active');
+		return iterateOverJobs(this.name, 'active', n, olderThan, 'inactive');
+	}
+
+	/**
+	 * Removes any old jobs from queue
+	 * older than specified time
+	 * @param {Number} [olderThan=3600000] Time in milliseconds, default = 3600000 (1 hr)
+	 */
+	async delete(olderThan = 3600000) {
+		const completed = await this.completedJobs();
+		const removeComplete = iterateOverJobs(this.name, 'complete', completed, olderThan, 'remove');
+
+		const failed = await this.failedJobs();
+		const removeFailed = iterateOverJobs(this.name, 'failed', failed, olderThan, 'remove');
+
+		const inactive = await this.pendingJobs();
+		const removeInactive = iterateOverJobs(this.name, 'inactive', inactive, olderThan, 'remove');
+
+		const delayed = await this.delayedJobs();
+		const removeDelayed = iterateOverJobs(this.name, 'delayed', delayed, olderThan, 'remove');
+
+		const active = await this.activeJobs();
+		const removeActive = iterateOverJobs(this.name, 'active', active, olderThan, 'remove');
+
+		return Promise.all([removeComplete, removeFailed, removeInactive, removeDelayed, removeActive]);
+	}
+
+	/**
+	 * Function to query the status of a job
+	 * @param {Number} jobId Job id for which status info is required
+	 * @returns {jobDetails} Object full of job details like state, time, attempts, etc.
+	 */
+	static async status(jobId) {
+		return new Promise((resolve, reject) => {
+			kue.Job.get(jobId, (err, job) => {
+				if (err || !job) {
+					reject(new Error('Job not found ' + err));
+					return;
+				}
+				job = _.pick(job.toJSON(), ['id', 'type', 'data', 'result', 'state', 'error', 'created_at', 'updated_at', 'attempts']);
+				resolve(job);
+			});
+		});
+	}
+
+	/**
+	 * Manualy process a specific Job. Returns existing result if job already processed
+	 * @param {Number} jobId Id of the job to be processed
+	 * @param {processorCallback} processor Function to be called to process the job data, without ctx
+	 * @returns {jobDetails} Result of processor function and job object of completed job
+	 */
+	static async processJobById(jobId, processor) {
+		return new Promise((resolve, reject) => {
+			kue.Job.get(jobId, async (err, job) => {
+				if (err || !job) {
+					reject(new Error('Could not fetch job' + err));
+					return;
+				}
+				await processorWrapper(job, processor, resolve, reject);
+			});
+		});
+	}
+
+	/**
+	 * Function shuts down the Queue gracefully.
+	 * Waits for active jobs to complete until timeout, then marks them failed.
+	 * @param {Number} [timeout=10000] Time in milliseconds, default = 10000
+	 * @returns {Boolean}
+	 */
+	static async exit(timeout = 10000) {
+		return new Promise((resolve) => {
+			if (Queue.jobs === undefined) {
+				resolve(true);
+			}
+			else {
+				console.log('[Queue] Shutting down redis queue');
+				// eslint-disable-next-line no-unused-vars
+				Queue.jobs.shutdown(timeout, (err) => {
+					Queue.jobs = undefined;
+					resolve(true);
 				});
 			}
-			else {
-				this._makeFetchPromise(resolve, reject, cacheFilePath);
-			}
 		});
-
-		return this.promise;
-	}
-
-	/**
-	 * It is used for method chaining.
-	 *
-	 * @param  {function} successCallback function to be called if the Promise is fulfilled
-	 * @param  {function} errorCallback   function to be called if the Promise is rejected
-	 * @return {Promise}                  a Promise in pending state
-	 */
-	then(successCallback, errorCallback) {
-		return this.fetch().then(successCallback, errorCallback);
-	}
-
-	/**
-	 * It is also used for method chaining, but handles rejected cases only.
-	 *
-	 * @param  {function} errorCallback   function to be called if the Promise is rejected
-	 * @return {Promise}                  a Promise in pending state
-	 */
-	catch(errorCallback) {
-		return this.fetch().catch(errorCallback);
 	}
 }
 
-export default Connect;
+export default Queue;
 </code></pre>
         </article>
     </section>

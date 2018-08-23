@@ -13,7 +13,9 @@ class TimeoutError extends Error {
 	}
 }
 
-/* Promise utility functions */
+/**
+ * Promise utility functions
+ */
 class Vachan {
 	/**
 	 * identity function is to make sure returned value is a promise.

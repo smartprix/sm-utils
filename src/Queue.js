@@ -60,6 +60,9 @@ async function iterateOverJobs(queue, jobType, numOfJobs, olderThan, action) {
 	});
 }
 
+/**
+ * Job Queue
+ */
 class Queue {
 	static jobs;
 	static queues = {};

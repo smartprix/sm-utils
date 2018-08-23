@@ -4,7 +4,7 @@ import request from 'request';
 import FileCookieStore from 'tough-cookie-file-store';
 import SocksHTTPAgent from 'sm-socks5-http-client/lib/Agent';
 import SocksHTTPSAgent from 'socks5-https-client/lib/Agent';
-import file from './file';
+import File from './File';
 import Crypt from './Crypt';
 
 const userAgents = {
@@ -29,7 +29,8 @@ const userAgents = {
  * Returns proxy url based on the proxy options.
  *
  * @param  {Object} proxy proxy options
- * @return {String}       proxy url based on the options
+ * @return {String} proxy url based on the options
+ * @private
  */
 function makeProxyUrl(proxy) {
 	let url = proxy.address.replace('http://', '');
@@ -44,7 +45,7 @@ function makeProxyUrl(proxy) {
 }
 
 /**
- * Class representing a Connection.
+ * Simple & Powerful HTTP request client.
  */
 class Connect {
 	/**
@@ -79,8 +80,8 @@ class Connect {
 	/**
 	 * Set the url for the connection.
 	 *
-	 * @param  {String} url self-descriptive
-	 * @return {Connect}    self
+	 * @param {String} url self-descriptive
+	 * @return {Connect} self
 	 */
 	url(url) {
 		this.options.url = url;
@@ -541,6 +542,7 @@ class Connect {
 	 * the default proxy type.
 	 *
 	 * NOTE: This function is for internal use
+	 * @private
 	 */
 	_addProxy() {
 		const proxy = this.options.proxy;
@@ -580,6 +582,7 @@ class Connect {
 	 * on the basis of the request method.
 	 *
 	 * NOTE: This function is for internal use
+	 * @private
 	 */
 	_addFields() {
 		if (!this.options.fields) return;
@@ -604,6 +607,7 @@ class Connect {
 	 * Add cookies in the options to the header.
 	 *
 	 * NOTE: This function is for internal use
+	 * @private
 	 */
 	_addCookies() {
 		if (!this.options.cookies) return;
@@ -624,6 +628,7 @@ class Connect {
 	 * used by fetch() to make the promise.
 	 *
 	 * NOTE: This function is for internal use
+	 * @private
 	 */
 	_makeFetchPromise(resolve, reject, cacheFilePath) {
 		this._addProxy();
@@ -659,10 +664,10 @@ class Connect {
 			const promises = [];
 
 			if (this.saveFilePath) {
-				promises.push(file(this.saveFilePath).write(response.body));
+				promises.push(File(this.saveFilePath).write(response.body));
 			}
 			if (cacheFilePath && response.statusCode === 200) {
-				promises.push(file(cacheFilePath).write(response.body));
+				promises.push(File(cacheFilePath).write(response.body));
 			}
 
 			if (promises.length) {
@@ -722,7 +727,7 @@ class Connect {
 				);
 
 				cacheFilePath = path.join(this.resposeCacheDir, cacheKey);
-				file(cacheFilePath).read().then((cachedContents) => {
+				File(cacheFilePath).read().then((cachedContents) => {
 					const response = {
 						body: cachedContents,
 						statusCode: 200,

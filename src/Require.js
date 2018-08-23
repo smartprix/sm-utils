@@ -2,6 +2,11 @@
 import path from 'path';
 import {execSync} from 'child_process';
 
+/**
+ * Helpers for requiring global & other files
+ * @module Require
+ */
+
 // assign properties to global to avoid issues in case of multiple sm-utils in node_modules
 // NOTE: don't change globalDataKey or globalData properties
 // it should be consistent across multiple sm-utils versions

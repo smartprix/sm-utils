@@ -2,7 +2,7 @@
 import _ from 'lodash';
 import Connect from './Connect';
 
-import crypt from './crypt';
+import crypt from './Crypt';
 import d from './debug/d_real';
 
 console.log(crypt.sequentialId(15));

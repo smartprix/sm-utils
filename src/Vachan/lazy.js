@@ -2,6 +2,7 @@
 
 /**
  * Create a lazy promise that defers execution until .then() or .catch() is called
+ * @ignore
  */
 class PLazy extends Promise {
 	/**
