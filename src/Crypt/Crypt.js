@@ -4,7 +4,7 @@ import {promisify} from 'util';
 import _ from 'lodash';
 
 import baseConvert from './base_convert';
-import Str from './Str';
+import Str from '../Str';
 
 const gzinflate = promisify(zlib.inflateRaw);
 const gzdeflate = promisify(zlib.deflateRaw);
