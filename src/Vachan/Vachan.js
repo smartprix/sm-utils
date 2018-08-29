@@ -24,8 +24,8 @@ class Vachan {
 	 * - function: executes the function and returns the result wrapped in a promise
 	 * - any: returns the input wrapped in a promise
 	 *
-	 * @param {function|Promise|any} promise
-	 * @returns {Promise}
+	 * @param {function|Promise<*>|any} promise
+	 * @returns {Promise<*>}
 	 */
 	static identity(promise) {
 		if (promise && promise.then) {
@@ -44,7 +44,7 @@ class Vachan {
 
 	/**
 	 * Execute a promise / function, and exit when it completes
-	 * @param {Promise|function} promise
+	 * @param {Promise<*>|function} promise
 	 * @param {object} options
 	 */
 	static exit(promise, options = {}) {
@@ -60,7 +60,7 @@ class Vachan {
 
 	/**
 	 * Execute a promise / function, without caring about its results
-	 * @param {Promise|function} promise
+	 * @param {Promise<*>|function} promise
 	 * @param {object} options
 	 */
 	static exec(promise, options = {}) {
@@ -76,7 +76,7 @@ class Vachan {
 	 * a lazy promise defers execution till .then() or .catch() is called
 	 *
 	 * @param {function} executor function(resolve, reject) {}, same as promise constructor
-	 * @returns {Promise} a lazy promise
+	 * @returns {Promise<*>} a lazy promise
 	 */
 	static lazy(executor) {
 		return new PLazy(executor);
@@ -108,9 +108,9 @@ class Vachan {
 	 * Invoked when the promise is settled regardless of outcome
 	 * https://github.com/sindresorhus/p-finally
 	 *
-	 * @param {promise} promise
+	 * @param {Promise<*>} promise
 	 * @param {function} onFinally
-	 * @returns {Promise} Returns a Promise.
+	 * @returns {Promise<*>} Returns a Promise.
 	 */
 	static finally(promise, onFinally) {
 		if (promise.finally) {
@@ -129,7 +129,7 @@ class Vachan {
 	/**
 	 * Returns a promise the rejects on specified timeout
 	 *
-	 * @param {Promise|function} promise A Promise or an async function
+	 * @param {Promise<*>|function} promise A Promise or an async function
 	 * @param {object|number} options can be {timeout} or a number
 	 *  timeout: Milliseconds before timing out
 	 */

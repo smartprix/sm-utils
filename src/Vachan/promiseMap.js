@@ -7,12 +7,13 @@ import _ from 'lodash';
  * of the promises reject. The fulfilled value is an Array of the
  * fulfilled values returned from mapper in input order.
  *
- * @param {array|object|map|set|iterable} iterable collection to iterate over
+ * @memberof Vachan
+ * @param {array|object|Map<any,any>|Set<*>} iterable collection to iterate over
  * @param {function} mapper The function invoked per iteration, should return a promise
  * 	mapper is invoked with (value, index|key, iterable)
  * @param {object} options object of {concurrency}
  * 	concurrency: Number of maximum concurrently running promises, default is Infinity
- * @returns {Promise(array)} a promise that resolves to an array of results
+ * @returns {Promise <Array < any>>} a promise that resolves to an array of results
  */
 function promiseMap(iterable, mapper, options = {}) {
 	return new Promise((resolve, reject) => {
@@ -93,6 +94,14 @@ function promiseMap(iterable, mapper, options = {}) {
 	});
 }
 
+/**
+ * Like promiseMap but for keys
+ * @memberof Vachan
+ * @param {array|object|Map<any,any>|Set<*>} iterable
+ * @param {function} mapper
+ * @param {object} options
+ * @returns {Promise<Array<any>>} a promise that resolves to an array of results
+ */
 function promiseMapKeys(iterable, mapper, options = {}) {
 	const result = {};
 	return promiseMap(
@@ -107,6 +116,14 @@ function promiseMapKeys(iterable, mapper, options = {}) {
 	).then(() => result);
 }
 
+/**
+ * Like promiseMap but for values
+ * @memberof Vachan
+ * @param {array|object|Map<any,any>|Set<*>} iterable
+ * @param {function} mapper
+ * @param {object} options
+ * @returns {Promise<Array<any>>} a promise that resolves to an array of results
+ */
 function promiseMapValues(iterable, mapper, options = {}) {
 	const result = {};
 	return promiseMap(
