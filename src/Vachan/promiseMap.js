@@ -13,7 +13,7 @@ import _ from 'lodash';
  * 	mapper is invoked with (value, index|key, iterable)
  * @param {object} options object of {concurrency}
  * 	concurrency: Number of maximum concurrently running promises, default is Infinity
- * @returns {Promise <Array < any>>} a promise that resolves to an array of results
+ * @returns {Promise<Array<any>>} a promise that resolves to an array of results
  */
 function promiseMap(iterable, mapper, options = {}) {
 	return new Promise((resolve, reject) => {
