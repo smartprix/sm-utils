@@ -289,6 +289,7 @@ function nanoSecondsAlpha(base36 = false) {
  *
  * @param  {Number} currentTime self-descriptive
  * @return {Number}             sequential number
+ * @ignore
  */
 function msCounter(currentTime) {
 	currentTime = currentTime || Date.now();
