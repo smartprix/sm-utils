@@ -69,7 +69,7 @@ class Queue {
 
 	/**
 	 * Initialise the redis connection
-	 * @param {Object} [redis={port: 6379, host: '127.0.0.1'}] Redist connection settings object
+	 * @param {Object} [redis={port: 6379, host: '127.0.0.1'}] Redis connection settings object
 	 * @param {Boolean} [enableWatchdog=false] Will watch for stuck jobs due to any connection issues
 	 * Read more here :  https://github.com/Automattic/kue#unstable-redis-connections
 	 */
@@ -88,13 +88,13 @@ class Queue {
 	}
 
 	/**
-	 * Class constructor : Create a new Queue
+	 * Create a new Queue
 	 * The redis and enableWatchdog settings are required only the first time to init
 	 * Can also be set beforehand by calling Queue.init()
 	 * @param {String} name Name of the queue
 	 * @param {Object} [redis={port: 6379, host: '127.0.0.1'}] Redis connection settings object
 	 * @param {Boolean} [enableWatchdog=false] Will watch for stuck jobs due to any connection issues
-	 * 		Read more here :  https://github.com/Automattic/kue#unstable-redis-connections
+	 * Read more here :  https://github.com/Automattic/kue#unstable-redis-connections
 	 */
 	constructor(name, redis = {port: 6379, host: '127.0.0.1'}, enableWatchdog = false) {
 		this.name = `${name}${process.env.NODE_ENV ? '-' + process.env.NODE_ENV : ''}`;
@@ -107,20 +107,20 @@ class Queue {
 
 	/**
 	 * @typedef {Object} addOpts
-	 * @property {Number|String} [opts.priority=0] Priority of the job, lower number is better
+	 * @property {Number|String} [priority=0] Priority of the job, lower number is better
 	 * Options are : low: 10, normal: 0, medium: -5, high: -10, critical: -15 | Or any integer
-	 * @property {Number} [opts.attempts] Number of attempts
-	 * @property {Number} [otps.delay] Delay in between jobs
-	 * @property {Number} [opts.ttl] Time to live for job
-	 * @property {Boolean} [opts.removeOnComplete] Remove job on completion
-	 * @property {Boolean} [opts.noFailure] Mark job as complete even if it fails
+	 * @property {Number} [attempts] Number of attempts
+	 * @property {Number} [delay] Delay in between jobs
+	 * @property {Number} [ttl] Time to live for job
+	 * @property {Boolean} [removeOnComplete] Remove job on completion
+	 * @property {Boolean} [noFailure] Mark job as complete even if it fails
 	 */
 
 	/**
 	 * Add a job to the Queue
 	 * @param {*} input Job data
 	 * @param {addOpts} opts
-	 * @returns {Number|*} The ID of the job created
+	 * @returns {Number} The ID of the job created
 	 */
 	async addJob(input, {
 		priority = 0,
@@ -201,10 +201,10 @@ class Queue {
 	 * Add a job to the Queue, wait for it to process and return result
 	 * Preferably set PRIORITY HIGH or it might timeout if lots of other tasks are in queue
 	 * Queue will process job only if timeout is not passed when processing begins
-	 * @param {*} input Job data
+	 * @param {any} input Job data
 	 * @param {addOpts} opts
 	 * @param {number} [timeout=180000] wait for this time else throw err
-	 * @returns {*} result
+	 * @returns {any} result
 	 */
 	async addAndProcess(input, opts = {}, timeout = 180000) {
 		opts._getResult = true;
@@ -379,6 +379,7 @@ class Queue {
 
 	/**
 	 * Alias for inactiveJobs
+ 	 * @returns {Number} inactiveCount
 	 */
 	pendingJobs() {
 		return this.inactiveJobs();
@@ -463,7 +464,7 @@ class Queue {
 	 */
 	async cleanup(olderThan = 5000) {
 		const n = await Queue.getCount(this.name, 'active');
-		return iterateOverJobs(this.name, 'active', n, olderThan, 'inactive');
+		await iterateOverJobs(this.name, 'active', n, olderThan, 'inactive');
 	}
 
 	/**
@@ -487,7 +488,7 @@ class Queue {
 		const active = await this.activeJobs();
 		const removeActive = iterateOverJobs(this.name, 'active', active, olderThan, 'remove');
 
-		return Promise.all([removeComplete, removeFailed, removeInactive, removeDelayed, removeActive]);
+		await Promise.all([removeComplete, removeFailed, removeInactive, removeDelayed, removeActive]);
 	}
 
 	/**
