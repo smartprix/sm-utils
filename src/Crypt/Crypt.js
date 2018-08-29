@@ -11,10 +11,15 @@ const gzdeflate = promisify(zlib.deflateRaw);
 
 /**
  * Cryptographic utilities
- * @module Crypt
+ * @namespace Crypt
  */
 
+/**
+ * @memberof Crypt
+ * @type {Object}
+ */
 const chars = {};
+
 chars.NUMERIC = '0123456789';
 chars.LOWER = 'abcdefghijklmnopqrstuvwxyz';
 chars.UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -33,9 +38,9 @@ const data = {};
 
 /**
  * Return a random number between 0 and 1
- *
+ * @memberof Crypt
  * @return {number} A random number (float) between 0 and 1
-*/
+ */
 function random() {
 	return Math.random();
 }
@@ -43,9 +48,10 @@ function random() {
 /**
  * Return a random integer between min and max (both inclusive)
  *
- * @param {int} num If max is not passed, num is max and min is 0
- * @param {int} [max]
- * @return {int} A random integer between min and max
+ * @memberof Crypt
+ * @param {number} num If max is not passed, num is max and min is 0
+ * @param {number} [max]
+ * @return {number} A random integer between min and max
 */
 function randomInt(num, max) {
 	if (max === undefined) {
@@ -62,7 +68,8 @@ function randomInt(num, max) {
  * But avoids float precision issues
  *
  * @param number
- * @return {int} The number of bits
+ * @return {number} The number of bits
+ * @ignore
  */
 function countBits(number) {
 	let log2 = 0;
@@ -80,7 +87,8 @@ function countBits(number) {
  * If options is an integer it will treated as length.
  * By default, length is 20 and charset is ALPHA_NUMERIC
  *
- * @param  {int|Object} options
+ * @memberof Crypt
+ * @param  {number|Object} options
  * 	length of the id or object of {length: int, base36: bool, charset: CHARSET}
  * @return {String} id
  */
@@ -148,6 +156,7 @@ function randomString(options = {}) {
  * Shuffle an array or a string.
  * You can optionally give a seed in the options to do a constant shuffle
  *
+ * @memberof Crypt
  * @param  {Array|String} itemToShuffle item which you want to shuffle
  * @param  {Object} [options = {}]      object of {seed: number}
  * @return {Array|String}               shuffled item
@@ -194,6 +203,23 @@ function shuffle(itemToShuffle, options = {}) {
 	return array;
 }
 
+/**
+ * @typedef {object} randomFunctions
+ * @property {number} seed
+ * @property {number} index
+ * @property {function} random
+ * @property {function} int
+ * @property {function} bytes
+ * @property {function} string
+ * @property {function} shuffle
+ */
+
+/**
+ *
+ * @memberof Crypt
+ * @param {number} seed
+ * @returns {randomFunctions} res
+ */
 function seededRandom(seed) {
 	return {
 		seed,
@@ -235,6 +261,7 @@ function seededRandom(seed) {
 /**
  * Get nanoseconds in base62 or base36 format.
  *
+ * @memberof Crypt
  * @param  {Boolean} base36 use base36 format or not
  * @return {String}         nanoseconds
  */
@@ -280,7 +307,8 @@ function msCounter(currentTime) {
  *
  * NOTE: For best results use atleast 15 characters in base62 and 18 characters in base36 encoding
  *
- * @param {int|Object} options length of the id or object of {length: int, base36: bool}
+ * @memberof Crypt
+ * @param {number|Object} options length of the id or object of {length: int, base36: bool}
  * @return {String}            id
  */
 function sequentialID(options) {
@@ -353,6 +381,7 @@ function addDashesForUUID(str) {
 
 /**
  * Get sequential ID in v4 UUID format.
+ * @memberof Crypt
  */
 function sequentialUUID() {
 	return addDashesForUUID(baseConvert(sequentialID(21), 62, 16));
@@ -360,6 +389,7 @@ function sequentialUUID() {
 
 /**
  * Get random ID in v4 UUID format.
+ * @memberof Crypt
  */
 function randomUUID() {
 	return addDashesForUUID(randomString({length: 30, charset: chars.HEX}));
@@ -371,6 +401,7 @@ function randomUUID() {
  *   'hex', 'binary' ('latin1'), 'ascii', 'base64', 'base64url',
  *   'utf8', 'buffer', 'utf16le' ('ucs2')
  *
+ * @memberof Crypt
  * @param  {String|Buffer} string item to be encoded
  * @param  {Object|String} opts   object or string specifying the encoding(s)
  * @return {String|Buffer}        encoded item
@@ -417,6 +448,7 @@ function baseEncode(string, opts) {
 /**
  * Decode a string encoded using a given encoding.
  *
+ * @memberof Crypt
  * @param  {String|Buffer} string item to be decoded
  * @param  {Object|String} opts   object or string specifying the encoding(s)
  * @return {String}        decoded item
@@ -438,6 +470,7 @@ function baseDecode(string, opts) {
 /**
  * Decode a string encoded using a given encoding to a buffer.
  *
+ * @memberof Crypt
  * @param  {String|Buffer} string item to be decoded
  * @param  {String} fromEncoding  encoding used to encode the string
  * @return {Buffer}        decoded item
@@ -453,9 +486,11 @@ function baseDecodeToBuffer(string, fromEncoding) {
  * Compute hash of a string using given algorithm
  * encoding can be 'hex', 'binary' ('latin1'), 'ascii', 'base64', 'base64url', 'utf8', 'buffer'
  *
- * @param  {String} algo                      algo to be used for hashing
- * @param  {String} string                    string to be hashed
- * @param  {Object} [{encoding = 'hex'} = {}] encoding in the form of an object
+ * @memberof Crypt
+ * @param {String} algo                      algo to be used for hashing
+ * @param {String} string                    string to be hashed
+ * @param {object} [opts={}]
+ * @param {string} [opts.encoding='hex'] 	  encoding in the form of an object
  * @return {String}                           encoded hash value
  */
 function hash(algo, string, {encoding = 'hex'} = {}) {
@@ -472,9 +507,10 @@ function hash(algo, string, {encoding = 'hex'} = {}) {
 /**
  * Compute hash of a string using md5
  *
+ * @memberof Crypt
  * @param {String} string string to be hashed
  * @param {Object} [options] object of {encoding}
- *   @param {String} [options.encoding = hex] encoding of output (default: `hex`)<br>
+ * @param {String} [options.encoding='hex'] encoding of output (default: `hex`)<br>
  *   encoding can be `hex`, `binary` (`latin1`), `ascii`, `base64`, `base64url`, `utf8`, `buffer`
  * @return {String} encoded hash value
  */
@@ -485,9 +521,10 @@ function md5(string, {encoding = 'hex'} = {}) {
 /**
  * Compute hash of a string using sha1
  *
+ * @memberof Crypt
  * @param {String} string string to be hashed
  * @param {Object} [options] object of {encoding}
- *   @param {String} [options.encoding = hex] encoding of output (default: `hex`)<br>
+ * @param {String} [options.encoding='hex'] encoding of output (default: `hex`)<br>
  *   encoding can be `hex`, `binary` (`latin1`), `ascii`, `base64`, `base64url`, `utf8`, `buffer`
  * @return {String} encoded hash value
  */
@@ -498,9 +535,10 @@ function sha1(string, {encoding = 'hex'} = {}) {
 /**
  * Compute hash of a string using sha256
  *
+ * @memberof Crypt
  * @param  {String} string string to be hashed
  * @param {Object} [options] object of {encoding}
- *   @param {String} [options.encoding = hex] encoding of output (default: `hex`)<br>
+ * @param {String} [options.encoding = hex] encoding of output (default: `hex`)<br>
  *   encoding can be `hex`, `binary` (`latin1`), `ascii`, `base64`, `base64url`, `utf8`, `buffer`
  * @return {String} encoded hash value
  */
@@ -511,9 +549,10 @@ function sha256(string, {encoding = 'hex'} = {}) {
 /**
  * Compute hash of a string using sha384
  *
+ * @memberof Crypt
  * @param {String} string string to be hashed
  * @param {Object} [options] object of {encoding}
- *   @param {String} [options.encoding = hex] encoding of output (default: `hex`)<br>
+ * @param {String} [options.encoding = hex] encoding of output (default: `hex`)<br>
  *   encoding can be `hex`, `binary` (`latin1`), `ascii`, `base64`, `base64url`, `utf8`, `buffer`
  * @return {String} encoded hash value
  */
@@ -524,9 +563,10 @@ function sha384(string, {encoding = 'hex'} = {}) {
 /**
  * Compute hash of a string using sha512
  *
+ * @memberof Crypt
  * @param  {String} string string to be hashed
  * @param {Object} [options] object of {encoding}
- *   @param {String} [options.encoding = hex] encoding of output (default: `hex`)<br>
+ * @param {String} [options.encoding = hex] encoding of output (default: `hex`)<br>
  *   encoding can be `hex`, `binary` (`latin1`), `ascii`, `base64`, `base64url`, `utf8`, `buffer`
  * @return {String} encoded hash value
  */
@@ -537,10 +577,11 @@ function sha512(string, {encoding = 'hex'} = {}) {
 /**
  * Create cryptographic HMAC digests using given algo
  *
+ * @memberof Crypt
  * @param {String} algo algo to be used for hashing
  * @param {String} string string to be hashed
  * @param {Object} [options] object of {encoding}
- *   @param {String} [options.encoding = hex] encoding of output (default: `hex`)<br>
+ * @param {String} [options.encoding = hex] encoding of output (default: `hex`)<br>
  *   encoding can be `hex`, `binary` (`latin1`), `ascii`, `base64`, `base64url`, `utf8`, `buffer`
  * @return {String} encoded HMAC digest
  */
@@ -559,9 +600,10 @@ function hmac(algo, string, key, {encoding = 'hex'} = {}) {
 /**
  * Create cryptographic HMAC digests using sha1
  *
+ * @memberof Crypt
  * @param {String} string string to be hashed
  * @param {Object} [options] object of {encoding}
- *   @param {String} [options.encoding = hex] encoding of output (default: `hex`)<br>
+ * @param {String} [options.encoding = hex] encoding of output (default: `hex`)<br>
  *   encoding can be `hex`, `binary` (`latin1`), `ascii`, `base64`, `base64url`, `utf8`, `buffer`
  * @return {String} encoded HMAC digest
  */
@@ -572,9 +614,10 @@ function sha1Hmac(string, key, {encoding = 'hex'} = {}) {
 /**
  * Create cryptographic HMAC digests using sha256
  *
+ * @memberof Crypt
  * @param {String} string string to be hashed
- * @param {Object} [options] object of {encoding}
- *   @param {String} [options.encoding = hex] encoding of output (default: `hex`)<br>
+ * @param {Object} [options={}] object of {encoding}
+ * @param {String} [options.encoding='hex'] encoding of output (default: `hex`)<br>
  *   encoding can be `hex`, `binary` (`latin1`), `ascii`, `base64`, `base64url`, `utf8`, `buffer`
  * @return {String} encoded HMAC digest
  */
@@ -591,6 +634,7 @@ function sha256Hmac(string, key, {encoding = 'hex'} = {}) {
  * openssl ec -in private.pem -pubout -out public.pem
  * ```
  *
+ * @memberof Crypt
  * @param  {String} message           the message to be signed
  * @param  {String|Object} privateKey self-descriptive
  * @param  {Object} opts              opts can have {encoding (default 'hex'), pass (default none)}
@@ -622,6 +666,7 @@ function sign(message, privateKey, opts = {}) {
  * openssl ec -in private.pem -pubout -out public.pem
  * ```
  *
+ * @memberof Crypt
  * @param  {String} message          message to be verified
  * @param  {String} signature        self-descriptive
  * @param  {String|Object} publicKey self-descriptive
@@ -651,9 +696,11 @@ function verify(message, signature, publicKey, opts = {}) {
  * Calling encrypt on the same string multiple times will return different encrypted strings
  * Optionally specify encoding in which you want to get the output
  *
+ * @memberof Crypt
  * @param  {String} string                          string to be encrypted
  * @param  {String} key                             key to be used
- * @param  {Object} [{encoding = 'base64url'} = {}] encoding in the form of an object
+ * @param {Object} [options={}] object of {encoding}
+ * @param {String} [options.encoding='base64Url'] encoding of output (default: 'base64url')
  * @return {String}                                 encrypted string
  */
 function encrypt(string, key, {encoding = 'base64url'} = {}) {
@@ -676,9 +723,11 @@ function encrypt(string, key, {encoding = 'base64url'} = {}) {
 /**
  * Decrypt the given string with the given key encrypted using encrypt
  *
+ * @memberof Crypt
  * @param  {String} string                          string to be decrypted
  * @param  {String} key                             key to be used
- * @param  {Object} [{encoding = 'base64url'} = {}] encoding in the form of an object
+ * @param {Object} [options={}] object of {encoding}
+ * @param {String} [options.encoding='base64Url'] encoding of output (default: 'base64url')
  * @return {String}                                 decrypted string
  */
 function decrypt(string, key, {encoding = 'base64url'} = {}) {
@@ -701,9 +750,11 @@ function decrypt(string, key, {encoding = 'base64url'} = {}) {
  * this encryption is weaker than Encrypt but has the benefit of returing same encrypted string
  * for same string and key.
  *
+ * @memberof Crypt
  * @param  {String} string                          string to be encrypted
  * @param  {String} key                             key to be used
- * @param  {Object} [{encoding = 'base64url'} = {}] encoding in the form of an object
+ * @param {Object} [options={}] object of {encoding}
+ * @param {String} [options.encoding='base64Url'] encoding of output (default: 'base64url')
  * @return {String}                                 encrypted string
  */
 function encryptStatic(string, key, {encoding = 'base64url'} = {}) {
@@ -719,9 +770,11 @@ function encryptStatic(string, key, {encoding = 'base64url'} = {}) {
 /**
  * Decrypt the given string with the given key encrypted using encryptStatic
  *
+ * @memberof Crypt
  * @param  {String} string                          string to be decrypted
  * @param  {String} key                             key to be used
- * @param  {Object} [{encoding = 'base64url'} = {}] encoding in the form of an object
+ * @param {Object} [options={}] object of {encoding}
+ * @param {String} [options.encoding='base64Url'] encoding of output (default: 'base64url')
  * @return {String}                                 decrypted string
  */
 function decryptStatic(string, key, {encoding = 'base64url'} = {}) {
@@ -737,6 +790,7 @@ function decryptStatic(string, key, {encoding = 'base64url'} = {}) {
  * Convert a message into an encrypted token by:
  * signing it with privateKey + encrypting it with publicKey
  * you only need a publicKey to verify and decrypt this token
+ * @memberof Crypt
  */
 function signAndEncrypt(message, privateKey, publicKey) {
 	const version = '1';
@@ -748,6 +802,7 @@ function signAndEncrypt(message, privateKey, publicKey) {
 
 /**
  * Convert an encrypted token (generated by signAndEncrypt) into a message
+ * @memberof Crypt
  */
 function verifyAndDecrypt(token, publicKey) {
 	const [messageEncrypted, signature] = token.split('.');
@@ -770,6 +825,7 @@ function verifyAndDecrypt(token, publicKey) {
 /**
  * Hash a given password using cryptographically strong hash function
  * Returns a 50 character long hash
+ * @memberof Crypt
  */
 function hashPassword(password, opts = {}) {
 	const salt = opts.salt || crypto.randomBytes(12);
@@ -782,6 +838,7 @@ function hashPassword(password, opts = {}) {
 
 /**
  * Verify that given password and hashed password are same or not
+ * @memberof Crypt
  */
 function verifyPassword(password, hashed) {
 	const version = hashed.substring(0, 1);  // eslint-disable-line
@@ -797,6 +854,7 @@ function verifyPassword(password, hashed) {
 
 /**
  * Base64 Encode
+ * @memberof Crypt
  */
 function base64Encode(string, fromEncoding = 'binary') {
 	return baseEncode(string, {
@@ -807,6 +865,7 @@ function base64Encode(string, fromEncoding = 'binary') {
 
 /**
  * URL Safe Base64 Encode
+ * @memberof Crypt
  */
 function base64UrlEncode(string, fromEncoding = 'binary') {
 	return baseEncode(string, {
@@ -817,6 +876,7 @@ function base64UrlEncode(string, fromEncoding = 'binary') {
 
 /**
  * Base64 Decode
+ * @memberof Crypt
  */
 function base64Decode(string, toEncoding = 'binary') {
 	return baseEncode(string, {
@@ -827,6 +887,7 @@ function base64Decode(string, toEncoding = 'binary') {
 
 /**
  * URL Safe Base64 Decode
+ * @memberof Crypt
  */
 function base64UrlDecode(string, toEncoding = 'binary') {
 	return baseEncode(string, {
@@ -838,6 +899,7 @@ function base64UrlDecode(string, toEncoding = 'binary') {
 /**
  * Pack many numbers into a single string
  *
+ * @memberof Crypt
  * @param  {Array} numbers array of numbers to be packed
  * @return {String}        packed string
  */
@@ -851,6 +913,7 @@ function packNumbers(numbers) {
 /**
  * Unpack a string packed with packNumbers
  *
+ * @memberof Crypt
  * @param  {String} str string to be unpacked
  * @return {Array}      array of unpacked numbers
  */
@@ -865,7 +928,8 @@ function unpackNumbers(str) {
 /**
  * Generate a random encrypted string that contains a timestamp.
  *
- * @param {int|Object} options length of the id or object of {length: int}
+ * @memberof Crypt
+ * @param {number|Object} options length of the id or object of {length: int}
  * @return {String} id
  */
 function encryptedTimestampedId(options, key) {
@@ -891,6 +955,7 @@ function encryptedTimestampedId(options, key) {
 /**
  * Legacy obfuscation method
  *
+ * @memberof Crypt
  * @param  {String} str the string to be obfuscted
  * @return {String} obfuscated string
  * @ignore
@@ -908,6 +973,7 @@ async function javaObfuscate(str) {
 /**
  * Legacy unobfuscation method (obfuscated by javaObfuscate)
  *
+ * @memberof Crypt
  * @param  {String} str the obfuscted string
  * @return {String} unobfuscated string
  * @ignore
