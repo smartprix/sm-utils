@@ -3,9 +3,13 @@ import numberToWords from './numberToWords';
 
 /**
  * String utilities
- * @module Str
+ * @namespace Str
  */
 
+/**
+ * @memberof Str
+ * @param {string} str
+ */
 function invertCase(str) {
 	let output = '';
 	let code = '';
@@ -26,15 +30,31 @@ function invertCase(str) {
 	return output;
 }
 
+/**
+ *
+ * @memberof Str
+ * @param {string} char
+ * @returns {boolean}
+ */
 function isVowel(char) {
 	return (/^[aeiou]$/i).test(char);
 }
 
+/**
+ * @memberof Str
+ * @param {string} char
+ * @returns {boolean}
+ */
 function isConsonant(char) {
 	return !isVowel(char);
 }
 
-// Get the plural of a string
+/**
+ * Get the plural of a string
+ * @memberof Str
+ * @param {string} str
+ * @returns {string}
+ */
 function plural(str) {
 	if (!str || str.length <= 2) return str;
 
@@ -73,6 +93,7 @@ function pluralize(str, count = 2) {
 /**
  * transform a string by replacing characters from from string to to string
  * eg. `Str.transform('abc', 'bc', 'de') // returns ade`
+ * @memberof Str
  * @param {string} str string to transform
  * @param {string} from characters to replace in the string
  * @param {string} to characters to replace with in the string
@@ -96,7 +117,13 @@ function transform(str, from, to) {
 	return out;
 }
 
-// Break String From Next Given Character After A Given Position
+/**
+ * Break String From Next Given Character After A Given Position
+ * @memberof Str
+ * @param {string} str
+ * @param {number} pos
+ * @param {string} [char=' ']
+ */
 function trimToNext(str, pos, char = ' ') {
 	const trimPos = str.indexOf(char, pos);
 	if (trimPos !== -1) {
@@ -126,6 +153,7 @@ function _getNumberLocale(options) {
  * Format a number according to a particular locale
  * Similar to Number.toLocaleFormat, except being significantly faster
  *
+ * @memberof Str
  * @param {number} number the number to format
  * @param {object|string} options string of locale
  * 	or object of {locale: 'en-IN', currency: 'INR', decimals: 0}
@@ -142,6 +170,7 @@ function numberFormat(number, options = {}) {
 /**
  * Space clean a string
  * Converts consecutive multiple spaces / tabs / newlines in the string into a single space
+ * @memberof Str
  * @param {string} str
  */
 function spaceClean(str) {
@@ -152,6 +181,7 @@ function spaceClean(str) {
 /**
  * Rotate a string by 13 characters
  *
+ * @memberof Str
  * @param {String} str the string to be rotated
  * @returns {String} rotated string
  */
@@ -176,6 +206,7 @@ function rot13(str) {
 /**
  * Rotate a string by 47 characters
  *
+ * @memberof Str
  * @param {String} str the string to be rotated
  * @returns {String} rotated string
  */
@@ -194,6 +225,12 @@ function rot47(str) {
 	return s.join('');
 }
 
+/**
+ *
+ * @memberof Str
+ * @param {string} str
+ * @returns {Object|null}
+ */
 function tryParseJson(str) {
 	try {
 		return JSON.parse(str);
@@ -205,6 +242,7 @@ function tryParseJson(str) {
 
 /**
  *
+ * @memberof Str
  * @param {string} str the string to remove tags from
  * @param {object} options object containing:
  * 	allowed: array of allowed tags eg. ['p', 'b', 'span'], default: []
@@ -256,6 +294,7 @@ function stripTags(str, options = {}) {
 
 /**
  * Escape a string for including in regular expressions
+ * @memberof Str
  * @param {string} str string to escape
  * @returns {string} escaped string
  */
