@@ -708,7 +708,7 @@ class Connect {
 	 * timeTaken is time taken (in ms) for the request
 	 * body contains the actual response body
 	 *
-	 * @return {Promise} a promise that resolves to response
+	 * @return {Promise<any>} a promise that resolves to response
 	 */
 	fetch() {
 		if (this.promise) return this.promise;
@@ -756,7 +756,7 @@ class Connect {
 	 *
 	 * @param  {function} successCallback function to be called if the Promise is fulfilled
 	 * @param  {function} errorCallback   function to be called if the Promise is rejected
-	 * @return {Promise}                  a Promise in pending state
+	 * @return {Promise<any>}                  a Promise in pending state
 	 */
 	then(successCallback, errorCallback) {
 		return this.fetch().then(successCallback, errorCallback);
@@ -766,7 +766,7 @@ class Connect {
 	 * It is also used for method chaining, but handles rejected cases only.
 	 *
 	 * @param  {function} errorCallback   function to be called if the Promise is rejected
-	 * @return {Promise}                  a Promise in pending state
+	 * @return {Promise<any>}                  a Promise in pending state
 	 */
 	catch(errorCallback) {
 		return this.fetch().catch(errorCallback);
