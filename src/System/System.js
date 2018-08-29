@@ -5,7 +5,7 @@ import gracefulServerShutdown from './gracefulServerShutdown';
 
 /**
  * System and process utilities
- * @module System
+ * @namespace System
  */
 
 let oldUmask = -1;
@@ -50,11 +50,10 @@ function execWrapper(method, args) {
 
 /**
  * Execute the given command in a shell.
- *
+ * @memberof System
  * @param {String} command
  * @param {Object} options options object
  * options: {timeout (in ms), cwd, uid, gid, env (object), shell (eg. /bin/sh), encoding}
- *
  */
 function exec(...args) {
 	return execWrapper('exec', args);
@@ -62,6 +61,7 @@ function exec(...args) {
 
 /**
  * Similar to exec but instead executes a given file
+ * @memberof System
  */
 function execFile(...args) {
 	return execWrapper('execFile', args);
@@ -70,6 +70,7 @@ function execFile(...args) {
 /**
  * execute a command and return its output
  *
+ * @memberof System
  * @return {String} output of the command's execution
  */
 async function execOut(...args) {
@@ -79,6 +80,7 @@ async function execOut(...args) {
 /**
  * execute a file and return its output
  *
+ * @memberof System
  * @return {String} output of the file's execution
  */
 async function execFileOut(...args) {
@@ -88,7 +90,8 @@ async function execFileOut(...args) {
 
 /**
  * turn off umask for the current process
- * returns the old umask
+ * @memberof System
+ * @returns {number} the old umask
  */
 function noUmask() {
 	oldUmask = process.umask(0);
@@ -97,6 +100,8 @@ function noUmask() {
 
 /**
  * restores (turns on) the previous umask
+ * @memberof System
+ * @returns {number} new umask
  */
 function yesUmask() {
 	let newUmask = -1;
@@ -109,6 +114,7 @@ function yesUmask() {
 /**
  * get the uid of the user running current process
  *
+ * @memberof System
  * @return {Number}  uid
  */
 function getuid() {
@@ -119,6 +125,7 @@ function getuid() {
  * get user info from username or uid
  * currently gets user info from /etc/passwd
  *
+ * @memberof System
  * @param  {String|Number} user username or uid
  * @return {Object}             the user's information
  */
@@ -145,6 +152,7 @@ function getUserInfo(user) {
  * get all users in the system
  * currently gets user info from /etc/passwd
  *
+ * @memberof System
  * @return {Object}  object containing info for all users, as username:info pairs
  */
 function getAllUsers() {
@@ -168,6 +176,7 @@ function getAllUsers() {
 /**
  * get current time in seconds
  *
+ * @memberof System
  * @return {Number}  current time in seconds
  */
 function time() {
@@ -177,6 +186,7 @@ function time() {
 /**
  * get current time in milliseconds (as double)
  *
+ * @memberof System
  * @return {Number}  current time in milliseconds
  */
 function millitime() {
@@ -186,6 +196,7 @@ function millitime() {
 /**
  * get current time in nanoseconds (as double)
  *
+ * @memberof System
  * @return {Number}  current time in nanoseconds
  */
 function nanotime() {
@@ -198,6 +209,7 @@ function nanotime() {
 /**
  * get current time in microseconds (as double)
  *
+ * @memberof System
  * @return {Number}  current time in microseconds
  */
 function microtime() {
@@ -207,6 +219,7 @@ function microtime() {
 /**
  * Sleep for a specified time (in milliseconds)
  *   Example: await System.sleep(2000);
+ * @memberof System
  */
 function sleep(timeout) {
 	return new Promise((resolve) => {
@@ -218,7 +231,8 @@ function sleep(timeout) {
  * wait till the next event loop cycle
  * this function is useful if we are running a long blocking task
  * and need to make sure that other callbacks can complete.
- */
+ * @memberof System
+*/
 function tick() {
 	return new Promise((resolve) => {
 		setImmediate(resolve);
@@ -230,7 +244,8 @@ function tick() {
  * code can be an exit code or a message (string)
  * if a message is given then it will be logged to console before exiting
  *
- * @param {int|String} code exit code or the message to be logged
+ * @memberof System
+ * @param {number|String} code exit code or the message to be logged
  */
 function exit(code) {
 	if (code === undefined || Number.isInteger(code)) {
@@ -248,7 +263,8 @@ function exit(code) {
  * no onExit handler will run when force exiting a process
  * same as original process.exit (which we override)
  *
- * @param {int|String} code exit code or the message to be logged
+ * @memberof System
+ * @param {number|String} code exit code or the message to be logged
  */
 function forceExit(code) {
 	if (code === undefined || Number.isInteger(code)) {
@@ -306,6 +322,7 @@ function _exitHandler(options = {}) {
 /**
  * Add an exit handler that runs when process receives an exit signal
  * callback can be an async function, process will exit when all handlers have completed
+ * @memberof System
  * @param {function} callback function to call on exit
  * @param {number|object} options can be {timeout} or a number
  *  timeout: Milliseconds before timing out (default 10000)
@@ -340,6 +357,11 @@ function onExit(callback, options = {}) {
 	}
 }
 
+/**
+ * @memberof System
+ * @param {*} server
+ * @param {*} options
+ */
 function gracefulServerExit(server, options = {}) {
 	onExit(gracefulServerShutdown(server), options);
 }
