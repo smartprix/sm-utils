@@ -1,8 +1,6 @@
 /* eslint-disable no-console, no-shadow */
 import System from '../System';
 
-require('longjohn');
-
 // increase error stack trace limit
 Error.stackTraceLimit = 30;
 
