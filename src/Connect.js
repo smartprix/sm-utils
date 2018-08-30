@@ -104,7 +104,7 @@ class Connect {
 	/**
 	* @static
 	 * Returns a new cookie jar.
-	 *
+	 * @param {Array<any>} args
 	 * @return {CookieJar} A cookie jar
 	 */
 	static newCookieJar(...args) {
@@ -179,6 +179,7 @@ class Connect {
 	 * Set the 'Referer' field in the headers.
 	 *
 	 * @param  {String} referer referer value
+	 * @return {Connect}
 	 */
 	referer(referer) {
 		this.header('Referer', referer);
@@ -200,6 +201,7 @@ class Connect {
 	 * Set the 'Content-Type' field in the headers.
 	 *
 	 * @param  {String} contentType value for content-type
+	 * @return {Connect}
 	 */
 	contentType(contentType) {
 		this.header('Content-Type', contentType);
@@ -318,6 +320,8 @@ class Connect {
 
 	/**
 	 * alias for timeoutMs
+	 * @param {number} timeoutInMs
+	 * @return {Connect}
 	 */
 	timeoutMilli(timeoutInMs) {
 		return this.timeoutMs(timeoutInMs);
@@ -699,16 +703,19 @@ class Connect {
 	}
 
 	/**
+	 * @typedef {object} response
+	 * @property {string} body the actual response body
+	 * @property {string} url the final url downloaded after following all redirects
+	 * @property {number} timeTaken time taken (in ms) for the request
+	 * @property {boolean} cached false if the response was downloaded, true if returned from a cache
+	 * @property {number} statusCode
+	 */
+
+	/**
 	 * It creates and returns a promise based on the information
 	 * passed to and parameters of this object.
 	 *
-	 * Response contains {body, url, timeTaken, cached, statusCode}
-	 * url is the final url downloaded after following all redirects
-	 * cached is false is the response was downloaded, true if returned from a cached file
-	 * timeTaken is time taken (in ms) for the request
-	 * body contains the actual response body
-	 *
-	 * @return {Promise<any>} a promise that resolves to response
+	 * @return {Promise<response>} a promise that resolves to response
 	 */
 	fetch() {
 		if (this.promise) return this.promise;

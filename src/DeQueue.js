@@ -23,7 +23,7 @@ class DeQueue {
 	 * Elements at negative values are that many from the end: -1 is one before the end
 	 * (the last element), -2 is two before the end (one before last), etc.
 	 * @param index
-	 * @returns {*}
+	 * @return {*}
 	 */
 	peekAt(index) {
 		let i = index;
@@ -42,7 +42,7 @@ class DeQueue {
 	/**
 	 * Alias for peakAt()
 	 * @param i
-	 * @returns {*}
+	 * @return {*}
 	 */
 	get(i) {
 		return this.peekAt(i);
@@ -53,7 +53,7 @@ class DeQueue {
 	 *
 	 * @param {number} index integer
 	 * @param {*} value
-	 * @returns {*}
+	 * @return {*}
 	 */
 	set(index, value) {
 		let i = index;
@@ -75,7 +75,7 @@ class DeQueue {
 
 	/**
 	 * Returns the first item in the list without removing it.
-	 * @returns {*}
+	 * @return {*}
 	 */
 	peek() {
 		if (this._head === this._tail) return undefined;
@@ -84,7 +84,7 @@ class DeQueue {
 
 	/**
 	 * Alias for peek()
-	 * @returns {*}
+	 * @return {*}
 	 */
 	peekFront() {
 		return this.peek();
@@ -92,7 +92,7 @@ class DeQueue {
 
 	/**
 	 * Alias for peek()
-	 * @returns {*}
+	 * @return {*}
 	 */
 	head() {
 		return this.peek();
@@ -108,7 +108,7 @@ class DeQueue {
 
 	/**
 	 * Alias for peekBack()
-	 * @returns {*}
+	 * @return {*}
 	 */
 	tail() {
 		return this.peekBack();
@@ -116,7 +116,7 @@ class DeQueue {
 
 	/**
 	 * Return the number of items on the list, or 0 if empty.
-	 * @returns {number}
+	 * @return {number}
 	 */
 	size() {
 		if (this._head === this._tail) return 0;
@@ -149,7 +149,7 @@ class DeQueue {
 	/**
 	 * Remove and return the first item on the list
 	 * Returns undefined if the list is empty.
-	 * @returns {*}
+	 * @return {*}
 	 */
 	shift() {
 		const head = this._head;
@@ -199,7 +199,7 @@ class DeQueue {
 	/**
 	 * Remove and return the last item on the list.
 	 * Returns undefined if the list is empty.
-	 * @returns {*}
+	 * @return {*}
 	 */
 	pop() {
 		const tail = this._tail;
@@ -216,7 +216,7 @@ class DeQueue {
 	 * Remove and return the item at the specified index from the list.
 	 * Returns undefined if the list is empty.
 	 * @param index
-	 * @returns {*}
+	 * @return {*}
 	 */
 	removeOne(index) {
 		let i = index;
@@ -255,7 +255,7 @@ class DeQueue {
 	 * Returns undefined if the list is empty.
 	 * @param index
 	 * @param count
-	 * @returns {array}
+	 * @return {array}
 	 */
 	remove(index, count) {
 		if (count === 1 || !count) {
@@ -336,7 +336,7 @@ class DeQueue {
 	 * @param index
 	 * @param count
 	 * @param {Array<*>} args
-	 * @returns {array}
+	 * @return {array}
 	 */
 	splice(index, count, ...args) {
 		if (!args.length) {
@@ -416,7 +416,7 @@ class DeQueue {
 
 	/**
 	 * Returns true or false whether the list is empty.
-	 * @returns {boolean}
+	 * @return {boolean}
 	 */
 	isEmpty() {
 		return this._head === this._tail;
@@ -424,7 +424,7 @@ class DeQueue {
 
 	/**
 	 * Returns an array of all queue items.
-	 * @returns {Array}
+	 * @return {Array}
 	 */
 	toArray() {
 		return this._copyArray(false);
@@ -432,7 +432,7 @@ class DeQueue {
 
 	/**
 	 * Returns an iterator of all queue items.
-	 * @returns {iterator}
+	 * @return {iterator}
 	 */
 	* [Symbol.iterator]() {
 		const list = this._list;
@@ -494,7 +494,7 @@ class DeQueue {
 	/**
 	 *
 	 * @param fullCopy
-	 * @returns {Array}
+	 * @return {Array}
 	 * @private
 	 */
 	_copyArray(fullCopy) {

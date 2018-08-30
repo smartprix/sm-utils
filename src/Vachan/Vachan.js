@@ -25,7 +25,7 @@ class Vachan {
 	 * - any: returns the input wrapped in a promise
 	 *
 	 * @param {function|Promise<*>|any} promise
-	 * @returns {Promise<*>}
+	 * @return {Promise<*>}
 	 */
 	static identity(promise) {
 		if (promise && promise.then) {
@@ -76,7 +76,7 @@ class Vachan {
 	 * a lazy promise defers execution till .then() or .catch() is called
 	 *
 	 * @param {function} executor function(resolve, reject) {}, same as promise constructor
-	 * @returns {Promise<*>} a lazy promise
+	 * @return {Promise<*>} a lazy promise
 	 */
 	static lazy(executor) {
 		return new PLazy(executor);
@@ -106,11 +106,10 @@ class Vachan {
 	/**
 	 * Promise.finally polyfill
 	 * Invoked when the promise is settled regardless of outcome
-	 * https://github.com/sindresorhus/p-finally
-	 *
+	 * @see https://github.com/sindresorhus/p-finally
 	 * @param {Promise<*>} promise
 	 * @param {function} onFinally
-	 * @returns {Promise<*>} Returns a Promise.
+	 * @return {Promise<*>} Returns a Promise.
 	 */
 	static finally(promise, onFinally) {
 		if (promise.finally) {
@@ -151,8 +150,7 @@ class Vachan {
 	/**
 	 * Returns a Promise that resolves when condition returns true.
 	 * Rejects if condition throws or returns a Promise that rejects.
-	 * https://github.com/sindresorhus/p-wait-for
-	 *
+	 * @see https://github.com/sindresorhus/p-wait-for
 	 * @param {function} conditionFn function that returns a boolean
 	 * @param {object|number} options can be {interval, timeout} or a number
 	 * 	interval: Number of milliseconds to wait before retrying condition (default 50)
@@ -184,8 +182,7 @@ class Vachan {
 	/**
 	 * Returns an async function that delays calling fn
 	 * until after wait milliseconds have elapsed since the last time it was called
-	 * https://github.com/sindresorhus/p-debounce
-	 *
+	 * @see https://github.com/sindresorhus/p-debounce
 	 * @param {function} fn function to debounce
 	 * @param {number} delay ms to wait before calling fn.
 	 * @param {object} options object of {leading, fixed}

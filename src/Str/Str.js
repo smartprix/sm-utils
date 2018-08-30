@@ -9,6 +9,7 @@ import numberToWords from './numberToWords';
 /**
  * @memberof Str
  * @param {string} str
+ * @return {string}
  */
 function invertCase(str) {
 	let output = '';
@@ -31,19 +32,20 @@ function invertCase(str) {
 }
 
 /**
- *
+ * Are all chars in string/char vowels
  * @memberof Str
  * @param {string} char
- * @returns {boolean}
+ * @return {boolean}
  */
 function isVowel(char) {
 	return (/^[aeiou]$/i).test(char);
 }
 
 /**
+ * Are all chars in string/char consonants
  * @memberof Str
  * @param {string} char
- * @returns {boolean}
+ * @return {boolean}
  */
 function isConsonant(char) {
 	return !isVowel(char);
@@ -53,7 +55,7 @@ function isConsonant(char) {
  * Get the plural of a string
  * @memberof Str
  * @param {string} str
- * @returns {string}
+ * @return {string}
  */
 function plural(str) {
 	if (!str || str.length <= 2) return str;
@@ -84,7 +86,13 @@ function plural(str) {
 	return str + 's';
 }
 
-// Pluralize a character if the count is greater than 1
+/**
+ * Pluralize a character if the count is greater than 1
+ * @memberof Str
+ * @param {string} str
+ * @param {number} [count=2]
+ * @return {string}
+ */
 function pluralize(str, count = 2) {
 	if (count <= 1) return str;
 	return plural(str);
@@ -97,7 +105,7 @@ function pluralize(str, count = 2) {
  * @param {string} str string to transform
  * @param {string} from characters to replace in the string
  * @param {string} to characters to replace with in the string
- * @returns {string} transformed string
+ * @return {string} transformed string
  */
 function transform(str, from, to) {
 	const len = str.length;
@@ -123,6 +131,7 @@ function transform(str, from, to) {
  * @param {string} str
  * @param {number} pos
  * @param {string} [char=' ']
+ * @return {string}
  */
 function trimToNext(str, pos, char = ' ') {
 	const trimPos = str.indexOf(char, pos);
@@ -150,14 +159,20 @@ function _getNumberLocale(options) {
 }
 
 /**
+ * @typedef {object} numberFormatOpts
+ * @property {string} locale like 'en-IN'
+ * @property {string} currency like 'INR'
+ * @property {number} decimals number of decimal places to return
+ */
+
+/**
  * Format a number according to a particular locale
  * Similar to Number.toLocaleFormat, except being significantly faster
  *
  * @memberof Str
  * @param {number} number the number to format
- * @param {object|string} options string of locale
- * 	or object of {locale: 'en-IN', currency: 'INR', decimals: 0}
- * @returns {string} formatted number
+ * @param {numberFormatOpts|string} [options={}] string of locale or opts object (default: 'en', decimals:: 0)
+ * @return {string} formatted number
  */
 function numberFormat(number, options = {}) {
 	if (typeof options === 'string') {
@@ -172,6 +187,7 @@ function numberFormat(number, options = {}) {
  * Converts consecutive multiple spaces / tabs / newlines in the string into a single space
  * @memberof Str
  * @param {string} str
+ * @return {string}
  */
 function spaceClean(str) {
 	if (!str) return '';
@@ -183,7 +199,7 @@ function spaceClean(str) {
  *
  * @memberof Str
  * @param {String} str the string to be rotated
- * @returns {String} rotated string
+ * @return {String} rotated string
  */
 function rot13(str) {
 	const s = [];
@@ -208,7 +224,7 @@ function rot13(str) {
  *
  * @memberof Str
  * @param {String} str the string to be rotated
- * @returns {String} rotated string
+ * @return {String} rotated string
  */
 function rot47(str) {
 	const s = [];
@@ -229,7 +245,7 @@ function rot47(str) {
  *
  * @memberof Str
  * @param {string} str
- * @returns {Object|null}
+ * @return {Object|null}
  */
 function tryParseJson(str) {
 	try {
@@ -252,7 +268,7 @@ function tryParseJson(str) {
  * if allowed is not given and blocked is given
  * then by default all tags not mentioned in blocked are allowed
  *
- * @returns {string} resulting string by removing all tags mentioned
+ * @return {string} resulting string by removing all tags mentioned
  */
 function stripTags(str, options = {}) {
 	if (!str) return '';
@@ -296,7 +312,7 @@ function stripTags(str, options = {}) {
  * Escape a string for including in regular expressions
  * @memberof Str
  * @param {string} str string to escape
- * @returns {string} escaped string
+ * @return {string} escaped string
  */
 function escapeRegex(str) {
 	if (!str) return '';

@@ -4,7 +4,10 @@ const NUMERALS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
  * convert arbitary long integer from one base to another
  * Taken from decimal.js
  * @memberof Crypt
-*/
+ * @param {string|number} str number in base 'baseIn'
+ * @param {number} baseIn input base
+ * @param {number} baseOut output base
+ */
 function baseConvert(str, baseIn = 10, baseOut = 62) {
 	str = String(str);
 	if (baseIn > 10 && baseIn <= 36) {

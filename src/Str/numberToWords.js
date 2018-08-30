@@ -3,7 +3,7 @@
  *
  * @memberof Str
  * @param {number} number
- * @returns {string}
+ * @return {string}
  */
 function numberToWords(number) {
 	const dictionary = {

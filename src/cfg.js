@@ -35,7 +35,7 @@ function merge(conf, confPrivate) {
  * Reads a config value
  * @param {String} key key to read, can be nested like `a.b.c`
  * @param {*} defaultValue value to return if key is not found
- * @returns {any}
+ * @return {any}
  */
 function cfg(key, defaultValue) {
 	// eslint-disable-next-line no-use-before-define
@@ -77,7 +77,7 @@ function readDefaultConfigFiles() {
  * @memberof cfg
  * @param {string} key
  * @param {any} defaultValue
- * @returns {any}
+ * @return {any}
  */
 cfg.get = function (key, defaultValue) {
 	return cfg(key, defaultValue);
@@ -86,7 +86,7 @@ cfg.get = function (key, defaultValue) {
 /** set values in global config
  * you can also give key as an object to assign all key values from it
  * @memberof cfg
- * @returns {null}
+ * @return {null}
  */
 cfg.set = function (key, value) {
 	readDefaultConfigFiles();
@@ -109,7 +109,7 @@ cfg.set = function (key, value) {
  * if a key already exists then it is merged with new value
  * if obj is not an Object then nothing happens
  * @memberof cfg
- * @returns {null}
+ * @return {null}
  */
 cfg.merge = function (obj) {
 	readDefaultConfigFiles();
@@ -129,7 +129,7 @@ cfg.merge = function (obj) {
  * if a key already exists then it is assigned with new value
  * if obj is not an Object then nothing happens
  * @memberof cfg
- * @returns {null}
+ * @return {null}
  */
 cfg.assign = function (obj) {
 	readDefaultConfigFiles();
@@ -145,7 +145,7 @@ cfg.assign = function (obj) {
 
 /**
  * @memberof cfg
- * @returns {void}
+ * @return {void}
  */
 cfg.delete = function (key) {
 	readDefaultConfigFiles();
@@ -189,7 +189,7 @@ cfg.file = function (file, options = {}) {
  * read the file specified by the key, and then cache it
  * @memberof cfg
  * @param {String} key
- * @returns {any} value
+ * @return {any} value
  */
 cfg.read = function (key) {
 	if (key in fileCache) {
@@ -214,7 +214,7 @@ cfg.read = function (key) {
 
 /**
  * @memberof cfg
- * @returns {boolean}
+ * @return {boolean}
  */
 cfg.isProduction = function () {
 	return process.env.NODE_ENV === 'production';
@@ -222,7 +222,7 @@ cfg.isProduction = function () {
 
 /**
  * @memberof cfg
- * @returns {boolean}
+ * @return {boolean}
  */
 cfg.isStaging = function () {
 	return process.env.NODE_ENV === 'staging';
@@ -231,7 +231,7 @@ cfg.isStaging = function () {
 /**
  * Returns true if env is production or staging
  * @memberof cfg
- * @returns {boolean}
+ * @return {boolean}
  */
 cfg.isProductionLike = function () {
 	return (process.env.NODE_ENV === 'production') || (process.env.NODE_ENV === 'staging');
@@ -239,7 +239,7 @@ cfg.isProductionLike = function () {
 
 /**
  * @memberof cfg
- * @returns {boolean}
+ * @return {boolean}
  */
 cfg.isTest = function () {
 	return process.env.NODE_ENV === 'test';
@@ -247,7 +247,7 @@ cfg.isTest = function () {
 
 /**
  * @memberof cfg
- * @returns {boolean}
+ * @return {boolean}
  */
 cfg.isDev = function () {
 	return (process.env.NODE_ENV !== 'production') && (process.env.NODE_ENV !== 'staging');

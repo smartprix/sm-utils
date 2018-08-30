@@ -71,7 +71,7 @@ class Queue {
 	 * Initialise the redis connection
 	 * @param {Object} [redis={port: 6379, host: '127.0.0.1'}] Redis connection settings object
 	 * @param {Boolean} [enableWatchdog=false] Will watch for stuck jobs due to any connection issues
-	 * Read more here :  https://github.com/Automattic/kue#unstable-redis-connections
+	 * @see https://github.com/Automattic/kue#unstable-redis-connections
 	 */
 	static init(redis, enableWatchdog) {
 		if (!Queue.jobs) {
@@ -120,7 +120,7 @@ class Queue {
 	 * Add a job to the Queue
 	 * @param {*} input Job data
 	 * @param {addOpts} opts
-	 * @returns {Number} The ID of the job created
+	 * @return {Number} The ID of the job created
 	 */
 	async addJob(input, {
 		priority = 0,
@@ -204,7 +204,7 @@ class Queue {
 	 * @param {any} input Job data
 	 * @param {addOpts} opts
 	 * @param {number} [timeout=180000] wait for this time else throw err
-	 * @returns {any} result
+	 * @return {any} result
 	 */
 	async addAndProcess(input, opts = {}, timeout = 180000) {
 		opts._getResult = true;
@@ -258,7 +258,7 @@ class Queue {
 	 * An async function which will be called to process the job data
 	 * @callback processorCallback
 	 * @param {*} jobData The information saved in the job during adding of job
-	 * @returns {*} Will be saved in return field in JobDetails
+	 * @return {*} Will be saved in return field in JobDetails
 	 */
 
 	/**
@@ -359,7 +359,7 @@ class Queue {
 	 * Return count of jobs in Queue of JobType
 	 * @param {String} queue Queue name
 	 * @param {String} jobType One of {'inactive', 'delayed' ,'active', 'complete', 'failed'}
-	 * @returns {Number} count
+	 * @return {Number} count
 	 */
 	static async getCount(queue, jobType) {
 		return new Promise((resolve, reject) => {
@@ -371,7 +371,7 @@ class Queue {
 	}
 	/**
 	 * Return count of inactive jobs in Queue
-	 * @returns {Number} inactiveCount
+	 * @return {Number} inactiveCount
 	 */
 	async inactiveJobs() {
 		return Queue.getCount(this.name, 'inactive');
@@ -379,7 +379,7 @@ class Queue {
 
 	/**
 	 * Alias for inactiveJobs
- 	 * @returns {Number} inactiveCount
+ 	 * @return {Number} inactiveCount
 	 */
 	pendingJobs() {
 		return this.inactiveJobs();
@@ -388,7 +388,7 @@ class Queue {
 	/**
 	 * Return count of completed jobs in Queue
 	 * Might return 0 if removeOnComplete was true
-	 * @returns {Number} completeCount
+	 * @return {Number} completeCount
 	 */
 	async completedJobs() {
 		return Queue.getCount(this.name, 'complete');
@@ -396,7 +396,7 @@ class Queue {
 
 	/**
 	 * Return count of failed jobs in Queue
-	 * @returns {Number} failedCount
+	 * @return {Number} failedCount
 	 */
 	async failedJobs() {
 		return Queue.getCount(this.name, 'failed');
@@ -404,7 +404,7 @@ class Queue {
 
 	/**
 	 * Return count of delayed jobs in Queue
-	 * @returns {Number} delayedCount
+	 * @return {Number} delayedCount
 	 */
 	async delayedJobs() {
 		return Queue.getCount(this.name, 'delayed');
@@ -412,7 +412,7 @@ class Queue {
 
 	/**
 	 * Return count of active jobs in Queue
-	 * @returns {Number} activeCount
+	 * @return {Number} activeCount
 	 */
 	async activeJobs() {
 		return Queue.getCount(this.name, 'active');
@@ -443,7 +443,7 @@ class Queue {
 	 * Process a single job in the Queue and mark it complete or failed,
 	 * for when you want to manually process jobs
 	 * @param {processorCallback} processor Function to be called to process the job data, without ctx
-	 * @returns {jobDetails} Job object of completed job
+	 * @return {jobDetails} Job object of completed job
 	 */
 	async processJob(processor) {
 		return new Promise((resolve, reject) => {
@@ -494,7 +494,7 @@ class Queue {
 	/**
 	 * Function to query the status of a job
 	 * @param {Number} jobId Job id for which status info is required
-	 * @returns {jobDetails} Object full of job details like state, time, attempts, etc.
+	 * @return {jobDetails} Object full of job details like state, time, attempts, etc.
 	 */
 	static async status(jobId) {
 		return new Promise((resolve, reject) => {
@@ -513,7 +513,7 @@ class Queue {
 	 * Manualy process a specific Job. Returns existing result if job already processed
 	 * @param {Number} jobId Id of the job to be processed
 	 * @param {processorCallback} processor Function to be called to process the job data, without ctx
-	 * @returns {jobDetails} Result of processor function and job object of completed job
+	 * @return {jobDetails} Result of processor function and job object of completed job
 	 */
 	static async processJobById(jobId, processor) {
 		return new Promise((resolve, reject) => {
@@ -531,7 +531,7 @@ class Queue {
 	 * Function shuts down the Queue gracefully.
 	 * Waits for active jobs to complete until timeout, then marks them failed.
 	 * @param {Number} [timeout=10000] Time in milliseconds, default = 10000
-	 * @returns {Boolean}
+	 * @return {Boolean}
 	 */
 	static async exit(timeout = 10000) {
 		return new Promise((resolve) => {
