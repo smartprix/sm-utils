@@ -10,3 +10,4 @@ yarn.lock
 .editorconfig
 jsdoc.json
 index2.d.ts
+out
