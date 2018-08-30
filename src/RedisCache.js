@@ -92,7 +92,8 @@ class RedisCache {
 		if (Number(pid) === processId) {
 			// since the message came from the same process, it's already been handled
 			// we don't need to do anything
-			// RedisCache.logger.log(`[RedisCache] ignored subscribe command ${command} from same process`);
+			// RedisCache.logger
+			// .log(`[RedisCache] ignored subscribe command ${command} from same process`);
 			return;
 		}
 
