@@ -385,6 +385,7 @@ class RedisCache {
 
 	/**
 	 * gets whether the cache is bypassed or not
+	 * @returns {boolean}
 	 */
 	isBypassed() {
 		if (this._bypass !== undefined) {
@@ -406,6 +407,7 @@ class RedisCache {
 
 	/**
 	 * gets whether the cache is bypassed or not
+	 * @returns {boolean}
 	 */
 	static isBypassed() {
 		return this._bypass;

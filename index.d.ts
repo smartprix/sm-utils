@@ -145,7 +145,7 @@ declare module 'sm-utils' {
         static clear(): void;
 
         /**
-         * 
+         *
          * @param key
          * @param fn
          * @param options ttl in ms/timestring('1d 3h') or opts (default: 0)
@@ -187,13 +187,13 @@ declare module 'sm-utils' {
         url(url: String): Connect;
 
         /**
-         * 
+         *
          * @param url self-descriptive
          */
         static url(url: String): Connect;
 
         /**
-         * 
+         *
          * @param args
          */
         static newCookieJar(...args: any[]): CookieJar;
@@ -457,7 +457,7 @@ declare module 'sm-utils' {
         /**
          * Generate a random string based on the options passed.
          * It can be treated as a Random UUID.
-         * 
+         *
          * You can give length and charset in options.
          * If options is an integer it will treated as length.
          * By default, length is 20 and charset is ALPHA_NUMERIC
@@ -475,7 +475,7 @@ declare module 'sm-utils' {
         function shuffle(itemToShuffle: any[] | String, options: shuffle_options): any[] | String;
 
         /**
-         * 
+         *
          * @param seed integer
          */
         function seededRandom(seed: number): randomFunctions;
@@ -489,7 +489,7 @@ declare module 'sm-utils' {
         /**
          * Generate a sequential id based on current time in millisecond and some randomness.
          * It can be treated as a Sequential UUID. Ideal for use as a DB primary key.
-         * 
+         *
          * NOTE: For best results use atleast 15 characters in base62 and 18 characters in base36 encoding
          * @param options length of the id or object of {length: int, base36: bool}
          */
@@ -597,7 +597,7 @@ declare module 'sm-utils' {
 
         /**
          * Sign a message using a private key.
-         * 
+         *
          * NOTE: Generate a key pair using:
          * ```sh
          * openssl ecparam -genkey -name secp256k1 | openssl ec -aes128 -out private.pem
@@ -612,7 +612,7 @@ declare module 'sm-utils' {
         /**
          * Verify a message using a public key
          * opts can have {encoding (default 'hex')}
-         * 
+         *
          * NOTE: Generate a key pair using:
          * ```sh
          * openssl ecparam -genkey -name secp256k1 | openssl ec -aes128 -out private.pem
@@ -1084,7 +1084,7 @@ declare module 'sm-utils' {
 
         /**
          * Unlink the path from the file.
-         * 
+         *
          * NOTE: If the path referred to a
          * symbolic link, the link is removed. If the path is the only link
          * to the file then the file will be deleted.
@@ -1093,7 +1093,7 @@ declare module 'sm-utils' {
 
         /**
          * Remove the file.
-         * 
+         *
          * NOTE: The path is unlinked from the file, but the file
          * is deleted only if the path was the only link to the file and
          * the file was not opened in any other process.
@@ -1102,7 +1102,7 @@ declare module 'sm-utils' {
 
         /**
          * Remove the directory.
-         * 
+         *
          * NOTE: The directory will be deleted only if it is empty.
          */
         rmdir(): void;
@@ -1144,7 +1144,7 @@ declare module 'sm-utils' {
          * Write contents to the file.
          * @param contents contents to be written to the file
          * @param options  contains options for writing to the file
-         *        
+         *
          *        The options can include parameters such as fileMode, dirMode, retries and encoding.
          */
         write(contents: String | Buffer, options?: Object): void;
@@ -1153,7 +1153,7 @@ declare module 'sm-utils' {
          * Append contents to the file.
          * @param contents contents to be written to the file
          * @param options  contains options for appending to the file
-         *        
+         *
          *        The options can include parameters such as fileMode, dirMode, retries and encoding.
          */
         append(contents: String | Buffer, options?: Object): void;
@@ -1162,7 +1162,7 @@ declare module 'sm-utils' {
          * Copy the file to some destination.
          * @param destination path of the destination
          * @param options  options for copying the file
-         *        
+         *
          *        If the overwrite option is explicitly set to false, only then
          *        will the function not attempt to overwrite the file if it (already)
          *        exists at the destination.
@@ -1191,13 +1191,13 @@ declare module 'sm-utils' {
         constructor();
 
         /**
-         * 
+         *
          * @param key
          */
         tryAcquire(key: string): boolean;
 
         /**
-         * 
+         *
          * @param key
          */
         acquire(key: string): boolean | void;
@@ -1470,6 +1470,33 @@ declare module 'sm-utils' {
         constructor();
 
         /**
+         * bypass the cache and compute value directly (useful for debugging / testing)
+         * NOTE: this'll be only useful in getOrSet or memoize, get will still return from cache
+         * @param bypass whether to bypass the cache or not
+         */
+        bypass(bypass?: boolean): void;
+
+        /**
+         * gets whether the cache is bypassed or not
+         * @returns
+         */
+        isBypassed(): boolean;
+
+        /**
+         * bypass the cache and compute value directly (useful for debugging / testing)
+         * NOTE: RedisCache.bypass will turn on bypassing for all instances of RedisCache
+         * For bypassing a particular instance, use [`instance.bypass()`]{@link RedisCache#bypass}
+         * @see [bypass]{@link RedisCache#bypass}
+         */
+        static bypass(): void;
+
+        /**
+         * gets whether the cache is bypassed or not
+         * @returns
+         */
+        static isBypassed(): boolean;
+
+        /**
          * gets a value from the cache immediately without waiting
          * @param key
          * @param defaultValue
@@ -1675,10 +1702,14 @@ declare module 'sm-utils' {
         function requireModule(moduleName: string, options?: requireModule_options): any;
 
         /**
-         * Require a module from local or global
+         * Require a global module
          * @param moduleName
          */
         function requireGlobal(moduleName: string): any;
+
+        const global: Require.requireGlobal;
+
+        const require: Require.requireModule;
 
     }
 
@@ -1701,19 +1732,19 @@ declare module 'sm-utils' {
      */
     namespace Str {
         /**
-         * 
+         * Inverts the case of a string
          * @param str
          */
         function invertCase(str: string): string;
 
         /**
-         * Are all chars in string/char vowels
+         * is the character given is a vowel?
          * @param char
          */
         function isVowel(char: string): boolean;
 
         /**
-         * Are all chars in string/char consonants
+         * is the character given is a consonant?
          * @param char
          */
         function isConsonant(char: string): boolean;
@@ -1752,7 +1783,7 @@ declare module 'sm-utils' {
          * Format a number according to a particular locale
          * Similar to Number.toLocaleFormat, except being significantly faster
          * @param number the number to format
-         * @param options string of locale or opts object (default: 'en', decimals:: 0)
+         * @param options string of locale or options object {locale: 'en', decimals: 0}
          */
         function numberFormat(number: number, options?: numberFormatOpts | string): string;
 
@@ -1776,19 +1807,19 @@ declare module 'sm-utils' {
         function rot47(str: String): String;
 
         /**
-         * 
+         * Parses a json string, returns null if string is invalid (instead of throwing error)
          * @param str
          */
         function tryParseJson(str: string): Object | null;
 
         /**
-         * 
+         * Strip html tags from a string
          * @param str the string to remove tags from
          * @param options object containing:
          *        allowed: array of allowed tags eg. ['p', 'b', 'span'], default: []
          *        blocked: array of blocked tags eg. ['p'], default: []
          *        replaceWith: replace the removed tags with this string, default: ''
-         *        
+         *
          *        if allowed is not given and blocked is given
          *        then by default all tags not mentioned in blocked are allowed
          */
@@ -1827,8 +1858,6 @@ declare module 'sm-utils' {
      * System and process utilities
      */
     namespace System {
-        const globalData: object;
-
         /**
          * Execute the given command in a shell.
          * @param command
@@ -1941,7 +1970,7 @@ declare module 'sm-utils' {
         function onExit(callback: Function, options?: number | timeoutOpts): Promise<void>;
 
         /**
-         * 
+         *
          * @param server
          * @param options
          */
@@ -2091,7 +2120,7 @@ declare module 'sm-utils' {
 
     namespace cfg {
         /**
-         * 
+         *
          * @param key
          * @param defaultValue
          */

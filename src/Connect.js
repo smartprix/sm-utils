@@ -53,9 +53,15 @@ class Connect {
 	 * @constructor
 	 */
 	constructor() {
-		/** Timeout period for the request in milliseconds */
+		/**
+		 * Timeout period for the request in milliseconds
+		 * @private
+		 */
 		this.requestTimeout = 120 * 1000;
-		/** Various options (or parameters) defining the Connection */
+		/**
+		 * Various options (or parameters) defining the Connection
+		 * @private
+		 */
 		this.options = {
 			url: null,
 			method: 'GET',

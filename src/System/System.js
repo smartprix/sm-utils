@@ -20,6 +20,7 @@ if (!global[globalDataKey]) global[globalDataKey] = {};
 /**
  * @type {object}
  * @memberof System
+ * @private
  */
 const globalData = global[globalDataKey];
 

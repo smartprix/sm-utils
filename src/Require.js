@@ -114,7 +114,7 @@ function requireModule(moduleName, options = {}) {
 }
 
 /**
- * Require a module from local or global
+ * Require a global module
  * @memberof Require
  * @param {string} moduleName
  * @return {any} the module required
@@ -127,6 +127,14 @@ module.exports = {
 	resolve,
 	resolveGlobal,
 	requireGlobal,
+	/**
+	 * @type {Require.requireGlobal}
+	 * @memberof Require
+	 */
 	global: requireGlobal,
+	/**
+	 * @type {Require.requireModule}
+	 * @memberof Require
+	 */
 	require: requireModule,
 };

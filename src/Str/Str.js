@@ -7,6 +7,9 @@ import numberToWords from './numberToWords';
  */
 
 /**
+ * Inverts the case of a string
+ * @example
+ * Str.invertCase('Hello iPhone'); // => 'hELLO IpHONE'
  * @memberof Str
  * @param {string} str
  * @return {string}
@@ -32,7 +35,11 @@ function invertCase(str) {
 }
 
 /**
- * Are all chars in string/char vowels
+ * is the character given is a vowel?
+ * @example
+ * Str.isVowel('a') // => true
+ * Str.isVowel('f') // => false
+ * Str.isVowel('ae') // => false
  * @memberof Str
  * @param {string} char
  * @return {boolean}
@@ -42,12 +49,17 @@ function isVowel(char) {
 }
 
 /**
- * Are all chars in string/char consonants
+ * is the character given is a consonant?
+ * @example
+ * Str.isConsonant('a') // => false
+ * Str.isConsonant('f') // => true
+ * Str.isConsonant('ff') // => false
  * @memberof Str
  * @param {string} char
  * @return {boolean}
  */
 function isConsonant(char) {
+	if (!char || char.length !== 1) return false;
 	return !isVowel(char);
 }
 
@@ -100,7 +112,8 @@ function pluralize(str, count = 2) {
 
 /**
  * transform a string by replacing characters from from string to to string
- * eg. `Str.transform('abc', 'bc', 'de') // returns ade`
+ * @example
+ * Str.transform('abc', 'bc', 'de') // => 'ade'
  * @memberof Str
  * @param {string} str string to transform
  * @param {string} from characters to replace in the string
@@ -171,7 +184,8 @@ function _getNumberLocale(options) {
  *
  * @memberof Str
  * @param {number} number the number to format
- * @param {numberFormatOpts|string} [options={}] string of locale or opts object (default: 'en', decimals:: 0)
+ * @param {numberFormatOpts|string} [options={}]
+ * 	string of locale or options object {locale: 'en', decimals: 0}
  * @return {string} formatted number
  */
 function numberFormat(number, options = {}) {
@@ -242,6 +256,7 @@ function rot47(str) {
 }
 
 /**
+ * Parses a json string, returns null if string is invalid (instead of throwing error)
  *
  * @memberof Str
  * @param {string} str
@@ -257,7 +272,7 @@ function tryParseJson(str) {
 }
 
 /**
- *
+ * Strip html tags from a string
  * @memberof Str
  * @param {string} str the string to remove tags from
  * @param {object} options object containing:

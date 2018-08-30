@@ -433,6 +433,7 @@ class DeQueue {
 	/**
 	 * Returns an iterator of all queue items.
 	 * @return {iterator}
+	 * @private
 	 */
 	* [Symbol.iterator]() {
 		const list = this._list;
