@@ -28,10 +28,11 @@ class RedisCache {
 	static redisGetCount = 0;
 	static useLocalCache = true;
 	static logger = console;
+	static _bypass = false;
 
-	constructor(prefix, redisConf = {}, {logger} = {}) {
+	constructor(prefix, redisConf = {}, options = {}) {
 		this.prefix = prefix;
-		this.logger = logger || RedisCache.logger;
+		this.logger = options.logger || RedisCache.logger;
 
 		if (redisConf instanceof Redis) {
 			this.redis = redisConf;
@@ -48,6 +49,9 @@ class RedisCache {
 
 		if ('useLocalCache' in redisConf) {
 			this.useLocalCache = redisConf.useLocalCache;
+		}
+		else if ('useLocalCache' in options) {
+			this.useLocalCache = options.useLocalCache;
 		}
 		else {
 			this.useLocalCache = this.constructor.useLocalCache;
@@ -361,6 +365,53 @@ class RedisCache {
 	}
 
 	/**
+	 * bypass the cache and compute value directly (useful for debugging / testing)
+	 * NOTE: this'll be only useful in getOrSet or memoize, get will still return from cache
+	 * @example
+	 * let i = 0;
+	 * const cache = new RedisCache();
+	 * await cache.getOrSet('a', () => ++i); // => 1
+	 * await cache.getOrSet('a', () => ++i); // => 1 (returned from cache)
+	 * cache.bypass(); // turn on bypassing
+	 * await cache.getOrSet('a', () => ++i); // => 2 (cache bypassed)
+	 * await cache.getOrSet('a', () => ++i); // => 3 (cache bypassed)
+	 * cache.bypass(false); // turn off bypassing
+	 * await cache.getOrSet('a', () => ++i); // => 1 (previous cache item)
+	 * @param {boolean} [bypass=true] whether to bypass the cache or not
+	 */
+	bypass(bypass = true) {
+		this._bypass = bypass;
+	}
+
+	/**
+	 * gets whether the cache is bypassed or not
+	 */
+	isBypassed() {
+		if (this._bypass !== undefined) {
+			return this._bypass;
+		}
+
+		return this.constructor._bypass;
+	}
+
+	/**
+	 * bypass the cache and compute value directly (useful for debugging / testing)
+	 * NOTE: RedisCache.bypass will turn on bypassing for all instances of RedisCache
+	 * For bypassing a particular instance, use [`instance.bypass()`]{@link RedisCache#bypass}
+	 * @see [bypass]{@link RedisCache#bypass}
+	 */
+	static bypass(bypass = true) {
+		this._bypass = bypass;
+	}
+
+	/**
+	 * gets whether the cache is bypassed or not
+	 */
+	static isBypassed() {
+		return this._bypass;
+	}
+
+	/**
 	 * gets a value from the cache immediately without waiting
 	 * @param {string} key
 	 * @param {any} defaultValue
@@ -526,6 +577,12 @@ class RedisCache {
 			return settingPromise;
 		}
 
+		// cache is bypassed, return value directly
+		if (this.isBypassed()) {
+			if (typeof value === 'function') return value(key);
+			return value;
+		}
+
 		// try to get the value from local cache first
 		if (this.useLocalCache) {
 			const localValue = this._localCache(key);
@@ -585,10 +642,9 @@ class RedisCache {
 
 	/**
 	 * memoizes a function (caches the return value of the function)
-	 * ```js
+	 * @example
 	 * const cachedFn = cache.memoize('expensiveFn', expensiveFn);
 	 * const result = cachedFn('a', 'b');
-	 * ```
 	 * @param {string} key cache key with which to memoize the results
 	 * @param {function} fn function to memoize
 	 * @param {number|string|setRedisOpts} [options={}] ttl in ms/timestring('1d 3h') (default: 0)

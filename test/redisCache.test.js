@@ -261,6 +261,42 @@ describe('redis cache library', () => {
 		expect(parseCount).to.equal(2);
 	});
 
+	it('should correctly bypass the cache for instance', async () => {
+		let i = 0;
+		expect(await cache.getOrSet('bypass', () => ++i)).to.equal(1);
+		expect(await cache.getOrSet('bypass', () => ++i)).to.equal(1);
+		cache.bypass(); // turn on bypassing
+		expect(await cache.getOrSet('bypass', () => ++i)).to.equal(2);
+		expect(await cache.getOrSet('bypass', () => ++i)).to.equal(3);
+		cache.bypass(false); // turn off bypassing
+		expect(await cache.getOrSet('bypass', () => ++i)).to.equal(1);
+		cache.bypass(); // turn on bypassing
+		expect(await cache.getOrSet('bypass', () => ++i)).to.equal(4);
+		cache.bypass(false); // turn off bypassing
+		expect(await cache.getOrSet('bypass', () => ++i)).to.equal(1);
+	});
+
+	it('should correctly bypass the cache globally', async () => {
+		const redisCache = new RedisCache('test_bypass');
+		let i = 0;
+		expect(await redisCache.getOrSet('bypass', () => ++i)).to.equal(1);
+		expect(await redisCache.getOrSet('bypass', () => ++i)).to.equal(1);
+		RedisCache.bypass(); // turn on bypassing
+		expect(await redisCache.getOrSet('bypass', () => ++i)).to.equal(2);
+		expect(await redisCache.getOrSet('bypass', () => ++i)).to.equal(3);
+		RedisCache.bypass(false); // turn off bypassing
+		expect(await redisCache.getOrSet('bypass', () => ++i)).to.equal(1);
+		RedisCache.bypass(); // turn on bypassing
+		expect(await redisCache.getOrSet('bypass', () => ++i)).to.equal(4);
+		RedisCache.bypass(false); // turn off bypassing
+		redisCache.bypass(false); // turn off bypassing for instance
+		RedisCache.bypass(); // turn on bypassing
+		expect(await redisCache.getOrSet('bypass', () => ++i)).to.equal(1);
+
+		await redisCache.clear();
+		expect(await redisCache.get('bypass')).to.be.undefined;
+	});
+
 	it('should correctly clear the cache', async () => {
 		expect(await cache.get('a')).to.equal('this');
 		await cache.clear();
