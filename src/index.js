@@ -12,10 +12,15 @@ import Vachan from './Vachan';
 import DeQueue from './DeQueue';
 import Require from './Require';
 
-
-const crypt = Crypt;
 const file = File;
+
+/** @type {Crypt} */
+const crypt = Crypt;
+
+/** @type {System} */
 const system = System;
+
+/** @type {Crypt.baseConvert} */
 const baseConvert = Crypt.baseConvert;
 
 export {

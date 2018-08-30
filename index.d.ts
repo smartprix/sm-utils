@@ -33,23 +33,26 @@ declare module 'sm-utils' {
          * avoids dogpiling if the value is a promise or a function returning a promise
          * @param key
          * @param value
-         * @param options either ttl in ms / timestring ('1d 3h'), or object of {ttl}
+         * @param options ttl in ms/timestring('1d 3h') or opts (default: 0)
          */
-        set(key: string, value: any, options: number | object): void;
+        set(key: string, value: any, options?: number | string | setOpts): boolean;
 
         /**
          * gets a value from the cache, or sets it if it doesn't exist
          * this takes care of dogpiling (make sure value is a function to avoid dogpiling)
          * @param key key to get
          * @param value value to set if the key does not exist
-         * @param options either ttl in ms / timestring ('1d 3h'), or object of {ttl}
+         * @param options ttl in ms/timestring('1d 3h') or opts (default: 0)
          */
-        getOrSet(key: string, value: any, options: number | object): void;
+        getOrSet(key: string, value: any, options?: number | string | setOpts): any;
 
         /**
          * alias for getOrSet
+         * @param key key to get
+         * @param value value to set if the key does not exist
+         * @param options ttl in ms/timestring('1d 3h') or opts (default: 0)
          */
-        $(): void;
+        $(key: string, value: any, options?: number | string | setOpts): any;
 
         /**
          * deletes a value from the cache
@@ -60,7 +63,7 @@ declare module 'sm-utils' {
         /**
          * returns the size of the cache (no. of keys)
          */
-        size(): void;
+        size(): number;
 
         /**
          * clears the cache (deletes all keys)
@@ -75,10 +78,87 @@ declare module 'sm-utils' {
          * ```
          * @param key cache key with which to memoize the results
          * @param fn function to memoize
-         * @param options either ttl in ms, or object of {ttl}
+         * @param options ttl in ms/timestring('1d 3h') or opts (default: 0)
          */
-        memoize(key: string, fn: Function, options: number | object): void;
+        memoize(key: string, fn: Function, options?: number | string | setOpts): Function;
 
+        /**
+         * returns a global cache instance
+         */
+        static globalCache(): Cache;
+
+        /**
+         * get value from global cache
+         * @param key
+         * @param defaultValue
+         */
+        static get(key: string, defaultValue: any): any;
+
+        /**
+         * gets a value from the cache immediately without waiting
+         * @param key
+         * @param defaultValue
+         */
+        static getStale(key: string, defaultValue: any): any;
+
+        /**
+         * checks if value exists in global cache
+         * @param key
+         */
+        static has(key: string): boolean;
+
+        /**
+         * sets a value in the global cache
+         * @param key
+         * @param value
+         * @param options ttl in ms/timestring('1d 3h') or opts (default: 0)
+         */
+        static set(key: string, value: any, options?: number | string | setOpts): boolean;
+
+        /**
+         * get or set a value in the global cache
+         * @param key
+         * @param value
+         * @param options ttl in ms/timestring('1d 3h') or opts (default: 0)
+         */
+        static getOrSet(key: string, value: any, options?: number | string | setOpts): any;
+
+        /**
+         * alias for getOrSet
+         * @param key
+         * @param value
+         * @param options ttl in ms/timestring('1d 3h') or opts (default: 0)
+         */
+        static $(key: string, value: any, options?: number | string | setOpts): any;
+
+        /**
+         * deletes a value from the global cache
+         * @param key
+         */
+        static del(key: string): void;
+
+        static size(): number;
+
+        /**
+         * clear the global cache
+         */
+        static clear(): void;
+
+        /**
+         * 
+         * @param key
+         * @param fn
+         * @param options ttl in ms/timestring('1d 3h') or opts (default: 0)
+         */
+        static memoize(key: string, fn: Function, options?: number | string | setOpts): Function;
+
+    }
+
+    interface setOpts {
+        /**
+         * in ms / timestring ('1d 3h') default: 0
+         */
+        ttl: number | string;
     }
 
     /**
@@ -112,7 +192,11 @@ declare module 'sm-utils' {
          */
         static url(url: String): Connect;
 
-        static newCookieJar(): CookieJar;
+        /**
+         * 
+         * @param args
+         */
+        static newCookieJar(...args: any[]): CookieJar;
 
         /**
          * Set or unset the followRedirect option for the connection.
@@ -144,7 +228,7 @@ declare module 'sm-utils' {
          * Set the 'Referer' field in the headers.
          * @param referer referer value
          */
-        referer(referer: String): void;
+        referer(referer: String): Connect;
 
         /**
          * Set the 'User-Agent' field in the headers.
@@ -156,7 +240,7 @@ declare module 'sm-utils' {
          * Set the 'Content-Type' field in the headers.
          * @param contentType value for content-type
          */
-        contentType(contentType: String): void;
+        contentType(contentType: String): Connect;
 
         /**
          * Returns whether the content-type is JSON or not
@@ -215,8 +299,9 @@ declare module 'sm-utils' {
 
         /**
          * alias for timeoutMs
+         * @param timeoutInMs
          */
-        timeoutMilli(): void;
+        timeoutMilli(timeoutInMs: number): Connect;
 
         /**
          * Set value of a field in the options.
@@ -310,14 +395,8 @@ declare module 'sm-utils' {
         /**
          * It creates and returns a promise based on the information
          * passed to and parameters of this object.
-         * 
-         * Response contains {body, url, timeTaken, cached, statusCode}
-         * url is the final url downloaded after following all redirects
-         * cached is false is the response was downloaded, true if returned from a cached file
-         * timeTaken is time taken (in ms) for the request
-         * body contains the actual response body
          */
-        fetch(): Promise<any>;
+        fetch(): Promise<response>;
 
         /**
          * It is used for method chaining.
@@ -334,10 +413,33 @@ declare module 'sm-utils' {
 
     }
 
+    interface response {
+        /**
+         * the actual response body
+         */
+        body: string;
+        /**
+         * the final url downloaded after following all redirects
+         */
+        url: string;
+        /**
+         * time taken (in ms) for the request
+         */
+        timeTaken: number;
+        /**
+         * false if the response was downloaded, true if returned from a cache
+         */
+        cached: boolean;
+        statusCode: number;
+    }
+
     /**
      * Cryptographic utilities
      */
     namespace Crypt {
+        /**
+         * different charsets available
+         */
         const chars: Object;
 
         /**
@@ -348,7 +450,7 @@ declare module 'sm-utils' {
         /**
          * Return a random integer between min and max (both inclusive)
          * @param num If max is not passed, num is max and min is 0
-         * @param max
+         * @param max max value of int, num will be min
          */
         function randomInt(num: number, max?: number): number;
 
@@ -359,22 +461,22 @@ declare module 'sm-utils' {
          * You can give length and charset in options.
          * If options is an integer it will treated as length.
          * By default, length is 20 and charset is ALPHA_NUMERIC
-         * @param options length of the id or object of {length: int, base36: bool, charset: CHARSET}
+         * @param options length of the id or options object
          */
-        function randomString(options: number | Object): String;
+        function randomString(options: number | randomOpts): String;
 
         /**
          * Shuffle an array or a string.
-         * You can optionally give a seed in the options to do a constant shuffle
          * @param itemToShuffle item which you want to shuffle
          * @param options  object of {seed: number}
+         * @param options.randomFunc Use this random function instead of default
+         * @param options.seed optionally give a seed to do a constant shuffle
          */
-        function shuffle(itemToShuffle: any[] | String, options?: Object): any[] | String;
+        function shuffle(itemToShuffle: any[] | String, options: shuffle_options): any[] | String;
 
         /**
          * 
-         * @param seed
-         * @returns res
+         * @param seed integer
          */
         function seededRandom(seed: number): randomFunctions;
 
@@ -411,14 +513,14 @@ declare module 'sm-utils' {
          * @param string item to be encoded
          * @param opts object or string specifying the encoding(s)
          */
-        function baseEncode(string: String | Buffer, opts: Object | String): String | Buffer;
+        function baseEncode(string: String | Buffer, opts: encodingConversion | String): String | Buffer;
 
         /**
          * Decode a string encoded using a given encoding.
          * @param string item to be decoded
          * @param opts object or string specifying the encoding(s)
          */
-        function baseDecode(string: String | Buffer, opts: Object | String): String;
+        function baseDecode(string: String | Buffer, opts: encodingConversion | String): String;
 
         /**
          * Decode a string encoded using a given encoding to a buffer.
@@ -433,82 +535,65 @@ declare module 'sm-utils' {
          * @param algo algo to be used for hashing
          * @param string string to be hashed
          * @param opts
-         * @param opts.encoding encoding in the form of an object
          */
-        function hash(algo: String, string: String, opts?: hash_opts): String;
+        function hash(algo: String, string: String, opts?: encodingOpts): String;
 
         /**
          * Compute hash of a string using md5
          * @param string string to be hashed
          * @param options object of {encoding}
-         * @param options.encoding encoding of output (default: `hex`)<br>
-         *        encoding can be `hex`, `binary` (`latin1`), `ascii`, `base64`, `base64url`, `utf8`, `buffer`
          */
-        function md5(string: String, options?: md5_options): String;
+        function md5(string: String, options?: encodingOpts): String;
 
         /**
          * Compute hash of a string using sha1
          * @param string string to be hashed
          * @param options object of {encoding}
-         * @param options.encoding encoding of output (default: `hex`)<br>
-         *        encoding can be `hex`, `binary` (`latin1`), `ascii`, `base64`, `base64url`, `utf8`, `buffer`
          */
-        function sha1(string: String, options?: sha1_options): String;
+        function sha1(string: String, options?: encodingOpts): String;
 
         /**
          * Compute hash of a string using sha256
          * @param string string to be hashed
          * @param options object of {encoding}
-         * @param options.encoding  encoding of output (default: `hex`)<br>
-         *        encoding can be `hex`, `binary` (`latin1`), `ascii`, `base64`, `base64url`, `utf8`, `buffer`
          */
-        function sha256(string: String, options?: sha256_options): String;
+        function sha256(string: String, options?: encodingOpts): String;
 
         /**
          * Compute hash of a string using sha384
          * @param string string to be hashed
          * @param options object of {encoding}
-         * @param options.encoding  encoding of output (default: `hex`)<br>
-         *        encoding can be `hex`, `binary` (`latin1`), `ascii`, `base64`, `base64url`, `utf8`, `buffer`
          */
-        function sha384(string: String, options?: sha384_options): String;
+        function sha384(string: String, options?: encodingOpts): String;
 
         /**
          * Compute hash of a string using sha512
          * @param string string to be hashed
          * @param options object of {encoding}
-         * @param options.encoding  encoding of output (default: `hex`)<br>
-         *        encoding can be `hex`, `binary` (`latin1`), `ascii`, `base64`, `base64url`, `utf8`, `buffer`
          */
-        function sha512(string: String, options?: sha512_options): String;
+        function sha512(string: String, options?: encodingOpts): String;
 
         /**
          * Create cryptographic HMAC digests using given algo
          * @param algo algo to be used for hashing
          * @param string string to be hashed
          * @param options object of {encoding}
-         * @param options.encoding  encoding of output (default: `hex`)<br>
-         *        encoding can be `hex`, `binary` (`latin1`), `ascii`, `base64`, `base64url`, `utf8`, `buffer`
          */
-        function hmac(algo: String, string: String, options?: hmac_options): String;
+        function hmac(algo: String, string: String, options?: encodingOpts): String;
 
         /**
          * Create cryptographic HMAC digests using sha1
          * @param string string to be hashed
          * @param options object of {encoding}
-         * @param options.encoding  encoding of output (default: `hex`)<br>
-         *        encoding can be `hex`, `binary` (`latin1`), `ascii`, `base64`, `base64url`, `utf8`, `buffer`
          */
-        function sha1Hmac(string: String, options?: sha1Hmac_options): String;
+        function sha1Hmac(string: String, options?: encodingOpts): String;
 
         /**
          * Create cryptographic HMAC digests using sha256
          * @param string string to be hashed
          * @param options object of {encoding}
-         * @param options.encoding encoding of output (default: `hex`)<br>
-         *        encoding can be `hex`, `binary` (`latin1`), `ascii`, `base64`, `base64url`, `utf8`, `buffer`
          */
-        function sha256Hmac(string: String, options?: sha256Hmac_options): String;
+        function sha256Hmac(string: String, options?: encodingOpts): String;
 
         /**
          * Sign a message using a private key.
@@ -520,9 +605,9 @@ declare module 'sm-utils' {
          * ```
          * @param message the message to be signed
          * @param privateKey self-descriptive
-         * @param opts opts can have {encoding (default 'hex'), pass (default none)}
+         * @param opts opts can have {encoding (default 'hex')
          */
-        function sign(message: String, privateKey: String | Object, opts: Object): String;
+        function sign(message: String, privateKey: String | Object, opts: encodingOpts): String;
 
         /**
          * Verify a message using a public key
@@ -536,9 +621,9 @@ declare module 'sm-utils' {
          * @param message message to be verified
          * @param signature self-descriptive
          * @param publicKey self-descriptive
-         * @param opts  opts can have {encoding (default 'hex')}
+         * @param opts opts can have {encoding (default 'hex')}
          */
-        function verify(message: String, signature: String, publicKey: String | Object, opts?: Object): Boolean;
+        function verify(message: String, signature: String, publicKey: String | Object, opts?: encodingOpts): Boolean;
 
         /**
          * Encrypt the given string with the given key using AES 256
@@ -546,19 +631,17 @@ declare module 'sm-utils' {
          * Optionally specify encoding in which you want to get the output
          * @param string string to be encrypted
          * @param key key to be used
-         * @param options object of {encoding}
-         * @param options.encoding encoding of output (default: 'base64url')
+         * @param options object of {encoding} (default: 'base64url')
          */
-        function encrypt(string: String, key: String, options?: encrypt_options): String;
+        function encrypt(string: String, key: String, options?: encodingOpts): String;
 
         /**
          * Decrypt the given string with the given key encrypted using encrypt
          * @param string string to be decrypted
          * @param key key to be used
-         * @param options object of {encoding}
-         * @param options.encoding encoding of output (default: 'base64url')
+         * @param options object of {encoding} (default: 'base64url')
          */
-        function decrypt(string: String, key: String, options?: decrypt_options): String;
+        function decrypt(string: String, key: String, options?: encodingOpts): String;
 
         /**
          * Encrypt the given string with the given key using AES 256
@@ -567,62 +650,77 @@ declare module 'sm-utils' {
          * for same string and key.
          * @param string string to be encrypted
          * @param key key to be used
-         * @param options object of {encoding}
-         * @param options.encoding encoding of output (default: 'base64url')
+         * @param options object of {encoding} (default: 'base64url')
          */
-        function encryptStatic(string: String, key: String, options?: encryptStatic_options): String;
+        function encryptStatic(string: String, key: String, options?: encodingOpts): String;
 
         /**
          * Decrypt the given string with the given key encrypted using encryptStatic
          * @param string string to be decrypted
          * @param key key to be used
-         * @param options object of {encoding}
-         * @param options.encoding encoding of output (default: 'base64url')
+         * @param options object of {encoding} (default: 'base64url')
          */
-        function decryptStatic(string: String, key: String, options?: decryptStatic_options): String;
+        function decryptStatic(string: String, key: String, options?: encodingOpts): String;
 
         /**
          * Convert a message into an encrypted token by:
          * signing it with privateKey + encrypting it with publicKey
          * you only need a publicKey to verify and decrypt this token
+         * @param message will be JSON.stringified
+         * @param privateKey
+         * @param publicKey
          */
-        function signAndEncrypt(): void;
+        function signAndEncrypt(message: any, privateKey: string | object, publicKey: string): string;
 
         /**
          * Convert an encrypted token (generated by signAndEncrypt) into a message
+         * @param token generated by signAndEncrypt
+         * @param publicKey
          */
-        function verifyAndDecrypt(): void;
+        function verifyAndDecrypt(token: string, publicKey: string): void;
 
         /**
          * Hash a given password using cryptographically strong hash function
-         * Returns a 50 character long hash
+         * @param password
+         * @param opts
+         * @param opts.salt
          */
-        function hashPassword(): void;
+        function hashPassword(password: string, opts: hashPassword_opts): string;
 
         /**
          * Verify that given password and hashed password are same or not
+         * @param password
+         * @param hashed
          */
-        function verifyPassword(): void;
+        function verifyPassword(password: string, hashed: string): boolean;
 
         /**
          * Base64 Encode
+         * @param string
+         * @param fromEncoding
          */
-        function base64Encode(): void;
+        function base64Encode(string: string, fromEncoding?: string): void;
 
         /**
          * URL Safe Base64 Encode
+         * @param string
+         * @param fromEncoding
          */
-        function base64UrlEncode(): void;
+        function base64UrlEncode(string: string, fromEncoding?: string): void;
 
         /**
          * Base64 Decode
+         * @param string
+         * @param toEncoding
          */
-        function base64Decode(): void;
+        function base64Decode(string: string, toEncoding?: string): void;
 
         /**
          * URL Safe Base64 Decode
+         * @param string
+         * @param toEncoding
          */
-        function base64UrlDecode(): void;
+        function base64UrlDecode(string: string, toEncoding?: string): void;
 
         /**
          * Pack many numbers into a single string
@@ -639,15 +737,50 @@ declare module 'sm-utils' {
         /**
          * Generate a random encrypted string that contains a timestamp.
          * @param options length of the id or object of {length: int}
+         * @param options.length
+         * @param options.time epoch time / 1000
          */
-        function encryptedTimestampedId(options: number | Object): String;
+        function encryptedTimestampedId(options: encryptedTimestampedId_options): String;
+
+        const rot13: typeof Str.rot13;
+
+        const rot47: typeof Str.rot47;
 
         /**
          * convert arbitary long integer from one base to another
          * Taken from decimal.js
+         * @param str number in base 'baseIn'
+         * @param baseIn input base
+         * @param baseOut output base
          */
-        function baseConvert(): void;
+        function baseConvert(str: string | number, baseIn?: number, baseOut?: number): void;
 
+    }
+
+    interface randomOpts {
+        /**
+         * integer
+         */
+        length: number;
+        /**
+         * if true will use BASE_36 charset
+         */
+        base36: Boolean;
+        /**
+         * provide a charset string
+         */
+        charset: string;
+    }
+
+    interface shuffle_options {
+        /**
+         * Use this random function instead of default
+         */
+        randomFunc: Function;
+        /**
+         * optionally give a seed to do a constant shuffle
+         */
+        seed: number;
     }
 
     interface randomFunctions {
@@ -661,111 +794,42 @@ declare module 'sm-utils' {
     }
 
     /**
-     * Get sequential number that resets every millisecond.
-     * 
-     * NOTE: Multiple call within the same millisecond will return 1, 2, 3 so on..
-     * The counter will reset on next millisecond
-     * @param currentTime self-descriptive
+     * Supported Encodings:
+     * 'hex', 'binary' ('latin1'), 'ascii', 'base64', 'base64url',
+     * 'utf8', 'buffer', 'utf16le' ('ucs2')
      */
-    function msCounter(currentTime: Number): Number;
-
-    interface hash_opts {
+    interface encodingConversion {
         /**
-         * encoding in the form of an object
+         * default 'base64url'
          */
-        encoding: string;
+        toEncodin?: string;
+        /**
+         * default 'binary'
+         */
+        fromEncoding?: string;
     }
 
-    interface md5_options {
+    /**
+     * Supported Encodings:
+     * 'hex', 'binary' ('latin1'), 'ascii', 'base64', 'base64url', 'utf8', 'buffer'
+     */
+    interface encodingOpts {
         /**
-         * encoding of output (default: `hex`)<br>
-         *   encoding can be `hex`, `binary` (`latin1`), `ascii`, `base64`, `base64url`, `utf8`, `buffer`
+         * default 'hex'
          */
-        encoding: String;
+        encoding?: string;
     }
 
-    interface sha1_options {
-        /**
-         * encoding of output (default: `hex`)<br>
-         *   encoding can be `hex`, `binary` (`latin1`), `ascii`, `base64`, `base64url`, `utf8`, `buffer`
-         */
-        encoding: String;
+    interface hashPassword_opts {
+        salt: string | Buffer;
     }
 
-    interface sha256_options {
+    interface encryptedTimestampedId_options {
+        length: number;
         /**
-         * encoding of output (default: `hex`)<br>
-         *   encoding can be `hex`, `binary` (`latin1`), `ascii`, `base64`, `base64url`, `utf8`, `buffer`
+         * epoch time / 1000
          */
-        encoding: String;
-    }
-
-    interface sha384_options {
-        /**
-         * encoding of output (default: `hex`)<br>
-         *   encoding can be `hex`, `binary` (`latin1`), `ascii`, `base64`, `base64url`, `utf8`, `buffer`
-         */
-        encoding: String;
-    }
-
-    interface sha512_options {
-        /**
-         * encoding of output (default: `hex`)<br>
-         *   encoding can be `hex`, `binary` (`latin1`), `ascii`, `base64`, `base64url`, `utf8`, `buffer`
-         */
-        encoding: String;
-    }
-
-    interface hmac_options {
-        /**
-         * encoding of output (default: `hex`)<br>
-         *   encoding can be `hex`, `binary` (`latin1`), `ascii`, `base64`, `base64url`, `utf8`, `buffer`
-         */
-        encoding: String;
-    }
-
-    interface sha1Hmac_options {
-        /**
-         * encoding of output (default: `hex`)<br>
-         *   encoding can be `hex`, `binary` (`latin1`), `ascii`, `base64`, `base64url`, `utf8`, `buffer`
-         */
-        encoding: String;
-    }
-
-    interface sha256Hmac_options {
-        /**
-         * encoding of output (default: `hex`)<br>
-         *   encoding can be `hex`, `binary` (`latin1`), `ascii`, `base64`, `base64url`, `utf8`, `buffer`
-         */
-        encoding: String;
-    }
-
-    interface encrypt_options {
-        /**
-         * encoding of output (default: 'base64url')
-         */
-        encoding: String;
-    }
-
-    interface decrypt_options {
-        /**
-         * encoding of output (default: 'base64url')
-         */
-        encoding: String;
-    }
-
-    interface encryptStatic_options {
-        /**
-         * encoding of output (default: 'base64url')
-         */
-        encoding: String;
-    }
-
-    interface decryptStatic_options {
-        /**
-         * encoding of output (default: 'base64url')
-         */
-        encoding: String;
+        time: number;
     }
 
     /**
@@ -783,14 +847,12 @@ declare module 'sm-utils' {
          * Elements at negative values are that many from the end: -1 is one before the end
          * (the last element), -2 is two before the end (one before last), etc.
          * @param index
-         * @returns
          */
         peekAt(index: any): any;
 
         /**
          * Alias for peakAt()
          * @param i
-         * @returns
          */
         get(i: any): any;
 
@@ -798,25 +860,21 @@ declare module 'sm-utils' {
          * Sets the queue value at a particular index
          * @param index integer
          * @param value
-         * @returns
          */
         set(index: number, value: any): any;
 
         /**
          * Returns the first item in the list without removing it.
-         * @returns
          */
         peek(): any;
 
         /**
          * Alias for peek()
-         * @returns
          */
         peekFront(): any;
 
         /**
          * Alias for peek()
-         * @returns
          */
         head(): any;
 
@@ -828,13 +886,11 @@ declare module 'sm-utils' {
 
         /**
          * Alias for peekBack()
-         * @returns
          */
         tail(): any;
 
         /**
          * Return the number of items on the list, or 0 if empty.
-         * @returns
          */
         size(): number;
 
@@ -852,7 +908,6 @@ declare module 'sm-utils' {
         /**
          * Remove and return the first item on the list
          * Returns undefined if the list is empty.
-         * @returns
          */
         shift(): any;
 
@@ -875,7 +930,6 @@ declare module 'sm-utils' {
         /**
          * Remove and return the last item on the list.
          * Returns undefined if the list is empty.
-         * @returns
          */
         pop(): any;
 
@@ -883,7 +937,6 @@ declare module 'sm-utils' {
          * Remove and return the item at the specified index from the list.
          * Returns undefined if the list is empty.
          * @param index
-         * @returns
          */
         removeOne(index: any): any;
 
@@ -893,7 +946,6 @@ declare module 'sm-utils' {
          * Returns undefined if the list is empty.
          * @param index
          * @param count
-         * @returns
          */
         remove(index: any, count: any): any[];
 
@@ -905,7 +957,6 @@ declare module 'sm-utils' {
          * @param index
          * @param count
          * @param args
-         * @returns
          */
         splice(index: any, count: any, ...args: any[]): any[];
 
@@ -916,13 +967,11 @@ declare module 'sm-utils' {
 
         /**
          * Returns true or false whether the list is empty.
-         * @returns
          */
         isEmpty(): boolean;
 
         /**
          * Returns an array of all queue items.
-         * @returns
          */
         toArray(): any[];
 
@@ -1144,14 +1193,12 @@ declare module 'sm-utils' {
         /**
          * 
          * @param key
-         * @returns
          */
         tryAcquire(key: string): boolean;
 
         /**
          * 
          * @param key
-         * @returns
          */
         acquire(key: string): boolean | void;
 
@@ -1176,7 +1223,7 @@ declare module 'sm-utils' {
          * Initialise the redis connection
          * @param redis Redis connection settings object
          * @param enableWatchdog Will watch for stuck jobs due to any connection issues
-         *        Read more here :  https://github.com/Automattic/kue#unstable-redis-connections
+         * @see https://github.com/Automattic/kue#unstable-redis-connections
          */
         static init(redis?: Object, enableWatchdog?: Boolean): void;
 
@@ -1184,7 +1231,6 @@ declare module 'sm-utils' {
          * Add a job to the Queue
          * @param input Job data
          * @param opts
-         * @returns The ID of the job created
          */
         addJob(input: any, opts: addOpts): Number;
 
@@ -1195,7 +1241,6 @@ declare module 'sm-utils' {
          * @param input Job data
          * @param opts
          * @param timeout wait for this time else throw err
-         * @returns result
          */
         addAndProcess(input: any, opts: addOpts, timeout?: number): any;
 
@@ -1254,44 +1299,37 @@ declare module 'sm-utils' {
          * Return count of jobs in Queue of JobType
          * @param queue Queue name
          * @param jobType One of {'inactive', 'delayed' ,'active', 'complete', 'failed'}
-         * @returns count
          */
         static getCount(queue: String, jobType: String): Number;
 
         /**
          * Return count of inactive jobs in Queue
-         * @returns inactiveCount
          */
         inactiveJobs(): Number;
 
         /**
          * Alias for inactiveJobs
-         * @returns inactiveCount
          */
         pendingJobs(): Number;
 
         /**
          * Return count of completed jobs in Queue
          * Might return 0 if removeOnComplete was true
-         * @returns completeCount
          */
         completedJobs(): Number;
 
         /**
          * Return count of failed jobs in Queue
-         * @returns failedCount
          */
         failedJobs(): Number;
 
         /**
          * Return count of delayed jobs in Queue
-         * @returns delayedCount
          */
         delayedJobs(): Number;
 
         /**
          * Return count of active jobs in Queue
-         * @returns activeCount
          */
         activeJobs(): Number;
 
@@ -1299,7 +1337,6 @@ declare module 'sm-utils' {
          * Process a single job in the Queue and mark it complete or failed,
          * for when you want to manually process jobs
          * @param processor Function to be called to process the job data, without ctx
-         * @returns Job object of completed job
          */
         processJob(processor: processorCallback): jobDetails;
 
@@ -1320,7 +1357,6 @@ declare module 'sm-utils' {
         /**
          * Function to query the status of a job
          * @param jobId Job id for which status info is required
-         * @returns Object full of job details like state, time, attempts, etc.
          */
         static status(jobId: Number): jobDetails;
 
@@ -1328,7 +1364,6 @@ declare module 'sm-utils' {
          * Manualy process a specific Job. Returns existing result if job already processed
          * @param jobId Id of the job to be processed
          * @param processor Function to be called to process the job data, without ctx
-         * @returns Result of processor function and job object of completed job
          */
         static processJobById(jobId: Number, processor: processorCallback): jobDetails;
 
@@ -1336,7 +1371,6 @@ declare module 'sm-utils' {
          * Function shuts down the Queue gracefully.
          * Waits for active jobs to complete until timeout, then marks them failed.
          * @param timeout Time in milliseconds, default = 10000
-         * @returns
          */
         static exit(timeout?: Number): Boolean;
 
@@ -1373,7 +1407,6 @@ declare module 'sm-utils' {
     /**
      * An async function which will be called to process the job data
      * @param jobData The information saved in the job during adding of job
-     * @returns Will be saved in return field in JobDetails
      */
     type processorCallback = (jobData: any)=>any;
 
@@ -1467,27 +1500,28 @@ declare module 'sm-utils' {
          * avoids dogpiling if the value is a promise or a function returning a promise
          * @param key
          * @param value
-         * @param options either ttl in ms / timestring ('1d 3h'), or object of {ttl}
+         * @param options ttl in ms/timestring('1d 3h') or opts (default: 0)
          */
-        set(key: string, value: any, options: number | object): void;
+        set(key: string, value: any, options?: number | string | setOpts): boolean;
 
         /**
          * gets a value from the cache, or sets it if it doesn't exist
          * this takes care of dogpiling (make sure value is a function to avoid dogpiling)
          * @param key key to get
          * @param value value to set if the key does not exist
-         * @param options either ttl in ms or as a timestring ('1d 3h'),
-         *        or object of {
-         *        ttl => time to live in milliseconds or as a timestring ('1d 3h'),
-         *        parse => function to parse when value is fetched from redis
-         *        }
+         * @param options ttl in ms/timestring('1d 3h') (default: 0)
+         *        or opts with parse and ttl
          */
-        getOrSet(key: string, value: any, options: number | object): void;
+        getOrSet(key: string, value: any, options?: number | string | setRedisOpts): any;
 
         /**
          * alias for getOrSet
+         * @param key key to get
+         * @param value value to set if the key does not exist
+         * @param options ttl in ms/timestring('1d 3h') (default: 0)
+         *        or opts with parse and ttl
          */
-        $(): void;
+        $(key: string, value: any, options?: number | string | setRedisOpts): any;
 
         /**
          * deletes a value from the cache
@@ -1497,7 +1531,6 @@ declare module 'sm-utils' {
 
         /**
          * NOTE: this method is expensive, so don't use it unless absolutely necessary
-         * @returns the size of the cache (no. of keys)
          */
         size(): number;
 
@@ -1515,10 +1548,10 @@ declare module 'sm-utils' {
          * ```
          * @param key cache key with which to memoize the results
          * @param fn function to memoize
-         * @param options either ttl in ms, or object of {ttl}
-         * @returns
+         * @param options ttl in ms/timestring('1d 3h') (default: 0)
+         *        or opts with parse and ttl
          */
-        memoize(key: string, fn: Function, options: number | object): Function;
+        memoize(key: string, fn: Function, options?: number | string | setRedisOpts): Function;
 
         /**
          * delete everything from cache if the key includes a particular string
@@ -1530,7 +1563,6 @@ declare module 'sm-utils' {
         /**
          * Return a global instance of Redis cache
          * @param redis redis redisConf
-         * @returns
          */
         static globalCache(redis: Object): RedisCache;
 
@@ -1558,25 +1590,28 @@ declare module 'sm-utils' {
          * sets a value in the global cache
          * @param key
          * @param value
-         * @param options either ttl in ms / timestring ('1d 3h'), or object of {ttl}
+         * @param options ttl in ms/timestring('1d 3h') (default: 0)
+         *        or opts with parse and ttl
          */
-        static set(key: string, value: any, options: number | object): void;
+        static set(key: string, value: any, options?: number | string | setRedisOpts): boolean;
 
         /**
          * gets a value from the global cache, or sets it if it doesn't exist
          * @param key key to get
          * @param value value to set if the key does not exist
-         * @param options
+         * @param options ttl in ms/timestring('1d 3h') (default: 0)
+         *        or opts with parse and ttl
          */
-        static getOrSet(key: string, value: any, options: number | object): void;
+        static getOrSet(key: string, value: any, options?: number | string | setRedisOpts): void;
 
         /**
-         * gets a value from the global cache, or sets it if it doesn't exist
+         * alias for getOrSet
          * @param key key to get
          * @param value value to set if the key does not exist
-         * @param options
+         * @param options ttl in ms/timestring('1d 3h') (default: 0)
+         *        or opts with parse and ttl
          */
-        static $(key: string, value: any, options: number | object): void;
+        static $(key: string, value: any, options?: number | string | setRedisOpts): void;
 
         /**
          * deletes a value from the global cache
@@ -1584,10 +1619,6 @@ declare module 'sm-utils' {
          */
         static del(key: string): void;
 
-        /**
-         * 
-         * @returns size of the global cache (no. of keys)
-         */
         static size(): number;
 
         /**
@@ -1599,11 +1630,22 @@ declare module 'sm-utils' {
          * memoizes a function (caches the return value of the function)
          * @param key
          * @param fn
-         * @param options
-         * @returns
+         * @param options ttl in ms/timestring('1d 3h') (default: 0)
+         *        or opts with parse and ttl
          */
-        static memoize(key: string, fn: Function, options: number | object): Function;
+        static memoize(key: string, fn: Function, options?: number | string | setRedisOpts): Function;
 
+    }
+
+    interface setRedisOpts {
+        /**
+         * in ms / timestring ('1d 3h') default: 0
+         */
+        ttl: number | string;
+        /**
+         * function to parse when value is fetched from redis
+         */
+        parse: Function;
     }
 
     /**
@@ -1613,7 +1655,6 @@ declare module 'sm-utils' {
         /**
          * Resolve path of a global module
          * @param moduleName
-         * @returns path of module
          */
         function resolveGlobal(moduleName: string): string;
 
@@ -1622,7 +1663,6 @@ declare module 'sm-utils' {
          * @param moduleName
          * @param options
          * @param options.useNative Use local module if available
-         * @returns path of module
          */
         function resolve(moduleName: string, options?: resolve_options): string;
 
@@ -1631,14 +1671,12 @@ declare module 'sm-utils' {
          * @param moduleName
          * @param options
          * @param options.useNative Use local module if available
-         * @returns the module required
          */
         function requireModule(moduleName: string, options?: requireModule_options): any;
 
         /**
          * Require a module from local or global
          * @param moduleName
-         * @returns the module required
          */
         function requireGlobal(moduleName: string): any;
 
@@ -1666,28 +1704,32 @@ declare module 'sm-utils' {
          * 
          * @param str
          */
-        function invertCase(str: string): void;
+        function invertCase(str: string): string;
 
         /**
-         * 
+         * Are all chars in string/char vowels
          * @param char
-         * @returns
          */
         function isVowel(char: string): boolean;
 
         /**
-         * 
+         * Are all chars in string/char consonants
          * @param char
-         * @returns
          */
         function isConsonant(char: string): boolean;
 
         /**
          * Get the plural of a string
          * @param str
-         * @returns
          */
         function plural(str: string): string;
+
+        /**
+         * Pluralize a character if the count is greater than 1
+         * @param str
+         * @param count
+         */
+        function pluralize(str: string, count?: number): string;
 
         /**
          * transform a string by replacing characters from from string to to string
@@ -1695,7 +1737,6 @@ declare module 'sm-utils' {
          * @param str string to transform
          * @param from characters to replace in the string
          * @param to characters to replace with in the string
-         * @returns transformed string
          */
         function transform(str: string, from: string, to: string): string;
 
@@ -1705,43 +1746,38 @@ declare module 'sm-utils' {
          * @param pos
          * @param char
          */
-        function trimToNext(str: string, pos: number, char?: string): void;
+        function trimToNext(str: string, pos: number, char?: string): string;
 
         /**
          * Format a number according to a particular locale
          * Similar to Number.toLocaleFormat, except being significantly faster
          * @param number the number to format
-         * @param options string of locale
-         *        or object of {locale: 'en-IN', currency: 'INR', decimals: 0}
-         * @returns formatted number
+         * @param options string of locale or opts object (default: 'en', decimals:: 0)
          */
-        function numberFormat(number: number, options: object | string): string;
+        function numberFormat(number: number, options?: numberFormatOpts | string): string;
 
         /**
          * Space clean a string
          * Converts consecutive multiple spaces / tabs / newlines in the string into a single space
          * @param str
          */
-        function spaceClean(str: string): void;
+        function spaceClean(str: string): string;
 
         /**
          * Rotate a string by 13 characters
          * @param str the string to be rotated
-         * @returns rotated string
          */
         function rot13(str: String): String;
 
         /**
          * Rotate a string by 47 characters
          * @param str the string to be rotated
-         * @returns rotated string
          */
         function rot47(str: String): String;
 
         /**
          * 
          * @param str
-         * @returns
          */
         function tryParseJson(str: string): Object | null;
 
@@ -1755,62 +1791,77 @@ declare module 'sm-utils' {
          *        
          *        if allowed is not given and blocked is given
          *        then by default all tags not mentioned in blocked are allowed
-         * @returns resulting string by removing all tags mentioned
          */
         function stripTags(str: string, options: object): string;
 
         /**
          * Escape a string for including in regular expressions
          * @param str string to escape
-         * @returns escaped string
          */
         function escapeRegex(str: string): string;
 
         /**
          * Convert a number into words
          * @param number
-         * @returns
          */
         function numberToWords(number: number): string;
 
+    }
+
+    interface numberFormatOpts {
+        /**
+         * like 'en-IN'
+         */
+        locale: string;
+        /**
+         * like 'INR'
+         */
+        currency: string;
+        /**
+         * number of decimal places to return
+         */
+        decimals: number;
     }
 
     /**
      * System and process utilities
      */
     namespace System {
+        const globalData: object;
+
         /**
          * Execute the given command in a shell.
          * @param command
          * @param options options object
          *        options: {timeout (in ms), cwd, uid, gid, env (object), shell (eg. /bin/sh), encoding}
          */
-        function exec(command: String, options: Object): void;
+        function exec(command: String, options: Object): Promise<processObject>;
 
         /**
          * Similar to exec but instead executes a given file
+         * @param args
          */
-        function execFile(): void;
+        function execFile(...args: any[]): Promise<processObject>;
 
         /**
          * execute a command and return its output
+         * @param args
          */
-        function execOut(): String;
+        function execOut(...args: any[]): String;
 
         /**
          * execute a file and return its output
+         * @param args
          */
-        function execFileOut(): String;
+        function execFileOut(...args: any[]): String;
 
         /**
          * turn off umask for the current process
-         * @returns the old umask
          */
         function noUmask(): number;
 
         /**
          * restores (turns on) the previous umask
-         * @returns new umask
          */
         function yesUmask(): number;
 
@@ -1856,14 +1907,14 @@ declare module 'sm-utils' {
          * Sleep for a specified time (in milliseconds)
          * Example: await System.sleep(2000);
          */
-        function sleep(): void;
+        function sleep(): Promise<void>;
 
         /**
          * wait till the next event loop cycle
          * this function is useful if we are running a long blocking task
          * and need to make sure that other callbacks can complete.
          */
-        function tick(): void;
+        function tick(): Promise<void>;
 
         /**
          * exit and kill the process gracefully (after completing all onExit handlers)
@@ -1886,17 +1937,29 @@ declare module 'sm-utils' {
          * callback can be an async function, process will exit when all handlers have completed
          * @param callback function to call on exit
          * @param options can be {timeout} or a number
-         *        timeout: Milliseconds before timing out (default 10000)
          */
-        function onExit(callback: Function, options: number | object): void;
+        function onExit(callback: Function, options?: number | timeoutOpts): Promise<void>;
 
         /**
          * 
          * @param server
          * @param options
          */
-        function gracefulServerExit(server: any, options: any): void;
+        function gracefulServerExit(server: any, options?: number | timeoutOpts): void;
 
+    }
+
+    interface processObject {
+        childProcess: ChildProcess;
+        stdout: Buffer;
+        stderr: Buffer;
+    }
+
+    interface timeoutOpts {
+        /**
+         * Milliseconds before timing out (default 10000)
+         */
+        timeout?: number;
     }
 
     /**
@@ -1915,7 +1978,6 @@ declare module 'sm-utils' {
          * - function: executes the function and returns the result wrapped in a promise
          * - any: returns the input wrapped in a promise
          * @param promise
-         * @returns
          */
         static identity(promise: Function | Promise<any> | any): Promise<any>;
 
@@ -1937,7 +1999,6 @@ declare module 'sm-utils' {
          * create a lazy promise from an executor function ((resolve, reject) => {})
          * a lazy promise defers execution till .then() or .catch() is called
          * @param executor function(resolve, reject) {}, same as promise constructor
-         * @returns a lazy promise
          */
         static lazy(executor: Function): Promise<any>;
 
@@ -1958,10 +2019,9 @@ declare module 'sm-utils' {
         /**
          * Promise.finally polyfill
          * Invoked when the promise is settled regardless of outcome
-         * https://github.com/sindresorhus/p-finally
+         * @see https://github.com/sindresorhus/p-finally
          * @param promise
          * @param onFinally
-         * @returns Returns a Promise.
          */
         static finally(promise: Promise<any>, onFinally: Function): Promise<any>;
 
@@ -1976,7 +2036,7 @@ declare module 'sm-utils' {
         /**
          * Returns a Promise that resolves when condition returns true.
          * Rejects if condition throws or returns a Promise that rejects.
-         * https://github.com/sindresorhus/p-wait-for
+         * @see https://github.com/sindresorhus/p-wait-for
          * @param conditionFn function that returns a boolean
          * @param options can be {interval, timeout} or a number
          *        interval: Number of milliseconds to wait before retrying condition (default 50)
@@ -1987,7 +2047,7 @@ declare module 'sm-utils' {
         /**
          * Returns an async function that delays calling fn
          * until after wait milliseconds have elapsed since the last time it was called
-         * https://github.com/sindresorhus/p-debounce
+         * @see https://github.com/sindresorhus/p-debounce
          * @param fn function to debounce
          * @param delay ms to wait before calling fn.
          * @param options object of {leading, fixed}
@@ -2008,7 +2068,6 @@ declare module 'sm-utils' {
          *        mapper is invoked with (value, index|key, iterable)
          * @param options object of {concurrency}
          *        concurrency: Number of maximum concurrently running promises, default is Infinity
-         * @returns a promise that resolves to an array of results
          */
         static promiseMap(iterable: any[] | object | Map<any, any> | Set<any>, mapper: Function, options: object): Promise<Array<any>>;
 
@@ -2017,7 +2076,6 @@ declare module 'sm-utils' {
          * @param iterable
          * @param mapper
          * @param options
-         * @returns a promise that resolves to an array of results
          */
         static promiseMapKeys(iterable: any[] | object | Map<any, any> | Set<any>, mapper: Function, options: object): Promise<Array<any>>;
 
@@ -2026,7 +2084,6 @@ declare module 'sm-utils' {
          * @param iterable
          * @param mapper
          * @param options
-         * @returns a promise that resolves to an array of results
          */
         static promiseMapValues(iterable: any[] | object | Map<any, any> | Set<any>, mapper: Function, options: object): Promise<Array<any>>;
 
@@ -2037,14 +2094,12 @@ declare module 'sm-utils' {
          * 
          * @param key
          * @param defaultValue
-         * @returns
          */
         function get(key: string, defaultValue: any): any;
 
         /**
          * set values in global config
          * you can also give key as an object to assign all key values from it
-         * @returns
          */
         function set(): null;
 
@@ -2052,7 +2107,6 @@ declare module 'sm-utils' {
          * set values in global config with an object to assign all key values from it
          * if a key already exists then it is merged with new value
          * if obj is not an Object then nothing happens
-         * @returns
          */
         function merge(): null;
 
@@ -2060,14 +2114,9 @@ declare module 'sm-utils' {
          * set values in global config with an object to assign all key values from it
          * if a key already exists then it is assigned with new value
          * if obj is not an Object then nothing happens
-         * @returns
          */
         function assign(): null;
 
-        /**
-         * 
-         * @returns
-         */
         /* Illegal function name 'delete' can't be used here
         function delete(): void;
         */
@@ -2082,41 +2131,44 @@ declare module 'sm-utils' {
         /**
          * read the file specified by the key, and then cache it
          * @param key
-         * @returns value
          */
         function read(key: String): any;
 
-        /**
-         * 
-         * @returns
-         */
         function isProduction(): boolean;
 
-        /**
-         * 
-         * @returns
-         */
         function isStaging(): boolean;
 
         /**
          * Returns true if env is production or staging
-         * @returns
          */
         function isProductionLike(): boolean;
 
-        /**
-         * 
-         * @returns
-         */
         function isTest(): boolean;
 
-        /**
-         * 
-         * @returns
-         */
         function isDev(): boolean;
 
     }
 
-    function cfg(key: string, defaultValue: any): any;
+    /**
+     * Reads a config value
+     * @param key key to read, can be nested like `a.b.c`
+     * @param defaultValue value to return if key is not found
+     */
+    function cfg(key: string, defaultValue?: any): any
+
+    const crypt: typeof Crypt;
+
+    const system: typeof System;
+
+    const baseConvert: typeof Crypt.baseConvert;
+
+}
+
+
+declare module 'sm-utils/d' {
+    /**
+     * Colored Log to console with stack trace
+     * @param args Args to log to console
+     */
+    export function d(...args: any[]): void;
 }

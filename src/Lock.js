@@ -66,7 +66,7 @@ class Lock extends EventEmitter {
 
 	/**
 	 * @param {string} key
-	 * @returns {boolean}
+	 * @return {boolean}
 	 */
 	async tryAcquire(key) {
 		if (this.fetching[key]) return false;
@@ -84,7 +84,7 @@ class Lock extends EventEmitter {
 
 	/**
 	 * @param {string} key
-	 * @returns {boolean|void}
+	 * @return {boolean|void}
 	 */
 	async acquire(key) {
 		if (await this.tryAcquire(key)) return true;

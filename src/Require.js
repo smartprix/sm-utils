@@ -50,7 +50,7 @@ function getYarnPrefix() {
  * Resolve path of a global module
  * @memberof Require
  * @param {string} moduleName
- * @returns {string} path of module
+ * @return {string} path of module
  */
 function resolveGlobal(moduleName) {
 	const npmPrefix = getNpmPrefix();
@@ -82,7 +82,7 @@ function resolveGlobal(moduleName) {
  * @param {string} moduleName
  * @param {object} [options={}]
  * @param {boolean} [options.useNative=true] Use local module if available
- * @returns {string} path of module
+ * @return {string} path of module
  */
 function resolve(moduleName, options = {}) {
 	if (options.useNative !== false) {
@@ -107,7 +107,7 @@ function resolve(moduleName, options = {}) {
  * @param {string} moduleName
  * @param {object} [options={}]
  * @param {boolean} [options.useNative=true] Use local module if available
- * @returns {any} the module required
+ * @return {any} the module required
  */
 function requireModule(moduleName, options = {}) {
 	return require(resolve(moduleName, options));
@@ -117,7 +117,7 @@ function requireModule(moduleName, options = {}) {
  * Require a module from local or global
  * @memberof Require
  * @param {string} moduleName
- * @returns {any} the module required
+ * @return {any} the module required
  */
 function requireGlobal(moduleName) {
 	return require(resolveGlobal(moduleName));

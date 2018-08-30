@@ -129,6 +129,10 @@ function dump(...args) {
 	});
 }
 
+/**
+ * Colored Log to console with stack trace
+ * @param  {Array<any>} args Args to log to console
+ */
 function d(...args) {
 	const prevStackLimit = Error.stackTraceLimit;
 	Error.stackTraceLimit = 2;

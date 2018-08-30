@@ -13,7 +13,7 @@ import _ from 'lodash';
  * 	mapper is invoked with (value, index|key, iterable)
  * @param {object} options object of {concurrency}
  * 	concurrency: Number of maximum concurrently running promises, default is Infinity
- * @returns {Promise<Array<any>>} a promise that resolves to an array of results
+ * @return {Promise<Array<any>>} a promise that resolves to an array of results
  */
 function promiseMap(iterable, mapper, options = {}) {
 	return new Promise((resolve, reject) => {
@@ -100,7 +100,7 @@ function promiseMap(iterable, mapper, options = {}) {
  * @param {array|object|Map<any,any>|Set<*>} iterable
  * @param {function} mapper
  * @param {object} options
- * @returns {Promise<Array<any>>} a promise that resolves to an array of results
+ * @return {Promise<Array<any>>} a promise that resolves to an array of results
  */
 function promiseMapKeys(iterable, mapper, options = {}) {
 	const result = {};
@@ -122,7 +122,7 @@ function promiseMapKeys(iterable, mapper, options = {}) {
  * @param {array|object|Map<any,any>|Set<*>} iterable
  * @param {function} mapper
  * @param {object} options
- * @returns {Promise<Array<any>>} a promise that resolves to an array of results
+ * @return {Promise<Array<any>>} a promise that resolves to an array of results
  */
 function promiseMapValues(iterable, mapper, options = {}) {
 	const result = {};

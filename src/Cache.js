@@ -89,11 +89,17 @@ class Cache {
 	}
 
 	/**
+	 * @typedef {object} setOpts
+	 * @property {number|string} ttl in ms / timestring ('1d 3h') default: 0
+	 */
+
+	/**
 	 * sets a value in the cache
 	 * avoids dogpiling if the value is a promise or a function returning a promise
 	 * @param {string} key
 	 * @param {any} value
-	 * @param {number|string|object} options either ttl in ms / timestring ('1d 3h'), or object of {ttl}
+	 * @param {number|string|setOpts} [options={}] ttl in ms/timestring('1d 3h') or opts (default: 0)
+	 * @return {boolean}
 	 */
 	async set(key, value, options = {}) {
 		let ttl = (typeof options === 'object') ? options.ttl : options;
@@ -137,7 +143,8 @@ class Cache {
 	 * this takes care of dogpiling (make sure value is a function to avoid dogpiling)
 	 * @param {string} key key to get
 	 * @param {any} value value to set if the key does not exist
-	 * @param {number|string|object} options either ttl in ms / timestring ('1d 3h'), or object of {ttl}
+	 * @param {number|string|setOpts} [options={}] ttl in ms/timestring('1d 3h') or opts (default: 0)
+	 * @return {any}
 	 */
 	async getOrSet(key, value, options = {}) {
 		const fetching = this.fetching.get(key);
@@ -161,6 +168,10 @@ class Cache {
 
 	/**
 	 * alias for getOrSet
+	 * @param {string} key key to get
+	 * @param {any} value value to set if the key does not exist
+	 * @param {number|string|setOpts} [options={}] ttl in ms/timestring('1d 3h') or opts (default: 0)
+	 * @return {any}
 	 */
 	async $(key, value, options = {}) {
 		return this.getOrSet(key, value, options);
@@ -169,6 +180,7 @@ class Cache {
 	/**
 	 * deletes a value from the cache
 	 * @param {string} key
+	 * @return {void}
 	 */
 	async del(key) {
 		return this._del(key);
@@ -176,6 +188,7 @@ class Cache {
 
 	/**
 	 * returns the size of the cache (no. of keys)
+	 * @return {number}
 	 */
 	async size() {
 		return this.data.size;
@@ -183,6 +196,7 @@ class Cache {
 
 	/**
 	 * clears the cache (deletes all keys)
+	 * @return {void}
 	 */
 	async clear() {
 		return this._clear();
@@ -196,7 +210,8 @@ class Cache {
 	 * ```
 	 * @param {string} key cache key with which to memoize the results
 	 * @param {function} fn function to memoize
-	 * @param {number|string|object} options either ttl in ms, or object of {ttl}
+	 * @param {number|string|setOpts} [options={}] ttl in ms/timestring('1d 3h') or opts (default: 0)
+	 * @return {function} memoized function
 	 */
 	memoize(key, fn, options = {}) {
 		return async (...args) => {
@@ -212,47 +227,108 @@ class Cache {
 		};
 	}
 
+	/**
+	 * returns a global cache instance
+	 * @return {Cache}
+	 */
 	static globalCache() {
 		if (!globalCache) globalCache = new this();
 		return globalCache;
 	}
 
+	/**
+	 * get value from global cache
+	 * @param {string} key
+	 * @param {any} defaultValue
+	 * @return {any}
+	 */
 	static get(key, defaultValue) {
 		return this.globalCache().get(key, defaultValue);
 	}
 
+	/**
+	 * gets a value from the cache immediately without waiting
+	 * @param {string} key
+	 * @param {any} defaultValue
+	 * @return {any}
+	 */
 	static getStale(key, defaultValue) {
 		return this.globalCache().getStale(key, defaultValue);
 	}
 
+	/**
+	 * checks if value exists in global cache
+	 * @param {string} key
+	 * @return {boolean}
+	 */
 	static has(key) {
 		return this.globalCache().has(key);
 	}
 
+	/**
+	 * sets a value in the global cache
+	 * @param {string} key
+	 * @param {any} value
+	 * @param {number|string|setOpts} [options={}] ttl in ms/timestring('1d 3h') or opts (default: 0)
+	 * @return {boolean}
+	 */
 	static set(key, value, options = {}) {
 		return this.globalCache().set(key, value, options);
 	}
 
+	/**
+	 * get or set a value in the global cache
+	 * @param {string} key
+	 * @param {any} value
+	 * @param {number|string|setOpts} [options={}] ttl in ms/timestring('1d 3h') or opts (default: 0)
+	 * @return {any}
+	 */
 	static getOrSet(key, value, options = {}) {
 		return this.globalCache().getOrSet(key, value, options);
 	}
 
+	/**
+	 * alias for getOrSet
+	 * @param {string} key
+	 * @param {any} value
+	 * @param {number|string|setOpts} [options={}] ttl in ms/timestring('1d 3h') or opts (default: 0)
+	 * @return {any}
+	 */
 	static $(key, value, options = {}) {
 		return this.globalCache().getOrSet(key, value, options);
 	}
 
+	/**
+	 * deletes a value from the global cache
+	 * @param {string} key
+	 * @return {void}
+	 */
 	static del(key) {
 		return this.globalCache().del(key);
 	}
 
+	/**
+	 * @return {number} the size of the global cache
+	 */
 	static size() {
 		return this.globalCache().size();
 	}
 
+	/**
+	 * clear the global cache
+	 * @return {void}
+	 */
 	static clear() {
 		return this.globalCache().clear();
 	}
 
+	/**
+	 *
+	 * @param {string} key
+	 * @param {function} fn
+	 * @param {number|string|setOpts} [options={}] ttl in ms/timestring('1d 3h') or opts (default: 0)
+	 * @return {function} memoized function
+	 */
 	static memoize(key, fn, options = {}) {
 		return this.globalCache().memoize(key, fn, options);
 	}

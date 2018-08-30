@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>Cache.js - Documentation</title>
+    <title>debug/d_real.js - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -33,7 +33,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">Cache.js</h1>
+    <h1 class="page-title">debug/d_real.js</h1>
     
 
     
@@ -43,343 +43,201 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>/* eslint-disable guard-for-in */
-import timestring from 'timestring';
+            <pre class="prettyprint source linenums"><code>/* eslint-disable no-console, no-shadow */
+require('longjohn');
 
-let globalCache;
+// increase error stack trace limit
+Error.stackTraceLimit = 30;
 
-/**
- * Local cache with dogpile prevention
- */
-class Cache {
-	constructor() {
-		this.data = new Map();
-		this.ttl = new Map();
-		this.fetching = new Map();
+const stackTrace = require('./stack_trace');
+const nodeUtil = require('./node_util_copy');
+const chalk = require('chalk');
+const _ = require('lodash');
+
+function errorFrameToString(frame, background = 'magenta', foreground = 'white') {
+	const fileName = frame.getRelativeFileName();
+
+	if (!fileName) {
+		return chalk.bgYellow(
+			' ' +
+			chalk.black.bold(
+				_.repeat('-', process.stdout.columns - 2)
+			)
+		);
 	}
 
-	_set(key, value, ttl = 0) {
-		if (ttl &lt;= 0) {
-			this.data.set(key, value);
+	const lineNumber = frame.getLineNumber();
+	const columnNumber = frame.getColumnNumber();
+	const functionName = frame.getFunctionNameSanitized() || 'module';
+
+	const header = ` ${fileName} at ${lineNumber}:${columnNumber} in ${functionName}`;
+	const headerSpace = _.repeat(' ', process.stdout.columns - header.length);
+
+	return chalk[`bg${_.upperFirst(background)}`](
+		' ' +
+		chalk[foreground](
+			chalk.bold(fileName) +
+			' at ' +
+			chalk.bold(lineNumber) +
+			':' +
+			columnNumber +
+			' in ' +
+			chalk.bold(functionName) +
+			headerSpace
+		)
+	);
+}
+
+function trace(error = '') {
+	let h1 = 'Tracing';
+	let name = error;
+	if (_.isError(error)) {
+		h1 = error.name;
+		name = error.message;
+	}
+
+	let stack;
+	if (!error) {
+		stack = stackTrace.get(new Error());
+		stack.shift();
+	}
+	else {
+		stack = stackTrace.get(error);
+	}
+
+	// eslint-disable-next-line no-control-regex
+	const h1Length = h1.replace(/\u001b\[\d\d?(;\d\d?)?m/g, '').length;
+
+	if (name.length > process.stdout.columns - h1Length - 3 - name.length) {
+		console.log(chalk.bgBlue(chalk.bold(chalk.white(' ' + h1 + ' \n ') + chalk.yellow(name))));
+	}
+	else {
+		const h1Space = _.repeat(' ', process.stdout.columns - h1Length - 2 - name.length);
+		console.log(chalk.bgBlue(chalk.white.bold(' ' + h1 + ' ' + chalk.yellow.bold(name) + h1Space)));
+	}
+
+	stack.forEach((frame) => {
+		const fileName = frame.getRelativeFileName();
+		const columnNumber = frame.getColumnNumber();
+
+		if (!frame.isApp() || fileName.indexOf('node_modules') !== -1) {
+			console.log(errorFrameToString(frame, 'black', 'white'));
 			return;
 		}
 
-		// set value
-		this.data.set(key, value);
 
-		// set ttl
-		clearTimeout(this.ttl.get(key));
-		this.ttl.set(key, setTimeout(() => this.del(key), ttl));
-	}
-
-	_del(key) {
-		// delete ttl
-		if (this.ttl.has(key)) {
-			clearTimeout(this.ttl.get(key));
-			this.ttl.delete(key);
+		const line = frame.getContext(3).line;
+		if (!line) {
+			console.log(errorFrameToString(frame, 'black', 'white'));
+			return;
 		}
 
-		// delete data
-		this.data.delete(key);
-	}
+		const marker = _.repeat(' ', columnNumber - 1) + '^';
 
-	_clear() {
-		// clear ttl
-		this.ttl.forEach(value => clearTimeout(value));
-		this.ttl.clear();
+		console.log(
+			errorFrameToString(frame, 'magenta', 'white') +
+			'\n' +
+			chalk.blue.bold(' ' + frame.getContext(3).pre.join('\n ').replace(/\t/g, '    ')) +
+			'\n ' +
+			chalk.yellow.bold(line.replace(/\t/g, '    ')) +
+			'\n ' +
+			chalk.yellow.bold(marker) +
+			'\n ' +
+			chalk.blue.bold(frame.getContext(3).post.join('\n ').replace(/\t/g, '    '))
+		);
+	});
 
-		// clear data
-		this.data.clear();
-		this.fetching.clear();
-	}
-
-	/**
-	 * gets a value from the cache
-	 * @param {string} key
-	 * @param {any} defaultValue
-	 */
-	async get(key, defaultValue = undefined) {
-		const fetching = this.fetching.get(key);
-		if (fetching) {
-			// Some other process is still fetching the value
-			// Don't dogpile shit, wait for the other process
-			// to finish it
-			const value = await fetching;
-			if (value === undefined) return defaultValue;
-			return value;
-		}
-
-		const existing = this.data.get(key);
-		if (existing === undefined) return defaultValue;
-		return existing;
-	}
-
-	/**
-	 * gets a value from the cache immediately without waiting
-	 * @param {string} key
-	 * @param {any} defaultValue
-	 */
-	async getStale(key, defaultValue = undefined) {
-		const existing = this.data.get(key);
-		if (existing === undefined) return defaultValue;
-		return existing;
-	}
-
-	/**
-	 * checks if a key exists in the cache
-	 * @param {string} key
-	 */
-	async has(key) {
-		return this.data.has(key);
-	}
-
-	/**
-	 * @typedef {object} setOpts
-	 * @property {number|string} ttl in ms / timestring ('1d 3h') default: 0
-	 */
-
-	/**
-	 * sets a value in the cache
-	 * avoids dogpiling if the value is a promise or a function returning a promise
-	 * @param {string} key
-	 * @param {any} value
-	 * @param {number|string|setOpts} [options={}] ttl in ms/timestring('1d 3h') or opts (default: 0)
-	 * @return {boolean}
-	 */
-	async set(key, value, options = {}) {
-		let ttl = (typeof options === 'object') ? options.ttl : options;
-		if (typeof ttl === 'string') {
-			ttl = timestring(ttl, 'ms');
-		}
-		else {
-			ttl = ttl || 0;
-		}
-
-		try {
-			if (value &amp;&amp; value.then) {
-				// value is a Promise
-				// resolve it and then cache it
-				this.fetching.set(key, value);
-				const resolvedValue = await value;
-				this._set(key, resolvedValue, ttl);
-				this.fetching.delete(key);
-				return true;
-			}
-			else if (typeof value === 'function') {
-				// value is a function
-				// call it and set the result
-				return this.set(key, value(key), ttl);
-			}
-
-			// value is normal
-			// just set it in the store
-			this._set(key, value, ttl);
-			return true;
-		}
-		catch (error) {
-			this._del(key);
-			this.fetching.delete(key);
-			return false;
-		}
-	}
-
-	/**
-	 * gets a value from the cache, or sets it if it doesn't exist
-	 * this takes care of dogpiling (make sure value is a function to avoid dogpiling)
-	 * @param {string} key key to get
-	 * @param {any} value value to set if the key does not exist
-	 * @param {number|string|setOpts} [options={}] ttl in ms/timestring('1d 3h') or opts (default: 0)
-	 * @return {any}
-	 */
-	async getOrSet(key, value, options = {}) {
-		const fetching = this.fetching.get(key);
-		if (fetching) {
-			// Some other process is still fetching the value
-			// Don't dogpile shit, wait for the other process
-			// to finish it
-			return fetching;
-		}
-
-		// key already exists, return it
-		const existing = this.data.get(key);
-		if (existing !== undefined) return existing;
-
-		// no value given, return undefined
-		if (value === undefined) return undefined;
-
-		await this.set(key, value, options);
-		return this.data.get(key);
-	}
-
-	/**
-	 * alias for getOrSet
-	 * @param {string} key key to get
-	 * @param {any} value value to set if the key does not exist
-	 * @param {number|string|setOpts} [options={}] ttl in ms/timestring('1d 3h') or opts (default: 0)
-	 * @return {any}
-	 */
-	async $(key, value, options = {}) {
-		return this.getOrSet(key, value, options);
-	}
-
-	/**
-	 * deletes a value from the cache
-	 * @param {string} key
-	 * @return {void}
-	 */
-	async del(key) {
-		return this._del(key);
-	}
-
-	/**
-	 * returns the size of the cache (no. of keys)
-	 * @return {number}
-	 */
-	async size() {
-		return this.data.size;
-	}
-
-	/**
-	 * clears the cache (deletes all keys)
-	 * @return {void}
-	 */
-	async clear() {
-		return this._clear();
-	}
-
-	/**
-	 * memoizes a function (caches the return value of the function)
-	 * ```js
-	 * const cachedFn = cache.memoize('expensiveFn', expensiveFn);
-	 * const result = cachedFn('a', 'b');
-	 * ```
-	 * @param {string} key cache key with which to memoize the results
-	 * @param {function} fn function to memoize
-	 * @param {number|string|setOpts} [options={}] ttl in ms/timestring('1d 3h') or opts (default: 0)
-	 * @return {function} memoized function
-	 */
-	memoize(key, fn, options = {}) {
-		return async (...args) => {
-			let cacheKey;
-			if (options.keyFn) {
-				cacheKey = key + ':' + options.keyFn(...args);
-			}
-			else {
-				cacheKey = key + ':' + JSON.stringify(args);
-			}
-
-			return this.getOrSet(cacheKey, () => fn(...args), options);
-		};
-	}
-
-	/**
-	 * returns a global cache instance
-	 * @return {Cache}
-	 */
-	static globalCache() {
-		if (!globalCache) globalCache = new this();
-		return globalCache;
-	}
-
-	/**
-	 * get value from global cache
-	 * @param {string} key
-	 * @param {any} defaultValue
-	 * @return {any}
-	 */
-	static get(key, defaultValue) {
-		return this.globalCache().get(key, defaultValue);
-	}
-
-	/**
-	 * gets a value from the cache immediately without waiting
-	 * @param {string} key
-	 * @param {any} defaultValue
-	 * @return {any}
-	 */
-	static getStale(key, defaultValue) {
-		return this.globalCache().getStale(key, defaultValue);
-	}
-
-	/**
-	 * checks if value exists in global cache
-	 * @param {string} key
-	 * @return {boolean}
-	 */
-	static has(key) {
-		return this.globalCache().has(key);
-	}
-
-	/**
-	 * sets a value in the global cache
-	 * @param {string} key
-	 * @param {any} value
-	 * @param {number|string|setOpts} [options={}] ttl in ms/timestring('1d 3h') or opts (default: 0)
-	 * @return {boolean}
-	 */
-	static set(key, value, options = {}) {
-		return this.globalCache().set(key, value, options);
-	}
-
-	/**
-	 * get or set a value in the global cache
-	 * @param {string} key
-	 * @param {any} value
-	 * @param {number|string|setOpts} [options={}] ttl in ms/timestring('1d 3h') or opts (default: 0)
-	 * @return {any}
-	 */
-	static getOrSet(key, value, options = {}) {
-		return this.globalCache().getOrSet(key, value, options);
-	}
-
-	/**
-	 * alias for getOrSet
-	 * @param {string} key
-	 * @param {any} value
-	 * @param {number|string|setOpts} [options={}] ttl in ms/timestring('1d 3h') or opts (default: 0)
-	 * @return {any}
-	 */
-	static $(key, value, options = {}) {
-		return this.globalCache().getOrSet(key, value, options);
-	}
-
-	/**
-	 * deletes a value from the global cache
-	 * @param {string} key
-	 * @return {void}
-	 */
-	static del(key) {
-		return this.globalCache().del(key);
-	}
-
-	/**
-	 * @return {number} the size of the global cache
-	 */
-	static size() {
-		return this.globalCache().size();
-	}
-
-	/**
-	 * clear the global cache
-	 * @return {void}
-	 */
-	static clear() {
-		return this.globalCache().clear();
-	}
-
-	/**
-	 *
-	 * @param {string} key
-	 * @param {function} fn
-	 * @param {number|string|setOpts} [options={}] ttl in ms/timestring('1d 3h') or opts (default: 0)
-	 * @return {function} memoized function
-	 */
-	static memoize(key, fn, options = {}) {
-		return this.globalCache().memoize(key, fn, options);
-	}
+	const lineSep = _.repeat('⁻', process.stdout.columns);
+	console.log(chalk.blue(lineSep));
 }
 
-export default Cache;
+function dumpSingle(arg, options = {}) {
+	if (arg instanceof Error) {
+		trace(arg);
+		return;
+	}
+
+	const opts = _.assign({
+		showHidden: false,
+		depth: null,
+		colors: true,
+		breakLength: 1,
+	}, options);
+
+	console.log(nodeUtil.inspect(arg, opts));
+}
+
+function dump(...args) {
+	args.forEach((arg) => {
+		dumpSingle(arg);
+	});
+}
+
+/**
+ * Colored Log to console with stack trace
+ * @param  {Array&lt;any>} args Args to log to console
+ */
+function d(...args) {
+	const prevStackLimit = Error.stackTraceLimit;
+	Error.stackTraceLimit = 2;
+
+	const stack = stackTrace.get(new Error());
+	Error.stackTraceLimit = prevStackLimit;
+
+	const frame = stack[1];
+	const fileName = frame.getRelativeFileName();
+	const lineNumber = frame.getLineNumber();
+	const columnNumber = frame.getColumnNumber();
+	const functionName = frame.getFunctionNameSanitized() || 'module';
+	const line = _.trim(frame.getContext().line, ' \t\n;');
+
+	const upperLine = `${fileName} at ${lineNumber}:${columnNumber} in ${functionName}`;
+	const upperExtraSpace = _.repeat(' ', Math.max(0, process.stdout.columns - upperLine.length - 1));
+	const lowerExtraSpace = _.repeat(' ', Math.max(0, process.stdout.columns - line.length - 1));
+
+	console.log(
+		chalk.bgBlue(
+			' ' +
+			chalk.white(
+				chalk.bold(fileName) +
+				' at ' +
+				chalk.bold(lineNumber) +
+				':' +
+				columnNumber +
+				' in ' +
+				chalk.bold(functionName)
+			) +
+			upperExtraSpace +
+			'\n ' +
+			chalk.yellow.bold(line) +
+			lowerExtraSpace
+		)
+	);
+
+	args.forEach((arg) => {
+		dumpSingle(arg);
+	});
+
+	const lineSep = _.repeat('⁻', process.stdout.columns);
+	console.log(chalk.blue(lineSep));
+}
+
+d.trace = trace;
+d.getTrace = stackTrace.get;
+d.dump = dump;
+
+process.on('uncaughtException', (err) => {
+	err.name = chalk.bgRed.white(' FATAL ') + ' ' + err.name;
+	d.trace(err);
+	process.exit(1);
+});
+
+process.on('unhandledRejection', (err) => {
+	err.name = chalk.bgRed.white(' UNHANDLED ') + ' ' + err.name;
+	d.trace(err);
+});
+
+module.exports = d;
 </code></pre>
         </article>
     </section>

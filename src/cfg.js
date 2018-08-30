@@ -6,7 +6,9 @@ const fileCache = {};
 let configRead = false;
 
 /**
- * @namespace cfg
+ * These are all available through cfg
+ * @see cfg
+ * @namespace config
  */
 
 // merge configs, takes care of getters while merging
@@ -35,7 +37,7 @@ function merge(conf, confPrivate) {
  * Reads a config value
  * @param {String} key key to read, can be nested like `a.b.c`
  * @param {*} defaultValue value to return if key is not found
- * @returns {any}
+ * @return {any}
  */
 function cfg(key, defaultValue) {
 	// eslint-disable-next-line no-use-before-define
@@ -74,10 +76,10 @@ function readDefaultConfigFiles() {
 	readEnvVariables();
 }
 /**
- * @memberof cfg
+ * @memberOf config
  * @param {string} key
  * @param {any} defaultValue
- * @returns {any}
+ * @return {any}
  */
 cfg.get = function (key, defaultValue) {
 	return cfg(key, defaultValue);
@@ -85,8 +87,8 @@ cfg.get = function (key, defaultValue) {
 
 /** set values in global config
  * you can also give key as an object to assign all key values from it
- * @memberof cfg
- * @returns {null}
+ * @memberOf config
+ * @return {null}
  */
 cfg.set = function (key, value) {
 	readDefaultConfigFiles();
@@ -108,8 +110,8 @@ cfg.set = function (key, value) {
  * set values in global config with an object to assign all key values from it
  * if a key already exists then it is merged with new value
  * if obj is not an Object then nothing happens
- * @memberof cfg
- * @returns {null}
+ * @memberOf config
+ * @return {null}
  */
 cfg.merge = function (obj) {
 	readDefaultConfigFiles();
@@ -128,8 +130,8 @@ cfg.merge = function (obj) {
  * set values in global config with an object to assign all key values from it
  * if a key already exists then it is assigned with new value
  * if obj is not an Object then nothing happens
- * @memberof cfg
- * @returns {null}
+ * @memberOf config
+ * @return {null}
  */
 cfg.assign = function (obj) {
 	readDefaultConfigFiles();
@@ -144,8 +146,8 @@ cfg.assign = function (obj) {
 };
 
 /**
- * @memberof cfg
- * @returns {void}
+ * @memberOf config
+ * @return {void}
  */
 cfg.delete = function (key) {
 	readDefaultConfigFiles();
@@ -154,7 +156,7 @@ cfg.delete = function (key) {
 
 /**
  * read config from a file, and merge with existing config
- * @memberof cfg
+ * @memberOf config
  * @param {string} file path of the file to read (only absolute paths)
  * @param {object} options
  * 	options = {ignoreErrors = ignore all errors, ignoreNotFound = ignore if file not found}
@@ -187,9 +189,9 @@ cfg.file = function (file, options = {}) {
 
 /**
  * read the file specified by the key, and then cache it
- * @memberof cfg
+ * @memberOf config
  * @param {String} key
- * @returns {any} value
+ * @return {any} value
  */
 cfg.read = function (key) {
 	if (key in fileCache) {
@@ -213,16 +215,16 @@ cfg.read = function (key) {
 };
 
 /**
- * @memberof cfg
- * @returns {boolean}
+ * @memberOf config
+ * @return {boolean}
  */
 cfg.isProduction = function () {
 	return process.env.NODE_ENV === 'production';
 };
 
 /**
- * @memberof cfg
- * @returns {boolean}
+ * @memberOf config
+ * @return {boolean}
  */
 cfg.isStaging = function () {
 	return process.env.NODE_ENV === 'staging';
@@ -230,24 +232,24 @@ cfg.isStaging = function () {
 
 /**
  * Returns true if env is production or staging
- * @memberof cfg
- * @returns {boolean}
+ * @memberOf config
+ * @return {boolean}
  */
 cfg.isProductionLike = function () {
 	return (process.env.NODE_ENV === 'production') || (process.env.NODE_ENV === 'staging');
 };
 
 /**
- * @memberof cfg
- * @returns {boolean}
+ * @memberOf config
+ * @return {boolean}
  */
 cfg.isTest = function () {
 	return process.env.NODE_ENV === 'test';
 };
 
 /**
- * @memberof cfg
- * @returns {boolean}
+ * @memberOf config
+ * @return {boolean}
  */
 cfg.isDev = function () {
 	return (process.env.NODE_ENV !== 'production') && (process.env.NODE_ENV !== 'staging');
