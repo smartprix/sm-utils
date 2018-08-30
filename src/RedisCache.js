@@ -430,7 +430,7 @@ class RedisCache {
 	 * avoids dogpiling if the value is a promise or a function returning a promise
 	 * @param {string} key
 	 * @param {any} value
-	 * @param {number|object} options either ttl in ms / timestring ('1d 3h'), or object of {ttl}
+	 * @param {number|string|object} options either ttl in ms / timestring ('1d 3h'), or object of {ttl}
 	 */
 	async set(key, value, options = {}, ret = {}) {
 		let ttl = (typeof options === 'object') ? options.ttl : options;
@@ -502,7 +502,7 @@ class RedisCache {
 	 * this takes care of dogpiling (make sure value is a function to avoid dogpiling)
 	 * @param {string} key key to get
 	 * @param {any} value value to set if the key does not exist
-	 * @param {number|object} options
+	 * @param {number|string|object} options
 	 * 	either ttl in ms or as a timestring ('1d 3h'),
 	 * 	or object of {
 	 * 		ttl => time to live in milliseconds or as a timestring ('1d 3h'),
@@ -578,7 +578,7 @@ class RedisCache {
 	 * ```
 	 * @param {string} key cache key with which to memoize the results
 	 * @param {function} fn function to memoize
-	 * @param {number|object} options either ttl in ms, or object of {ttl}
+	 * @param {number|string|object} options either ttl in ms, or object of {ttl}
 	 * @returns {function}
 	 */
 	memoize(key, fn, options = {}) {
@@ -664,7 +664,7 @@ class RedisCache {
 	 * sets a value in the global cache
 	 * @param {string} key
 	 * @param {any} value
-	 * @param {number|object} options either ttl in ms / timestring ('1d 3h'), or object of {ttl}
+	 * @param {number|string|object} options either ttl in ms / timestring ('1d 3h'), or object of {ttl}
 	 */
 	static set(key, value, options = {}) {
 		return this.globalCache().set(key, value, options);
@@ -674,7 +674,7 @@ class RedisCache {
 	 * gets a value from the global cache, or sets it if it doesn't exist
 	 * @param {string} key key to get
 	 * @param {any} value value to set if the key does not exist
-	 * @param {number|object} options
+	 * @param {number|string|object} options
 	 */
 	static getOrSet(key, value, options = {}) {
 		return this.globalCache().getOrSet(key, value, options);
@@ -684,7 +684,7 @@ class RedisCache {
 	 * gets a value from the global cache, or sets it if it doesn't exist
 	 * @param {string} key key to get
 	 * @param {any} value value to set if the key does not exist
-	 * @param {number|object} options
+	 * @param {number|string|object} options
 	 */
 	static $(key, value, options = {}) {
 		return this.globalCache().getOrSet(key, value, options);
@@ -717,7 +717,7 @@ class RedisCache {
 	 * memoizes a function (caches the return value of the function)
 	 * @param {string} key
 	 * @param {function} fn
-	 * @param {number|object} options
+	 * @param {number|string|object} options
 	 * @returns {function}
 	 */
 	static memoize(key, fn, options = {}) {
