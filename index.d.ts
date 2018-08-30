@@ -2150,12 +2150,6 @@ declare module 'sm-utils' {
     }
 
     /**
-     * Colored Log to console with stack trace
-     * @param args Args to log to console
-     */
-    function d(...args: any[]): void;
-
-    /**
      * Reads a config value
      * @param key key to read, can be nested like `a.b.c`
      * @param defaultValue value to return if key is not found
