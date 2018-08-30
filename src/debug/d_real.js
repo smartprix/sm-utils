@@ -1,4 +1,5 @@
 /* eslint-disable no-console, no-shadow */
+import System from '../System';
 require('longjohn');
 
 // increase error stack trace limit
@@ -180,7 +181,7 @@ d.dump = dump;
 process.on('uncaughtException', (err) => {
 	err.name = chalk.bgRed.white(' FATAL ') + ' ' + err.name;
 	d.trace(err);
-	process.exit(1);
+	System.exit(1);
 });
 
 process.on('unhandledRejection', (err) => {
