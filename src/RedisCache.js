@@ -27,9 +27,11 @@ class RedisCache {
 	static globalPrefix = 'a';
 	static redisGetCount = 0;
 	static useLocalCache = true;
+	static logger = console;
 
-	constructor(prefix, redisConf = {}) {
+	constructor(prefix, redisConf = {}, {logger} = {}) {
 		this.prefix = prefix;
+		this.logger = logger || RedisCache.logger;
 
 		if (redisConf instanceof Redis) {
 			this.redis = redisConf;
@@ -73,7 +75,7 @@ class RedisCache {
 
 		redisIns.subscribe(channelName, (err) => {
 			if (err) {
-				console.error(`[RedisCache] can't subscribe to channel ${channelName}`, err);
+				RedisCache.logger.error(`[RedisCache] can't subscribe to channel ${channelName}`, err);
 			}
 		});
 
@@ -85,12 +87,12 @@ class RedisCache {
 		// the message is ${pid}\v${prefix}\v${command}\v${args.join('\v')}
 		const [pid, prefix, command, key, ...args] = message.split('\v');
 
-		// console.log(`[RedisCache] received subscribe command ${command} ${prefix}:${key}`);
+		// RedisCache.logger.log(`[RedisCache] received subscribe command ${command} ${prefix}:${key}`);
 
 		if (Number(pid) === processId) {
 			// since the message came from the same process, it's already been handled
 			// we don't need to do anything
-			// console.log(`[RedisCache] ignored subscribe command ${command} from same process`);
+			// RedisCache.logger.log(`[RedisCache] ignored subscribe command ${command} from same process`);
 			return;
 		}
 
@@ -110,7 +112,7 @@ class RedisCache {
 			this._localCache(prefix, key, value, ttl);
 		}
 		else {
-			console.error(`[RedisCache] unknown subscribe command ${command}`);
+			RedisCache.logger.error(`[RedisCache] unknown subscribe command ${command}`);
 		}
 	}
 
@@ -473,7 +475,7 @@ class RedisCache {
 			return true;
 		}
 		catch (error) {
-			console.error(`[RedisCache] error while setting key ${key}`, error);
+			this.logger.error(`[RedisCache] error while setting key ${key}`, error);
 			await this._del(key);
 			this._setting(key, DELETE);
 			return false;

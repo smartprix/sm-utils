@@ -66,6 +66,7 @@ async function iterateOverJobs(queue, jobType, numOfJobs, olderThan, action) {
 class Queue {
 	static jobs;
 	static queues = {};
+	static logger = console;
 
 	/**
 	 * Initialise the redis connection
@@ -80,7 +81,7 @@ class Queue {
 			});
 			if (enableWatchdog)	Queue.jobs.watchStuckJobs(10000);
 			Queue.jobs.on('error', (err) => {
-				console.error(`[Queue] ${err}`);
+				Queue.logger.error(`[Queue] ${err}`);
 			});
 
 			System.onExit(Queue.exit);
@@ -93,15 +94,23 @@ class Queue {
 	 * Can also be set beforehand by calling Queue.init()
 	 * @param {String} name Name of the queue
 	 * @param {Object} [redis={port: 6379, host: '127.0.0.1'}] Redis connection settings object
-	 * @param {Boolean} [enableWatchdog=false] Will watch for stuck jobs due to any connection issues
+	 * @param {Boolean|Object} [options={}]
+	 * @param {Boolean} [options.enableWatchdog=false] Will watch for stuck jobs
+	 * @param {Console} [options.logger]
 	 * Read more here :  https://github.com/Automattic/kue#unstable-redis-connections
 	 */
-	constructor(name, redis = {port: 6379, host: '127.0.0.1'}, enableWatchdog = false) {
+	constructor(name, redis = {port: 6379, host: '127.0.0.1'}, options = {}) {
 		this.name = `${name}${process.env.NODE_ENV ? '-' + process.env.NODE_ENV : ''}`;
+
+		if (typeof options !== 'object') options = {enableWatchdog: !!options};
+		else options.enableWatchdog = !!options.enableWatchdog;
 		if (!Queue.queues[this.name]) Queue.queues[this.name] = {processorAdded: false};
+
+		this.logger = options.logger || Queue.logger;
 		this.paused = undefined;
 		this.kueCtx = undefined;
-		Queue.init(redis, enableWatchdog);
+
+		Queue.init(redis, options.enableWatchdog);
 	}
 
 
@@ -317,7 +326,7 @@ class Queue {
 			}, 10000);
 		}
 		catch (err) {
-			console.error('[Queue] Could not set kue ctx');
+			this.logger.error('[Queue] Could not set kue ctx');
 		}
 	}
 
@@ -539,9 +548,8 @@ class Queue {
 				resolve(true);
 			}
 			else {
-				console.log('[Queue] Shutting down redis queue');
-				// eslint-disable-next-line no-unused-vars
-				Queue.jobs.shutdown(timeout, (err) => {
+				Queue.logger.log('[Queue] Shutting down redis queue');
+				Queue.jobs.shutdown(timeout, () => {
 					Queue.jobs = undefined;
 					resolve(true);
 				});
