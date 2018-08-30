@@ -1,8 +1,7 @@
-/** @module Str */
-
 /**
  * Convert a number into words
  *
+ * @memberof Str
  * @param {number} number
  * @returns {string}
  */

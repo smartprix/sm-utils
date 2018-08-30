@@ -13,6 +13,7 @@ const fs = promisify(_fs);
 
 /**
  * File System utilities wrapped in a class
+ * @class
  */
 class File {
 	/**

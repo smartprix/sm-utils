@@ -21,6 +21,7 @@ async function _withDefault(promise, defaultValue) {
 
 /**
  * Cache backed by Redis
+ * @class
  */
 class RedisCache {
 	static globalPrefix = 'a';
@@ -429,7 +430,7 @@ class RedisCache {
 	 * avoids dogpiling if the value is a promise or a function returning a promise
 	 * @param {string} key
 	 * @param {any} value
-	 * @param {int|object} options either ttl in ms / timestring ('1d 3h'), or object of {ttl}
+	 * @param {number|object} options either ttl in ms / timestring ('1d 3h'), or object of {ttl}
 	 */
 	async set(key, value, options = {}, ret = {}) {
 		let ttl = (typeof options === 'object') ? options.ttl : options;
@@ -501,7 +502,7 @@ class RedisCache {
 	 * this takes care of dogpiling (make sure value is a function to avoid dogpiling)
 	 * @param {string} key key to get
 	 * @param {any} value value to set if the key does not exist
-	 * @param {int|object} options
+	 * @param {number|object} options
 	 * 	either ttl in ms or as a timestring ('1d 3h'),
 	 * 	or object of {
 	 * 		ttl => time to live in milliseconds or as a timestring ('1d 3h'),
@@ -551,8 +552,8 @@ class RedisCache {
 	}
 
 	/**
-	 * returns the size of the cache (no. of keys)
-	 * NOTE: this method is expansive, so don't use it unless absolutely necessary
+	 * NOTE: this method is expensive, so don't use it unless absolutely necessary
+	 * @returns {number} the size of the cache (no. of keys)
 	 */
 	async size() {
 		return this._size();
@@ -560,7 +561,7 @@ class RedisCache {
 
 	/**
 	 * clears the cache (deletes all keys)
-	 * NOTE: this method is expansive, so don't use it unless absolutely necessary
+	 * NOTE: this method is expensive, so don't use it unless absolutely necessary
 	 */
 	async clear() {
 		if (this.useLocalCache) {
@@ -577,7 +578,8 @@ class RedisCache {
 	 * ```
 	 * @param {string} key cache key with which to memoize the results
 	 * @param {function} fn function to memoize
-	 * @param {int|object} options either ttl in ms, or object of {ttl}
+	 * @param {number|object} options either ttl in ms, or object of {ttl}
+	 * @returns {function}
 	 */
 	memoize(key, fn, options = {}) {
 		return async (...args) => {
@@ -622,47 +624,102 @@ class RedisCache {
 		);
 	}
 
+	/**
+	 * Return a global instance of Redis cache
+	 * @param {Object} redis redis redisConf
+	 * @returns {RedisCache}
+	 */
 	static globalCache(redis) {
 		if (!globalCache) globalCache = new this('global', redis);
 		return globalCache;
 	}
 
+	/**
+	 * gets a value from the cache immediately without waiting
+	 * @param {string} key
+	 * @param {any} defaultValue
+	 */
 	static getStale(key, defaultValue) {
 		return this.globalCache().getStale(key, defaultValue);
 	}
 
+	/**
+	 * gets a value from the global cache
+	 * @param {string} key
+	 * @param {any} defaultValue
+	 */
 	static get(key, defaultValue) {
 		return this.globalCache().get(key, defaultValue);
 	}
 
+	/**
+	 * checks if a key exists in the global cache
+	 * @param {string} key
+	 */
 	static has(key) {
 		return this.globalCache().has(key);
 	}
 
+	/**
+	 * sets a value in the global cache
+	 * @param {string} key
+	 * @param {any} value
+	 * @param {number|object} options either ttl in ms / timestring ('1d 3h'), or object of {ttl}
+	 */
 	static set(key, value, options = {}) {
 		return this.globalCache().set(key, value, options);
 	}
 
+	/**
+	 * gets a value from the global cache, or sets it if it doesn't exist
+	 * @param {string} key key to get
+	 * @param {any} value value to set if the key does not exist
+	 * @param {number|object} options
+	 */
 	static getOrSet(key, value, options = {}) {
 		return this.globalCache().getOrSet(key, value, options);
 	}
 
+	/**
+	 * gets a value from the global cache, or sets it if it doesn't exist
+	 * @param {string} key key to get
+	 * @param {any} value value to set if the key does not exist
+	 * @param {number|object} options
+	 */
 	static $(key, value, options = {}) {
 		return this.globalCache().getOrSet(key, value, options);
 	}
 
+	/**
+	 * deletes a value from the global cache
+	 * @param {string} key
+	 */
 	static del(key) {
 		return this.globalCache().del(key);
 	}
 
+	/**
+	 * @returns {number} size of the global cache (no. of keys)
+	 */
 	static size() {
 		return this.globalCache().size();
 	}
 
+	/**
+	 * clears the global cache (deletes all keys)
+	 */
 	static clear() {
 		return this.globalCache().clear();
 	}
 
+	/**
+	 *
+	 * memoizes a function (caches the return value of the function)
+	 * @param {string} key
+	 * @param {function} fn
+	 * @param {number|object} options
+	 * @returns {function}
+	 */
 	static memoize(key, fn, options = {}) {
 		return this.globalCache().memoize(key, fn, options);
 	}

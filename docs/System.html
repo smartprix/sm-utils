@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>Queue - Documentation</title>
+    <title>System - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -33,7 +33,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">Queue</h1>
+    <h1 class="page-title">System</h1>
     
 
     
@@ -46,10 +46,8 @@
 <header>
     
         <h2>
-        Queue
+        System
         </h2>
-        
-            <div class="class-description"><p>Job Queue</p></div>
         
     
 </header>
@@ -60,23 +58,12 @@
         
             
 
-    
-    <h2>Constructor</h2>
-    
-
-    <h4 class="name" id="Queue"><span class="type-signature"></span>new Queue<span class="signature">(name, redis<span class="signature-attributes">opt</span>, enableWatchdog<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-
 <dl class="details">
 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Queue.js.html">Queue.js</a>, <a href="Queue.js.html#line66">line 66</a>
+        <a href="System_System.js.html">System/System.js</a>, <a href="System_System.js.html#line6">line 6</a>
     </li></ul></dd>
     
 
@@ -114,178 +101,11 @@
 
 
 
-
-<div class="description">
-    <p>Create a new Queue<br>The redis and enableWatchdog settings are required only the first time to init<br>Can also be set beforehand by calling Queue.init()</p>
-</div>
-
-
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-        <th>Attributes</th>
-        
-
-        
-        <th>Default</th>
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
             
-                <td class="name"><code>name</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">String</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
+                <div class="description"><p>System and process utilities</p></div>
             
 
             
-                <td class="default">
-                
-                </td>
-            
-
-            <td class="description last"><p>Name of the queue</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>redis</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Object</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    <code>{port: 6379, host: '127.0.0.1'}</code>
-                
-                </td>
-            
-
-            <td class="description last"><p>Redis connection settings object</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>enableWatchdog</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Boolean</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    <code>false</code>
-                
-                </td>
-            
-
-            <td class="description last"><p>Will watch for stuck jobs due to any connection issues<br>Read more here :  https://github.com/Automattic/kue#unstable-redis-connections</p></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         
         </div>
     
@@ -310,7 +130,7 @@
 
     
 
-    <h4 class="name" id=".exit"><span class="type-signature">(async, static) </span>exit<span class="signature">(timeout<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Boolean}</span></h4>
+    <h4 class="name" id=".exec"><span class="type-signature">(static) </span>exec<span class="signature">(command, options)</span><span class="type-signature"></span></h4>
 
     
 
@@ -322,7 +142,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Queue.js.html">Queue.js</a>, <a href="Queue.js.html#line536">line 536</a>
+        <a href="System_System.js.html">System/System.js</a>, <a href="System_System.js.html#line58">line 58</a>
     </li></ul></dd>
     
 
@@ -362,178 +182,7 @@
 
 
 <div class="description">
-    <p>Function shuts down the Queue gracefully.<br>Waits for active jobs to complete until timeout, then marks them failed.</p>
-</div>
-
-
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-        <th>Attributes</th>
-        
-
-        
-        <th>Default</th>
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>timeout</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Number</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    <code>10000</code>
-                
-                </td>
-            
-
-            <td class="description last"><p>Time in milliseconds, default = 10000</p></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
-
-
-<dl class="param-type">
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">Boolean</span>
-
-
-    </dd>
-</dl>
-
-    
-
-
-        
-            
-
-    
-
-    <h4 class="name" id=".getCount"><span class="type-signature">(async, static) </span>getCount<span class="signature">(queue, jobType)</span><span class="type-signature"> &rarr; {Number}</span></h4>
-
-    
-
-
-
-
-<dl class="details">
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Queue.js.html">Queue.js</a>, <a href="Queue.js.html#line364">line 364</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-<div class="description">
-    <p>Return count of jobs in Queue of JobType</p>
+    <p>Execute the given command in a shell.</p>
 </div>
 
 
@@ -571,7 +220,7 @@
 
         <tr>
             
-                <td class="name"><code>queue</code></td>
+                <td class="name"><code>command</code></td>
             
 
             <td class="type">
@@ -587,173 +236,14 @@
 
             
 
-            <td class="description last"><p>Queue name</p></td>
+            <td class="description last"></td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>jobType</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">String</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>One of {'inactive', 'delayed' ,'active', 'complete', 'failed'}</p></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
-<div class="param-desc">
-    <p>count</p>
-</div>
-
-
-
-<dl class="param-type">
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">Number</span>
-
-
-    </dd>
-</dl>
-
-    
-
-
-        
-            
-
-    
-
-    <h4 class="name" id=".init"><span class="type-signature">(static) </span>init<span class="signature">(redis<span class="signature-attributes">opt</span>, enableWatchdog<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-
-<dl class="details">
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Queue.js.html">Queue.js</a>, <a href="Queue.js.html#line76">line 76</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-<div class="description">
-    <p>Initialise the redis connection</p>
-</div>
-
-
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-        <th>Attributes</th>
-        
-
-        
-        <th>Default</th>
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>redis</code></td>
+                <td class="name"><code>options</code></td>
             
 
             <td class="type">
@@ -766,65 +256,10 @@
             </td>
 
             
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
 
             
-                <td class="default">
-                
-                    <code>{port: 6379, host: '127.0.0.1'}</code>
-                
-                </td>
-            
 
-            <td class="description last"><p>Redis connection settings object</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>enableWatchdog</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Boolean</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    <code>false</code>
-                
-                </td>
-            
-
-            <td class="description last"><p>Will watch for stuck jobs due to any connection issues<br>Read more here :  https://github.com/Automattic/kue#unstable-redis-connections</p></td>
+            <td class="description last"><p>options object<br>options: {timeout (in ms), cwd, uid, gid, env (object), shell (eg. /bin/sh), encoding}</p></td>
         </tr>
 
     
@@ -851,7 +286,7 @@
 
     
 
-    <h4 class="name" id=".processJobById"><span class="type-signature">(async, static) </span>processJobById<span class="signature">(jobId, processor)</span><span class="type-signature"> &rarr; {<a href="global.html#jobDetails">jobDetails</a>}</span></h4>
+    <h4 class="name" id=".execFile"><span class="type-signature">(static) </span>execFile<span class="signature">()</span><span class="type-signature"></span></h4>
 
     
 
@@ -863,7 +298,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Queue.js.html">Queue.js</a>, <a href="Queue.js.html#line518">line 518</a>
+        <a href="System_System.js.html">System/System.js</a>, <a href="System_System.js.html#line66">line 66</a>
     </li></ul></dd>
     
 
@@ -903,7 +338,303 @@
 
 
 <div class="description">
-    <p>Manualy process a specific Job. Returns existing result if job already processed</p>
+    <p>Similar to exec but instead executes a given file</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".execFileOut"><span class="type-signature">(async, static) </span>execFileOut<span class="signature">()</span><span class="type-signature"> &rarr; {String}</span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="System_System.js.html">System/System.js</a>, <a href="System_System.js.html#line86">line 86</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>execute a file and return its output</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>output of the file's execution</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">String</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".execOut"><span class="type-signature">(async, static) </span>execOut<span class="signature">()</span><span class="type-signature"> &rarr; {String}</span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="System_System.js.html">System/System.js</a>, <a href="System_System.js.html#line76">line 76</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>execute a command and return its output</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>output of the command's execution</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">String</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".exit"><span class="type-signature">(static) </span>exit<span class="signature">(code)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="System_System.js.html">System/System.js</a>, <a href="System_System.js.html#line250">line 250</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>exit and kill the process gracefully (after completing all onExit handlers)<br>code can be an exit code or a message (string)<br>if a message is given then it will be logged to console before exiting</p>
 </div>
 
 
@@ -941,552 +672,26 @@
 
         <tr>
             
-                <td class="name"><code>jobId</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>Id of the job to be processed</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>processor</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><a href="global.html#processorCallback">processorCallback</a></span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>Function to be called to process the job data, without ctx</p></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
-<div class="param-desc">
-    <p>Result of processor function and job object of completed job</p>
-</div>
-
-
-
-<dl class="param-type">
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type"><a href="global.html#jobDetails">jobDetails</a></span>
-
-
-    </dd>
-</dl>
-
-    
-
-
-        
-            
-
-    
-
-    <h4 class="name" id=".status"><span class="type-signature">(async, static) </span>status<span class="signature">(jobId)</span><span class="type-signature"> &rarr; {<a href="global.html#jobDetails">jobDetails</a>}</span></h4>
-
-    
-
-
-
-
-<dl class="details">
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Queue.js.html">Queue.js</a>, <a href="Queue.js.html#line499">line 499</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-<div class="description">
-    <p>Function to query the status of a job</p>
-</div>
-
-
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>jobId</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>Job id for which status info is required</p></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
-<div class="param-desc">
-    <p>Object full of job details like state, time, attempts, etc.</p>
-</div>
-
-
-
-<dl class="param-type">
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type"><a href="global.html#jobDetails">jobDetails</a></span>
-
-
-    </dd>
-</dl>
-
-    
-
-
-        
-            
-
-    
-
-    <h4 class="name" id="activeJobs"><span class="type-signature">(async) </span>activeJobs<span class="signature">()</span><span class="type-signature"> &rarr; {Number}</span></h4>
-
-    
-
-
-
-
-<dl class="details">
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Queue.js.html">Queue.js</a>, <a href="Queue.js.html#line417">line 417</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-<div class="description">
-    <p>Return count of active jobs in Queue</p>
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
-<div class="param-desc">
-    <p>activeCount</p>
-</div>
-
-
-
-<dl class="param-type">
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">Number</span>
-
-
-    </dd>
-</dl>
-
-    
-
-
-        
-            
-
-    
-
-    <h4 class="name" id="addAndProcess"><span class="type-signature">(async) </span>addAndProcess<span class="signature">(input, opts, timeout<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {any}</span></h4>
-
-    
-
-
-
-
-<dl class="details">
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Queue.js.html">Queue.js</a>, <a href="Queue.js.html#line209">line 209</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-<div class="description">
-    <p>Add a job to the Queue, wait for it to process and return result<br>Preferably set PRIORITY HIGH or it might timeout if lots of other tasks are in queue<br>Queue will process job only if timeout is not passed when processing begins</p>
-</div>
-
-
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-        <th>Attributes</th>
-        
-
-        
-        <th>Default</th>
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>input</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">any</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                </td>
-            
-
-            <td class="description last"><p>Job data</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>opts</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><a href="global.html#addOpts">addOpts</a></span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                </td>
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>timeout</code></td>
+                <td class="name"><code>code</code></td>
             
 
             <td class="type">
             
                 
 <span class="param-type">number</span>
+|
+
+<span class="param-type">String</span>
 
 
             
             </td>
 
             
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
 
             
-                <td class="default">
-                
-                    <code>180000</code>
-                
-                </td>
-            
 
-            <td class="description last"><p>wait for this time else throw err</p></td>
+            <td class="description last"><p>exit code or the message to be logged</p></td>
         </tr>
 
     
@@ -1506,28 +711,6 @@
 
 
 
-<h5>Returns:</h5>
-
-        
-<div class="param-desc">
-    <p>result</p>
-</div>
-
-
-
-<dl class="param-type">
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">any</span>
-
-
-    </dd>
-</dl>
-
-    
 
 
         
@@ -1535,7 +718,7 @@
 
     
 
-    <h4 class="name" id="addJob"><span class="type-signature">(async) </span>addJob<span class="signature">(input, opts)</span><span class="type-signature"> &rarr; {Number}</span></h4>
+    <h4 class="name" id=".forceExit"><span class="type-signature">(static) </span>forceExit<span class="signature">(code)</span><span class="type-signature"></span></h4>
 
     
 
@@ -1547,7 +730,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Queue.js.html">Queue.js</a>, <a href="Queue.js.html#line125">line 125</a>
+        <a href="System_System.js.html">System/System.js</a>, <a href="System_System.js.html#line269">line 269</a>
     </li></ul></dd>
     
 
@@ -1587,7 +770,7 @@
 
 
 <div class="description">
-    <p>Add a job to the Queue</p>
+    <p>force exit the process<br>no onExit handler will run when force exiting a process<br>same as original process.exit (which we override)</p>
 </div>
 
 
@@ -1625,7 +808,509 @@
 
         <tr>
             
-                <td class="name"><code>input</code></td>
+                <td class="name"><code>code</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+|
+
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>exit code or the message to be logged</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".getAllUsers"><span class="type-signature">(static) </span>getAllUsers<span class="signature">()</span><span class="type-signature"> &rarr; {Object}</span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="System_System.js.html">System/System.js</a>, <a href="System_System.js.html#line158">line 158</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>get all users in the system<br>currently gets user info from /etc/passwd</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>object containing info for all users, as username:info pairs</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".getuid"><span class="type-signature">(static) </span>getuid<span class="signature">()</span><span class="type-signature"> &rarr; {Number}</span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="System_System.js.html">System/System.js</a>, <a href="System_System.js.html#line120">line 120</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>get the uid of the user running current process</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>uid</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Number</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".getUserInfo"><span class="type-signature">(static) </span>getUserInfo<span class="signature">(user)</span><span class="type-signature"> &rarr; {Object}</span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="System_System.js.html">System/System.js</a>, <a href="System_System.js.html#line132">line 132</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>get user info from username or uid<br>currently gets user info from /etc/passwd</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>user</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+|
+
+<span class="param-type">Number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>username or uid</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>the user's information</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".gracefulServerExit"><span class="type-signature">(static) </span>gracefulServerExit<span class="signature">(server, options)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="System_System.js.html">System/System.js</a>, <a href="System_System.js.html#line365">line 365</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>server</code></td>
             
 
             <td class="type">
@@ -1641,20 +1326,20 @@
 
             
 
-            <td class="description last"><p>Job data</p></td>
+            <td class="description last"></td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>opts</code></td>
+                <td class="name"><code>options</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type"><a href="global.html#addOpts">addOpts</a></span>
+<span class="param-type">*</span>
 
 
             
@@ -1684,28 +1369,6 @@
 
 
 
-<h5>Returns:</h5>
-
-        
-<div class="param-desc">
-    <p>The ID of the job created</p>
-</div>
-
-
-
-<dl class="param-type">
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">Number</span>
-
-
-    </dd>
-</dl>
-
-    
 
 
         
@@ -1713,7 +1376,7 @@
 
     
 
-    <h4 class="name" id="addProcessor"><span class="type-signature">(async) </span>addProcessor<span class="signature">(processor, concurrency<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".microtime"><span class="type-signature">(static) </span>microtime<span class="signature">()</span><span class="type-signature"> &rarr; {Number}</span></h4>
 
     
 
@@ -1725,7 +1388,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Queue.js.html">Queue.js</a>, <a href="Queue.js.html#line269">line 269</a>
+        <a href="System_System.js.html">System/System.js</a>, <a href="System_System.js.html#line215">line 215</a>
     </li></ul></dd>
     
 
@@ -1765,348 +1428,7 @@
 
 
 <div class="description">
-    <p>Attach a processor to the Queue which will keep getting jobs as it completes them</p>
-</div>
-
-
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-        <th>Attributes</th>
-        
-
-        
-        <th>Default</th>
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>processor</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><a href="global.html#processorCallback">processorCallback</a></span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                </td>
-            
-
-            <td class="description last"><p>Function to be called to process the job data</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>concurrency</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Number</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    <code>1</code>
-                
-                </td>
-            
-
-            <td class="description last"><p>The number of jobs this processor can handle parallely</p></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id="cleanup"><span class="type-signature">(async) </span>cleanup<span class="signature">(olderThan<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-
-<dl class="details">
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Queue.js.html">Queue.js</a>, <a href="Queue.js.html#line465">line 465</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-<div class="description">
-    <p>Cleanup function to be called during startup,<br>resets active jobs older than specified time</p>
-</div>
-
-
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-        <th>Attributes</th>
-        
-
-        
-        <th>Default</th>
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>olderThan</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Number</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    <code>5000</code>
-                
-                </td>
-            
-
-            <td class="description last"><p>Time in milliseconds, default = 5000</p></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id="completedJobs"><span class="type-signature">(async) </span>completedJobs<span class="signature">()</span><span class="type-signature"> &rarr; {Number}</span></h4>
-
-    
-
-
-
-
-<dl class="details">
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Queue.js.html">Queue.js</a>, <a href="Queue.js.html#line393">line 393</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-<div class="description">
-    <p>Return count of completed jobs in Queue<br>Might return 0 if removeOnComplete was true</p>
+    <p>get current time in microseconds (as double)</p>
 </div>
 
 
@@ -2135,7 +1457,7 @@
 
         
 <div class="param-desc">
-    <p>completeCount</p>
+    <p>current time in microseconds</p>
 </div>
 
 
@@ -2160,7 +1482,7 @@
 
     
 
-    <h4 class="name" id="delayedJobs"><span class="type-signature">(async) </span>delayedJobs<span class="signature">()</span><span class="type-signature"> &rarr; {Number}</span></h4>
+    <h4 class="name" id=".millitime"><span class="type-signature">(static) </span>millitime<span class="signature">()</span><span class="type-signature"> &rarr; {Number}</span></h4>
 
     
 
@@ -2172,7 +1494,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Queue.js.html">Queue.js</a>, <a href="Queue.js.html#line409">line 409</a>
+        <a href="System_System.js.html">System/System.js</a>, <a href="System_System.js.html#line192">line 192</a>
     </li></ul></dd>
     
 
@@ -2212,7 +1534,7 @@
 
 
 <div class="description">
-    <p>Return count of delayed jobs in Queue</p>
+    <p>get current time in milliseconds (as double)</p>
 </div>
 
 
@@ -2241,7 +1563,7 @@
 
         
 <div class="param-desc">
-    <p>delayedCount</p>
+    <p>current time in milliseconds</p>
 </div>
 
 
@@ -2266,7 +1588,7 @@
 
     
 
-    <h4 class="name" id="delete"><span class="type-signature">(async) </span>delete<span class="signature">(olderThan<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".nanotime"><span class="type-signature">(static) </span>nanotime<span class="signature">()</span><span class="type-signature"> &rarr; {Number}</span></h4>
 
     
 
@@ -2278,7 +1600,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Queue.js.html">Queue.js</a>, <a href="Queue.js.html#line475">line 475</a>
+        <a href="System_System.js.html">System/System.js</a>, <a href="System_System.js.html#line202">line 202</a>
     </li></ul></dd>
     
 
@@ -2318,160 +1640,7 @@
 
 
 <div class="description">
-    <p>Removes any old jobs from queue<br>older than specified time</p>
-</div>
-
-
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-        <th>Attributes</th>
-        
-
-        
-        <th>Default</th>
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>olderThan</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Number</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    <code>3600000</code>
-                
-                </td>
-            
-
-            <td class="description last"><p>Time in milliseconds, default = 3600000 (1 hr)</p></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id="failedJobs"><span class="type-signature">(async) </span>failedJobs<span class="signature">()</span><span class="type-signature"> &rarr; {Number}</span></h4>
-
-    
-
-
-
-
-<dl class="details">
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Queue.js.html">Queue.js</a>, <a href="Queue.js.html#line401">line 401</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-<div class="description">
-    <p>Return count of failed jobs in Queue</p>
+    <p>get current time in nanoseconds (as double)</p>
 </div>
 
 
@@ -2500,7 +1669,7 @@
 
         
 <div class="param-desc">
-    <p>failedCount</p>
+    <p>current time in nanoseconds</p>
 </div>
 
 
@@ -2525,7 +1694,7 @@
 
     
 
-    <h4 class="name" id="inactiveJobs"><span class="type-signature">(async) </span>inactiveJobs<span class="signature">()</span><span class="type-signature"> &rarr; {Number}</span></h4>
+    <h4 class="name" id=".noUmask"><span class="type-signature">(static) </span>noUmask<span class="signature">()</span><span class="type-signature"> &rarr; {number}</span></h4>
 
     
 
@@ -2537,7 +1706,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Queue.js.html">Queue.js</a>, <a href="Queue.js.html#line376">line 376</a>
+        <a href="System_System.js.html">System/System.js</a>, <a href="System_System.js.html#line96">line 96</a>
     </li></ul></dd>
     
 
@@ -2577,7 +1746,7 @@
 
 
 <div class="description">
-    <p>Return count of inactive jobs in Queue</p>
+    <p>turn off umask for the current process</p>
 </div>
 
 
@@ -2606,7 +1775,7 @@
 
         
 <div class="param-desc">
-    <p>inactiveCount</p>
+    <p>the old umask</p>
 </div>
 
 
@@ -2617,7 +1786,7 @@
     </dt>
     <dd>
         
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
     </dd>
@@ -2631,7 +1800,7 @@
 
     
 
-    <h4 class="name" id="pauseProcessor"><span class="type-signature">(async) </span>pauseProcessor<span class="signature">(timeout<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".onExit"><span class="type-signature">(static) </span>onExit<span class="signature">(callback, options)</span><span class="type-signature"></span></h4>
 
     
 
@@ -2643,7 +1812,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Queue.js.html">Queue.js</a>, <a href="Queue.js.html#line329">line 329</a>
+        <a href="System_System.js.html">System/System.js</a>, <a href="System_System.js.html#line330">line 330</a>
     </li></ul></dd>
     
 
@@ -2683,7 +1852,7 @@
 
 
 <div class="description">
-    <p>Pause Queue processing<br>Gives timeout time to all workers to complete their current jobs then stops them</p>
+    <p>Add an exit handler that runs when process receives an exit signal<br>callback can be an async function, process will exit when all handlers have completed</p>
 </div>
 
 
@@ -2709,11 +1878,7 @@
         <th>Type</th>
 
         
-        <th>Attributes</th>
-        
 
-        
-        <th>Default</th>
         
 
         <th class="last">Description</th>
@@ -2725,39 +1890,49 @@
 
         <tr>
             
-                <td class="name"><code>timeout</code></td>
+                <td class="name"><code>callback</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">function</span>
 
 
             
             </td>
 
             
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
 
-                
+            
 
+            <td class="description last"><p>function to call on exit</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
                 
-                </td>
+<span class="param-type">number</span>
+|
+
+<span class="param-type">object</span>
+
+
+            
+            </td>
+
             
 
             
-                <td class="default">
-                
-                    <code>5000</code>
-                
-                </td>
-            
 
-            <td class="description last"><p>Time to complete current jobs in ms</p></td>
+            <td class="description last"><p>can be {timeout} or a number<br> timeout: Milliseconds before timing out (default 10000)</p></td>
         </tr>
 
     
@@ -2784,7 +1959,7 @@
 
     
 
-    <h4 class="name" id="pendingJobs"><span class="type-signature"></span>pendingJobs<span class="signature">()</span><span class="type-signature"> &rarr; {Number}</span></h4>
+    <h4 class="name" id=".sleep"><span class="type-signature">(static) </span>sleep<span class="signature">()</span><span class="type-signature"></span></h4>
 
     
 
@@ -2796,7 +1971,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Queue.js.html">Queue.js</a>, <a href="Queue.js.html#line384">line 384</a>
+        <a href="System_System.js.html">System/System.js</a>, <a href="System_System.js.html#line224">line 224</a>
     </li></ul></dd>
     
 
@@ -2836,7 +2011,175 @@
 
 
 <div class="description">
-    <p>Alias for inactiveJobs</p>
+    <p>Sleep for a specified time (in milliseconds)<br>  Example: await System.sleep(2000);</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".tick"><span class="type-signature">(static) </span>tick<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="System_System.js.html">System/System.js</a>, <a href="System_System.js.html#line236">line 236</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>wait till the next event loop cycle<br>this function is useful if we are running a long blocking task<br>and need to make sure that other callbacks can complete.</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".time"><span class="type-signature">(static) </span>time<span class="signature">()</span><span class="type-signature"> &rarr; {Number}</span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="System_System.js.html">System/System.js</a>, <a href="System_System.js.html#line182">line 182</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>get current time in seconds</p>
 </div>
 
 
@@ -2865,7 +2208,7 @@
 
         
 <div class="param-desc">
-    <p>inactiveCount</p>
+    <p>current time in seconds</p>
 </div>
 
 
@@ -2890,7 +2233,7 @@
 
     
 
-    <h4 class="name" id="processJob"><span class="type-signature">(async) </span>processJob<span class="signature">(processor)</span><span class="type-signature"> &rarr; {<a href="global.html#jobDetails">jobDetails</a>}</span></h4>
+    <h4 class="name" id=".yesUmask"><span class="type-signature">(static) </span>yesUmask<span class="signature">()</span><span class="type-signature"> &rarr; {number}</span></h4>
 
     
 
@@ -2902,7 +2245,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Queue.js.html">Queue.js</a>, <a href="Queue.js.html#line448">line 448</a>
+        <a href="System_System.js.html">System/System.js</a>, <a href="System_System.js.html#line106">line 106</a>
     </li></ul></dd>
     
 
@@ -2942,7 +2285,213 @@
 
 
 <div class="description">
-    <p>Process a single job in the Queue and mark it complete or failed,<br>for when you want to manually process jobs</p>
+    <p>restores (turns on) the previous umask</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>new umask</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">number</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+    
+
+    
+
+    
+</article>
+
+</section>
+
+
+
+
+
+
+
+<section>
+
+<header>
+    
+        <h2>
+        System
+        </h2>
+        
+    
+</header>
+
+<article>
+    
+        <div class="container-overview">
+        
+            
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="System_gracefulServerShutdown.js.html">System/gracefulServerShutdown.js</a>, <a href="System_gracefulServerShutdown.js.html#line1">line 1</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+            
+                <div class="description"><p>gracefully shuts downs a http server<br>Partially based on: https://github.com/sebhildebrandt/http-graceful-shutdown<br>LICENSE: MIT</p></div>
+            
+
+            
+        
+        </div>
+    
+
+    
+
+    
+
+    
+
+     
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        
+            
+
+    
+
+    <h4 class="name" id=".exec"><span class="type-signature">(static) </span>exec<span class="signature">(command, options)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="System_System.js.html">System/System.js</a>, <a href="System_System.js.html#line58">line 58</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>Execute the given command in a shell.</p>
 </div>
 
 
@@ -2980,13 +2529,13 @@
 
         <tr>
             
-                <td class="name"><code>processor</code></td>
+                <td class="name"><code>command</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type"><a href="global.html#processorCallback">processorCallback</a></span>
+<span class="param-type">String</span>
 
 
             
@@ -2996,7 +2545,946 @@
 
             
 
-            <td class="description last"><p>Function to be called to process the job data, without ctx</p></td>
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>options object<br>options: {timeout (in ms), cwd, uid, gid, env (object), shell (eg. /bin/sh), encoding}</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".execFile"><span class="type-signature">(static) </span>execFile<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="System_System.js.html">System/System.js</a>, <a href="System_System.js.html#line66">line 66</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>Similar to exec but instead executes a given file</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".execFileOut"><span class="type-signature">(async, static) </span>execFileOut<span class="signature">()</span><span class="type-signature"> &rarr; {String}</span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="System_System.js.html">System/System.js</a>, <a href="System_System.js.html#line86">line 86</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>execute a file and return its output</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>output of the file's execution</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">String</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".execOut"><span class="type-signature">(async, static) </span>execOut<span class="signature">()</span><span class="type-signature"> &rarr; {String}</span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="System_System.js.html">System/System.js</a>, <a href="System_System.js.html#line76">line 76</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>execute a command and return its output</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>output of the command's execution</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">String</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".exit"><span class="type-signature">(static) </span>exit<span class="signature">(code)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="System_System.js.html">System/System.js</a>, <a href="System_System.js.html#line250">line 250</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>exit and kill the process gracefully (after completing all onExit handlers)<br>code can be an exit code or a message (string)<br>if a message is given then it will be logged to console before exiting</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>code</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+|
+
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>exit code or the message to be logged</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".forceExit"><span class="type-signature">(static) </span>forceExit<span class="signature">(code)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="System_System.js.html">System/System.js</a>, <a href="System_System.js.html#line269">line 269</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>force exit the process<br>no onExit handler will run when force exiting a process<br>same as original process.exit (which we override)</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>code</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+|
+
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>exit code or the message to be logged</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".getAllUsers"><span class="type-signature">(static) </span>getAllUsers<span class="signature">()</span><span class="type-signature"> &rarr; {Object}</span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="System_System.js.html">System/System.js</a>, <a href="System_System.js.html#line158">line 158</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>get all users in the system<br>currently gets user info from /etc/passwd</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>object containing info for all users, as username:info pairs</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".getuid"><span class="type-signature">(static) </span>getuid<span class="signature">()</span><span class="type-signature"> &rarr; {Number}</span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="System_System.js.html">System/System.js</a>, <a href="System_System.js.html#line120">line 120</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>get the uid of the user running current process</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>uid</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Number</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".getUserInfo"><span class="type-signature">(static) </span>getUserInfo<span class="signature">(user)</span><span class="type-signature"> &rarr; {Object}</span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="System_System.js.html">System/System.js</a>, <a href="System_System.js.html#line132">line 132</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>get user info from username or uid<br>currently gets user info from /etc/passwd</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>user</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+|
+
+<span class="param-type">Number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>username or uid</p></td>
         </tr>
 
     
@@ -3020,7 +3508,7 @@
 
         
 <div class="param-desc">
-    <p>Job object of completed job</p>
+    <p>the user's information</p>
 </div>
 
 
@@ -3031,7 +3519,7 @@
     </dt>
     <dd>
         
-<span class="param-type"><a href="global.html#jobDetails">jobDetails</a></span>
+<span class="param-type">Object</span>
 
 
     </dd>
@@ -3045,7 +3533,7 @@
 
     
 
-    <h4 class="name" id="resumeProcessor"><span class="type-signature"></span>resumeProcessor<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".gracefulServerExit"><span class="type-signature">(static) </span>gracefulServerExit<span class="signature">(server, options)</span><span class="type-signature"></span></h4>
 
     
 
@@ -3057,7 +3545,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Queue.js.html">Queue.js</a>, <a href="Queue.js.html#line348">line 348</a>
+        <a href="System_System.js.html">System/System.js</a>, <a href="System_System.js.html#line365">line 365</a>
     </li></ul></dd>
     
 
@@ -3095,94 +3583,6 @@
 
 
 
-
-<div class="description">
-    <p>Resume Queue processing</p>
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id="setAttempts"><span class="type-signature"></span>setAttempts<span class="signature">(attempts)</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-
-<dl class="details">
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Queue.js.html">Queue.js</a>, <a href="Queue.js.html#line219">line 219</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-<div class="description">
-    <p>Set default number of retry attempts for any job added later</p>
-</div>
 
 
 
@@ -3219,42 +3619,171 @@
 
         <tr>
             
-                <td class="name"><code>attempts</code></td>
+                <td class="name"><code>server</code></td>
             
 
             <td class="type">
             
                 
+<span class="param-type">*</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">*</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".microtime"><span class="type-signature">(static) </span>microtime<span class="signature">()</span><span class="type-signature"> &rarr; {Number}</span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="System_System.js.html">System/System.js</a>, <a href="System_System.js.html#line215">line 215</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>get current time in microseconds (as double)</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>current time in microseconds</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
 <span class="param-type">Number</span>
 
 
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>Number of attempts (&gt;= 0), default = 1</p></td>
-        </tr>
+    </dd>
+</dl>
 
     
-    </tbody>
-</table>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
         
@@ -3262,7 +3791,7 @@
 
     
 
-    <h4 class="name" id="setDelay"><span class="type-signature"></span>setDelay<span class="signature">(delay)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".millitime"><span class="type-signature">(static) </span>millitime<span class="signature">()</span><span class="type-signature"> &rarr; {Number}</span></h4>
 
     
 
@@ -3274,7 +3803,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Queue.js.html">Queue.js</a>, <a href="Queue.js.html#line227">line 227</a>
+        <a href="System_System.js.html">System/System.js</a>, <a href="System_System.js.html#line192">line 192</a>
     </li></ul></dd>
     
 
@@ -3314,7 +3843,7 @@
 
 
 <div class="description">
-    <p>Set delay b/w successive jobs for any job added later</p>
+    <p>get current time in milliseconds (as double)</p>
 </div>
 
 
@@ -3327,67 +3856,40 @@
 
 
 
-    <h5>Parameters:</h5>
-    
 
-<table class="params">
-    <thead>
-    <tr>
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
         
-        <th>Name</th>
+<div class="param-desc">
+    <p>current time in milliseconds</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
         
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>delay</code></td>
-            
-
-            <td class="type">
-            
-                
 <span class="param-type">Number</span>
 
 
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>Delay b/w jobs, milliseconds, default = 0</p></td>
-        </tr>
+    </dd>
+</dl>
 
     
-    </tbody>
-</table>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
         
@@ -3395,7 +3897,7 @@
 
     
 
-    <h4 class="name" id="setNoFailure"><span class="type-signature"></span>setNoFailure<span class="signature">(noFailure)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".nanotime"><span class="type-signature">(static) </span>nanotime<span class="signature">()</span><span class="type-signature"> &rarr; {Number}</span></h4>
 
     
 
@@ -3407,7 +3909,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Queue.js.html">Queue.js</a>, <a href="Queue.js.html#line253">line 253</a>
+        <a href="System_System.js.html">System/System.js</a>, <a href="System_System.js.html#line202">line 202</a>
     </li></ul></dd>
     
 
@@ -3447,7 +3949,7 @@
 
 
 <div class="description">
-    <p>Sets default noFailure for any job added to this Queue from now on.<br>This will mark the job complete even if it fails when true</p>
+    <p>get current time in nanoseconds (as double)</p>
 </div>
 
 
@@ -3460,53 +3962,6 @@
 
 
 
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>noFailure</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Boolean</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>default = false</p></td>
-        </tr>
-
-    
-    </tbody>
-</table>
 
 
 
@@ -3519,247 +3974,240 @@
 
 
 
-
-
-
+<h5>Returns:</h5>
 
         
-            
-
-    
-
-    <h4 class="name" id="setRemoveOnCompletion"><span class="type-signature"></span>setRemoveOnCompletion<span class="signature">(removeOnComplete)</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-
-<dl class="details">
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Queue.js.html">Queue.js</a>, <a href="Queue.js.html#line244">line 244</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-<div class="description">
-    <p>Sets default removeOnComplete for any job added to this Queue from now on</p>
+<div class="param-desc">
+    <p>current time in nanoseconds</p>
 </div>
 
 
 
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
         
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>removeOnComplete</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Boolean</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>default = false</p></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id="setTTL"><span class="type-signature"></span>setTTL<span class="signature">(ttl)</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-
-<dl class="details">
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Queue.js.html">Queue.js</a>, <a href="Queue.js.html#line236">line 236</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-<div class="description">
-    <p>Set default TTL (time to live) for new jobs added from now on,<br>will fail job if not completed in TTL time</p>
-</div>
-
-
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>ttl</code></td>
-            
-
-            <td class="type">
-            
-                
 <span class="param-type">Number</span>
 
 
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".noUmask"><span class="type-signature">(static) </span>noUmask<span class="signature">()</span><span class="type-signature"> &rarr; {number}</span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="System_System.js.html">System/System.js</a>, <a href="System_System.js.html#line96">line 96</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>turn off umask for the current process</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>the old umask</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">number</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".onExit"><span class="type-signature">(static) </span>onExit<span class="signature">(callback, options)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="System_System.js.html">System/System.js</a>, <a href="System_System.js.html#line330">line 330</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>Add an exit handler that runs when process receives an exit signal<br>callback can be an async function, process will exit when all handlers have completed</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>callback</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
             
             </td>
 
@@ -3767,7 +4215,33 @@
 
             
 
-            <td class="description last"><p>Time in milliseconds, infinite when 0. default = 0</p></td>
+            <td class="description last"><p>function to call on exit</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+|
+
+<span class="param-type">object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>can be {timeout} or a number<br> timeout: Milliseconds before timing out (default 10000)</p></td>
         </tr>
 
     
@@ -3787,6 +4261,386 @@
 
 
 
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".sleep"><span class="type-signature">(static) </span>sleep<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="System_System.js.html">System/System.js</a>, <a href="System_System.js.html#line224">line 224</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>Sleep for a specified time (in milliseconds)<br>  Example: await System.sleep(2000);</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".tick"><span class="type-signature">(static) </span>tick<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="System_System.js.html">System/System.js</a>, <a href="System_System.js.html#line236">line 236</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>wait till the next event loop cycle<br>this function is useful if we are running a long blocking task<br>and need to make sure that other callbacks can complete.</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".time"><span class="type-signature">(static) </span>time<span class="signature">()</span><span class="type-signature"> &rarr; {Number}</span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="System_System.js.html">System/System.js</a>, <a href="System_System.js.html#line182">line 182</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>get current time in seconds</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>current time in seconds</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Number</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".yesUmask"><span class="type-signature">(static) </span>yesUmask<span class="signature">()</span><span class="type-signature"> &rarr; {number}</span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="System_System.js.html">System/System.js</a>, <a href="System_System.js.html#line106">line 106</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>restores (turns on) the previous umask</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>new umask</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">number</span>
+
+
+    </dd>
+</dl>
+
+    
 
 
         

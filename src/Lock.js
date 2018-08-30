@@ -1,6 +1,9 @@
 import EventEmitter from 'events';
 import Redis from 'ioredis';
 
+/**
+ * @class Lock
+ */
 class Lock extends EventEmitter {
 	constructor(redis) {
 		super();
@@ -61,6 +64,10 @@ class Lock extends EventEmitter {
 		}
 	}
 
+	/**
+	 * @param {string} key
+	 * @returns {boolean}
+	 */
 	async tryAcquire(key) {
 		if (this.fetching[key]) return false;
 		this.fetching[key] = true;
@@ -75,6 +82,10 @@ class Lock extends EventEmitter {
 		return true;
 	}
 
+	/**
+	 * @param {string} key
+	 * @returns {boolean|void}
+	 */
 	async acquire(key) {
 		if (await this.tryAcquire(key)) return true;
 		const id = this._addToQueue(key);
@@ -83,6 +94,10 @@ class Lock extends EventEmitter {
 		});
 	}
 
+	/**
+	 * release a lock
+	 * @param {string} key
+	 */
 	async release(key) {
 		const deleted = await this._del(key);
 		if (deleted) this.emit('released', key);

@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>Require.js - Documentation</title>
+    <title>Lock - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -33,151 +33,566 @@
 
 <div id="main">
     
-    <h1 class="page-title">Require.js</h1>
+    <h1 class="page-title">Lock</h1>
     
 
     
 
 
 
+
+<section>
+
+<header>
     
-    <section>
-        <article>
-            <pre class="prettyprint source linenums"><code>/* eslint-disable global-require, import/no-dynamic-require */
-import path from 'path';
-import {execSync} from 'child_process';
+        <h2>
+        Lock
+        </h2>
+        
+    
+</header>
 
-/**
- * Helpers for requiring global &amp; other files
- * @namespace Require
- */
+<article>
+    
+        <div class="container-overview">
+        
+            
 
-// assign properties to global to avoid issues in case of multiple sm-utils in node_modules
-// NOTE: don't change globalDataKey or globalData properties
-// it should be consistent across multiple sm-utils versions
-const globalDataKey = '_SmUtils_Require';
-if (!global[globalDataKey]) global[globalDataKey] = {};
-const globalData = global[globalDataKey];
+    
 
-function getNpmPrefix() {
-	if (globalData.npmPrefix != null) return globalData.npmPrefix;
+    <h4 class="name" id="Lock"><span class="type-signature"></span>new Lock<span class="signature">()</span><span class="type-signature"></span></h4>
 
-	let npmPrefix;
-	try {
-		npmPrefix = execSync('npm config get prefix').toString().trim();
-		if (npmPrefix) npmPrefix = path.join(npmPrefix, 'lib/node_modules');
-	}
-	catch (e) {
-		npmPrefix = '';
-	}
+    
 
-	globalData.npmPrefix = npmPrefix;
-	return npmPrefix;
-}
 
-function getYarnPrefix() {
-	if (globalData.yarnPrefix != null) return globalData.yarnPrefix;
 
-	let yarnPrefix;
-	try {
-		yarnPrefix = execSync('yarn global dir').toString().trim();
-		if (yarnPrefix) yarnPrefix = path.join(yarnPrefix, 'node_modules');
-	}
-	catch (e) {
-		yarnPrefix = '';
-	}
 
-	globalData.yarnPrefix = yarnPrefix;
-	return yarnPrefix;
-}
+<dl class="details">
 
-/**
- * Resolve path of a global module
- * @memberof Require
- * @param {string} moduleName
- * @returns {string} path of module
- */
-function resolveGlobal(moduleName) {
-	const npmPrefix = getNpmPrefix();
-	if (npmPrefix) {
-		try {
-			return require.resolve(path.join(npmPrefix, moduleName));
-		}
-		catch (e) {
-			// Ignore errors
-		}
-	}
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Lock.js.html">Lock.js</a>, <a href="Lock.js.html#line4">line 4</a>
+    </li></ul></dd>
+    
 
-	const yarnPrefix = getYarnPrefix();
-	if (yarnPrefix) {
-		try {
-			return require.resolve(path.join(yarnPrefix, moduleName));
-		}
-		catch (e) {
-			// Ignore errors
-		}
-	}
+    
 
-	throw new Error(`[Require Global] Module Not Found ${moduleName}`);
-}
+    
 
-/**
- * Resolve path of a local or global module
- * @memberof Require
- * @param {string} moduleName
- * @param {object} [options={}]
- * @param {boolean} [options.useNative=true] Use local module if available
- * @returns {string} path of module
- */
-function resolve(moduleName, options = {}) {
-	if (options.useNative !== false) {
-		options.useNative = true;
-	}
+    
 
-	if (options.useNative) {
-		try {
-			return require.resolve(moduleName);
-		}
-		catch (e) {
-			// Ignore errors
-		}
-	}
+    
 
-	return resolveGlobal(moduleName);
-}
+    
 
-/**
- * Require a module from local or global
- * @memberof Require
- * @param {string} moduleName
- * @param {object} [options={}]
- * @param {boolean} [options.useNative=true] Use local module if available
- * @returns {any} the module required
- */
-function requireModule(moduleName, options = {}) {
-	return require(resolve(moduleName, options));
-}
+    
 
-/**
- * Require a module from local or global
- * @memberof Require
- * @param {string} moduleName
- * @returns {any} the module required
- */
-function requireGlobal(moduleName) {
-	return require(resolveGlobal(moduleName));
-}
+    
 
-module.exports = {
-	resolve,
-	resolveGlobal,
-	requireGlobal,
-	global: requireGlobal,
-	require: requireModule,
-};
-</code></pre>
-        </article>
-    </section>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+        </div>
+    
+
+    
+
+    
+
+    
+
+     
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        
+            
+
+    
+
+    <h4 class="name" id="acquire"><span class="type-signature">(async) </span>acquire<span class="signature">(key)</span><span class="type-signature"> &rarr; {boolean|void}</span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Lock.js.html">Lock.js</a>, <a href="Lock.js.html#line89">line 89</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>key</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">boolean</span>
+|
+
+<span class="param-type">void</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="release"><span class="type-signature">(async) </span>release<span class="signature">(key)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Lock.js.html">Lock.js</a>, <a href="Lock.js.html#line101">line 101</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>release a lock</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>key</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="tryAcquire"><span class="type-signature">(async) </span>tryAcquire<span class="signature">(key)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Lock.js.html">Lock.js</a>, <a href="Lock.js.html#line71">line 71</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>key</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">boolean</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+    
+
+    
+
+    
+</article>
+
+</section>
 
 
 

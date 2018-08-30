@@ -4,7 +4,7 @@ import {execSync} from 'child_process';
 
 /**
  * Helpers for requiring global & other files
- * @module Require
+ * @namespace Require
  */
 
 // assign properties to global to avoid issues in case of multiple sm-utils in node_modules
@@ -46,6 +46,12 @@ function getYarnPrefix() {
 	return yarnPrefix;
 }
 
+/**
+ * Resolve path of a global module
+ * @memberof Require
+ * @param {string} moduleName
+ * @returns {string} path of module
+ */
 function resolveGlobal(moduleName) {
 	const npmPrefix = getNpmPrefix();
 	if (npmPrefix) {
@@ -70,6 +76,14 @@ function resolveGlobal(moduleName) {
 	throw new Error(`[Require Global] Module Not Found ${moduleName}`);
 }
 
+/**
+ * Resolve path of a local or global module
+ * @memberof Require
+ * @param {string} moduleName
+ * @param {object} [options={}]
+ * @param {boolean} [options.useNative=true] Use local module if available
+ * @returns {string} path of module
+ */
 function resolve(moduleName, options = {}) {
 	if (options.useNative !== false) {
 		options.useNative = true;
@@ -87,12 +101,26 @@ function resolve(moduleName, options = {}) {
 	return resolveGlobal(moduleName);
 }
 
+/**
+ * Require a module from local or global
+ * @memberof Require
+ * @param {string} moduleName
+ * @param {object} [options={}]
+ * @param {boolean} [options.useNative=true] Use local module if available
+ * @returns {any} the module required
+ */
 function requireModule(moduleName, options = {}) {
 	return require(resolve(moduleName, options));
 }
 
-function requireGlobal(moduleName, options = {}) {
-	return require(resolveGlobal(moduleName, options));
+/**
+ * Require a module from local or global
+ * @memberof Require
+ * @param {string} moduleName
+ * @returns {any} the module required
+ */
+function requireGlobal(moduleName) {
+	return require(resolveGlobal(moduleName));
 }
 
 module.exports = {

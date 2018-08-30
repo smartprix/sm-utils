@@ -4,6 +4,7 @@
 
 /**
  * Custom implementation of a double ended queue.
+ * @class
  */
 class DeQueue {
 	constructor(array) {
@@ -50,7 +51,7 @@ class DeQueue {
 	/**
 	 * Sets the queue value at a particular index
 	 *
-	 * @param {int} index
+	 * @param {number} index integer
 	 * @param {*} value
 	 * @returns {*}
 	 */
@@ -334,7 +335,7 @@ class DeQueue {
 	 *
 	 * @param index
 	 * @param count
-	 * @param {...*} [elements]
+	 * @param {Array<*>} args
 	 * @returns {array}
 	 */
 	splice(index, count, ...args) {

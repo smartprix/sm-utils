@@ -1,4 +1,3 @@
-/* eslint-disable global-require */
 import File from './File';
 import Crypt from './Crypt';
 import Connect from './Connect';
@@ -13,12 +12,18 @@ import Vachan from './Vachan';
 import DeQueue from './DeQueue';
 import Require from './Require';
 
-module.exports = {
-	file: File,
-	system: System,
-	crypt: Crypt,
+
+const crypt = Crypt;
+const file = File;
+const system = System;
+const baseConvert = Crypt.baseConvert;
+
+export {
+	file,
+	system,
+	crypt,
 	cfg,
-	baseConvert: Crypt.baseConvert,
+	baseConvert,
 	File,
 	Crypt,
 	Connect,
