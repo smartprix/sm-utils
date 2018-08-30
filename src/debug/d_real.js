@@ -177,19 +177,34 @@ function d(...args) {
 	console.log(chalk.blue(lineSep));
 }
 
-d.trace = trace;
-d.getTrace = stackTrace.get;
-d.dump = dump;
-
-process.on('uncaughtException', (err) => {
+function uncaughtExceptionHandler(err) {
 	err.name = chalk.bgRed.white(' FATAL ') + ' ' + err.name;
 	d.trace(err);
 	System.exit(1);
-});
+}
 
-process.on('unhandledRejection', (err) => {
+function unhandledRejectionHandler(err) {
 	err.name = chalk.bgRed.white(' UNHANDLED ') + ' ' + err.name;
 	d.trace(err);
-});
+}
+
+function enableUncaughtHandler({exceptions = true, rejections = true} = {}) {
+	if (exceptions) process.on('uncaughtException', uncaughtExceptionHandler);
+	if (rejections) process.on('unhandledRejection', unhandledRejectionHandler);
+}
+
+function disableUncaughtHandler({exceptions = true, rejections = true} = {}) {
+	if (exceptions) process.off('uncaughtException', uncaughtExceptionHandler);
+	if (rejections) process.off('unhandledRejection', unhandledRejectionHandler);
+}
+
+d.trace = trace;
+d.getTrace = stackTrace.get;
+d.dump = dump;
+d.enableUncaughtHandler = enableUncaughtHandler;
+d.disableUncaughtHandler = disableUncaughtHandler;
+
+// enable uncaught exception handler by default
+d.enableUncaughtHandler();
 
 module.exports = d;
