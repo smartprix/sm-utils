@@ -1018,6 +1018,18 @@ async function javaUnobfuscate(str) {
 	}
 }
 
+/**
+ * @type {Str.rot13}
+ * @memberof Crypt
+ */
+const rot13 = Str.rot13;
+
+/**
+ * @type {Str.rot47}
+ * @memberof Crypt
+ */
+const rot47 = Str.rot47;
+
 module.exports = {
 	baseConvert,
 	chars,
@@ -1077,8 +1089,8 @@ module.exports = {
 
 	encryptedTimestampedId,
 
-	rot13: Str.rot13,
-	rot47: Str.rot47,
+	rot13,
+	rot47,
 	javaObfuscate,
 	javaUnobfuscate,
 };
