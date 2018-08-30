@@ -17,6 +17,8 @@ class TimeoutError extends Error {
  * Promise utility functions
  */
 class Vachan {
+	static logger = console;
+
 	/**
 	 * identity function is to make sure returned value is a promise.
 	 * returns the following if the input is a:
@@ -52,7 +54,7 @@ class Vachan {
 			process.exit(0);
 		}).catch((err) => {
 			if (!options.silent) {
-				console.error(err);
+				Vachan.logger.error(err);
 			}
 			process.exit(1);
 		});
@@ -66,7 +68,7 @@ class Vachan {
 	static exec(promise, options = {}) {
 		this.identity(promise).then(() => {}).catch((err) => {
 			if (!options.silent) {
-				console.error(err);
+				Vachan.logger.error(err);
 			}
 		});
 	}
