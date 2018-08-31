@@ -91,6 +91,12 @@ describe('file class', () => {
 			const existence = await directory.exists();
 			expect(existence).to.be.false;
 		});
+
+		it('should glob correctly', async () => {
+			const files = await File('src/*.js').glob();
+			expect(files.length).to.be.gt(5);
+			expect(files).to.include('src/cfg.js');
+		});
 	});
 
 	after(async () => {
