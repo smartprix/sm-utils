@@ -7,6 +7,8 @@ if (cfg.isProductionLike()) {
 	d.dump = function () {};
 	d.trace = function () {};
 	d.getTrace = function () {};
+	d.enableUncaughtHandler = function () {};
+	d.disableUncaughtHandler = function () {};
 
 	module.exports = d;
 }
