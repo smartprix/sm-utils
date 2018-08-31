@@ -1,15 +1,39 @@
 const _ = require('lodash');
-const promisify = require('thenify-all');
+const {promisify} = require('util');
 const _path = require('path');
-const _rimraf = promisify(require('rimraf'));
-const _mkdirp = promisify(require('mkdirp'));
-const _glob = promisify(require('glob'));
-const _chmodr = promisify(require('chmodr'));
-const _chownr = promisify(require('chownr'));
 const System = require('./System');
 const _fs = require('fs');
 
-const fs = promisify(_fs);
+// TODO: replace this with fs.promises when it becomes stable
+const fs = {};
+const methods = [
+	'lstat',
+	'stat',
+	'chmod',
+	'realpath',
+	'copyFile',
+	'appendFile',
+	'writeFile',
+	'readFile',
+	'mkdir',
+	'chown',
+	'rename',
+	'unlink',
+	'rmdir',
+];
+methods.forEach((method) => {
+	fs[method] = promisify(_fs[method]);
+});
+
+const moduleCache = {};
+function getModule(name) {
+	if (!moduleCache[name]) {
+		// eslint-disable-next-line  global-require, import/no-dynamic-require
+		moduleCache[name] = promisify(require(name));
+	}
+
+	return moduleCache[name];
+}
 
 /**
  * File System utilities wrapped in a class
@@ -192,7 +216,7 @@ class File {
 	 * @return {Number}              0, on success; -1, if some error occurred
 	 */
 	async chmodr(mode) {
-		return _chmodr(this.path, mode);
+		return getModule('chmodr')(this.path, mode);
 	}
 
 	/**
@@ -223,7 +247,7 @@ class File {
 	 */
 	async chownr(user, group) {
 		if (Number.isInteger(user) && Number.isInteger(group)) {
-			return _chownr(this.path, user, group);
+			return getModule('chownr')(this.path, user, group);
 		}
 
 		return System.execOut(`chown -R ${user}:${group} ${this.path}`);
@@ -292,7 +316,7 @@ class File {
 	 * Recursively delete the directory and all its contents.
 	 */
 	async rmrf() {
-		return _rimraf(this.path);
+		return getModule('rimraf')(this.path);
 	}
 
 	/**
@@ -310,7 +334,7 @@ class File {
 	 * @param  {Number} [mode = 0o755] file mode for the directory
 	 */
 	async mkdirp(mode = 0o755) {
-		return _mkdirp(this.path, mode);
+		return getModule('mkdirp')(this.path, mode);
 	}
 
 	/**
@@ -319,7 +343,7 @@ class File {
 	 * @return {Array} Array containing the matches
 	 */
 	async glob() {
-		return _glob(this.path);
+		return getModule('glob')(this.path);
 	}
 
 	/**
@@ -337,7 +361,7 @@ class File {
 	 * @param  {Number} [mode = 0o755] file mode for the directory
 	 */
 	async mkdirpPath(mode = 0o755) {
-		return _mkdirp(_path.dirname(this.path), mode);
+		return getModule('mkdirp')(_path.dirname(this.path), mode);
 	}
 
 	/**

@@ -43,9 +43,7 @@
     "rimraf": "^2.6.2",
     "sm-socks5-http-client": "^1.0.4",
     "socks5-https-client": "^1.2.1",
-    "source-map-support": "^0.5.9",
     "stack-trace": "^0.0.10",
-    "thenify-all": "^1.6.0",
     "timestring": "^5.0.1",
     "tough-cookie-file-store": "^1.2.0"
   },
