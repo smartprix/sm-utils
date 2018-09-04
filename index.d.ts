@@ -145,7 +145,7 @@ declare module 'sm-utils' {
         static clear(): void;
 
         /**
-         *
+         * 
          * @param key
          * @param fn
          * @param options ttl in ms/timestring('1d 3h') or opts (default: 0)
@@ -171,29 +171,19 @@ declare module 'sm-utils' {
         constructor();
 
         /**
-         * Timeout period for the request in milliseconds
-         */
-        requestTimeout: any;
-
-        /**
-         * Various options (or parameters) defining the Connection
-         */
-        options: any;
-
-        /**
          * Set the url for the connection.
          * @param url self-descriptive
          */
-        url(url: String): Connect;
+        url(url: string): Connect;
 
         /**
-         *
+         * 
          * @param url self-descriptive
          */
-        static url(url: String): Connect;
+        static url(url: string): Connect;
 
         /**
-         *
+         * 
          * @param args
          */
         static newCookieJar(...args: any[]): CookieJar;
@@ -202,50 +192,50 @@ declare module 'sm-utils' {
          * Set or unset the followRedirect option for the connection.
          * @param shouldFollowRedirect boolean representing whether to follow redirect or not
          */
-        followRedirect(shouldFollowRedirect: Boolean): Connect;
+        followRedirect(shouldFollowRedirect: boolean): Connect;
 
         /**
          * Set value of a header parameter for the connection.
          * @param headerName name of the header parameter whose value is to be set
          * @param headerValue value to be set
          */
-        header(headerName: String, headerValue: any): Connect;
+        header(headerName: string, headerValue: any): Connect;
 
         /**
          * Set value of the headers for the connection.
          * @param headers object representing the headers for the connection
          */
-        headers(headers: Object): Connect;
+        headers(headers: object): Connect;
 
         /**
          * Set the body of the connection object.
          * @param body value for body
          * @param contentType string representing the content type of the body
          */
-        body(body: any, contentType?: String): Connect;
+        body(body: any, contentType?: string): Connect;
 
         /**
          * Set the 'Referer' field in the headers.
          * @param referer referer value
          */
-        referer(referer: String): Connect;
+        referer(referer: string): Connect;
 
         /**
          * Set the 'User-Agent' field in the headers.
          * @param userAgent name of the user-agent or its value
          */
-        userAgent(userAgent: String): Connect;
+        userAgent(userAgent: string): Connect;
 
         /**
          * Set the 'Content-Type' field in the headers.
          * @param contentType value for content-type
          */
-        contentType(contentType: String): Connect;
+        contentType(contentType: string): Connect;
 
         /**
          * Returns whether the content-type is JSON or not
          */
-        isJSON(): Boolean;
+        isJSON(): boolean;
 
         /**
          * Sets the value of a cookie.
@@ -257,7 +247,7 @@ declare module 'sm-utils' {
          *        cookie to be set, or the cookies object
          * @param cookieValue cookie value to be set
          */
-        cookie(cookieName: String | Boolean | Object, cookieValue: Object): Connect;
+        cookie(cookieName: string | boolean | object, cookieValue: object): Connect;
 
         /**
          * Sets multiple cookies.
@@ -265,19 +255,19 @@ declare module 'sm-utils' {
          * @param cookies object representing the cookies
          *        and their values as key:value pairs.
          */
-        cookies(cookies: Object | Boolean): Connect;
+        cookies(cookies: object | boolean): Connect;
 
         /**
          * Enable global cookies.
          * @param enableGlobalCookies self-descriptive
          */
-        globalCookies(enableGlobalCookies?: Boolean): Connect;
+        globalCookies(enableGlobalCookies?: boolean): Connect;
 
         /**
          * Set the value of cookie jar based on a file (cookie store).
          * @param fileName name of (or path to) the file
          */
-        cookieFile(fileName: String): Connect;
+        cookieFile(fileName: string): Connect;
 
         /**
          * Set the value of cookie jar.
@@ -289,13 +279,13 @@ declare module 'sm-utils' {
          * Set request timeout.
          * @param timeout timeout value in seconds
          */
-        timeout(timeout: Number): Connect;
+        timeout(timeout: number): Connect;
 
         /**
          * Set request timeout.
          * @param timeoutInMs timeout value in milliseconds
          */
-        timeoutMs(timeoutInMs: Number): Connect;
+        timeoutMs(timeoutInMs: number): Connect;
 
         /**
          * alias for timeoutMs
@@ -310,54 +300,54 @@ declare module 'sm-utils' {
          * @param fieldName name of the field to be set, or the fields object
          * @param fieldValue value to be set
          */
-        field(fieldName: String | Object, fieldValue: any): Connect;
+        field(fieldName: string | object, fieldValue: any): Connect;
 
         /**
          * Set multiple fields.
          * @param fields object representing the field-names and their
          *        values as key:value pairs
          */
-        fields(fields: Object): Connect;
+        fields(fields: object): Connect;
 
         /**
          * Set the request method for the connection.
          * @param method one of the HTTP request methods ('GET', 'PUT', 'POST', etc.)
          */
-        method(method: String): Connect;
+        method(method: string): Connect;
 
         /**
          * Set username and password for authentication.
          * @param username self-descriptive
          * @param password self-descriptive
          */
-        httpAuth(username: String, password: String): Connect;
+        httpAuth(username: string, password: string): Connect;
 
         /**
          * Set proxy address (or options).
          * @param proxy proxy address, or object representing proxy options
          */
-        proxy(proxy: String | Object): Connect;
+        proxy(proxy: string | object): Connect;
 
         /**
          * Set address and port for an http proxy.
          * @param proxyAddress self-descriptive
          * @param proxyPort self-descriptive
          */
-        httpProxy(proxyAddress: String, proxyPort: Number): Connect;
+        httpProxy(proxyAddress: string, proxyPort: number): Connect;
 
         /**
          * Set address and port for a socks proxy.
          * @param proxyAddress self-descriptive
          * @param proxyPort self-descriptive
          */
-        socksProxy(proxyAddress: String, proxyPort: Number): Connect;
+        socksProxy(proxyAddress: string, proxyPort: number): Connect;
 
         /**
          * Set username and password for proxy.
          * @param username self-descriptive
          * @param password self-descriptive
          */
-        proxyAuth(username: String, password: String): Connect;
+        proxyAuth(username: string, password: string): Connect;
 
         /**
          * Set request method to 'GET'.
@@ -378,19 +368,19 @@ declare module 'sm-utils' {
          * Set cache directory for the connection.
          * @param dir name or path to the directory
          */
-        cacheDir(dir: String): Connect;
+        cacheDir(dir: string): Connect;
 
         /**
          * Set if the body is to be returned as a buffer
          * @param returnAsBuffer self-descriptive
          */
-        asBuffer(returnAsBuffer?: Boolean): Connect;
+        asBuffer(returnAsBuffer?: boolean): Connect;
 
         /**
          * Set the path for file for saving the response.
          * @param filePath self-descriptive
          */
-        save(filePath: String): Connect;
+        save(filePath: string): Connect;
 
         /**
          * It creates and returns a promise based on the information
@@ -440,7 +430,7 @@ declare module 'sm-utils' {
         /**
          * different charsets available
          */
-        const chars: Object;
+        const chars: object;
 
         /**
          * Return a random number between 0 and 1
@@ -457,13 +447,13 @@ declare module 'sm-utils' {
         /**
          * Generate a random string based on the options passed.
          * It can be treated as a Random UUID.
-         *
+         * 
          * You can give length and charset in options.
          * If options is an integer it will treated as length.
          * By default, length is 20 and charset is ALPHA_NUMERIC
          * @param options length of the id or options object
          */
-        function randomString(options: number | randomOpts): String;
+        function randomString(options: number | randomOpts): string;
 
         /**
          * Shuffle an array or a string.
@@ -472,10 +462,10 @@ declare module 'sm-utils' {
          * @param options.randomFunc Use this random function instead of default
          * @param options.seed optionally give a seed to do a constant shuffle
          */
-        function shuffle(itemToShuffle: any[] | String, options: shuffle_options): any[] | String;
+        function shuffle(itemToShuffle: any[] | string, options: shuffle_options): any[] | string;
 
         /**
-         *
+         * 
          * @param seed integer
          */
         function seededRandom(seed: number): randomFunctions;
@@ -484,16 +474,16 @@ declare module 'sm-utils' {
          * Get nanoseconds in base62 or base36 format.
          * @param base36 use base36 format or not
          */
-        function nanoSecondsAlpha(base36?: Boolean): String;
+        function nanoSecondsAlpha(base36?: boolean): string;
 
         /**
          * Generate a sequential id based on current time in millisecond and some randomness.
          * It can be treated as a Sequential UUID. Ideal for use as a DB primary key.
-         *
+         * 
          * NOTE: For best results use atleast 15 characters in base62 and 18 characters in base36 encoding
          * @param options length of the id or object of {length: int, base36: bool}
          */
-        function sequentialID(options: number | Object): String;
+        function sequentialID(options: number | object): string;
 
         /**
          * Get sequential ID in v4 UUID format.
@@ -513,21 +503,21 @@ declare module 'sm-utils' {
          * @param string item to be encoded
          * @param opts object or string specifying the encoding(s)
          */
-        function baseEncode(string: String | Buffer, opts: encodingConversion | String): String | Buffer;
+        function baseEncode(string: string | Buffer, opts: encodingConversion | string): string | Buffer;
 
         /**
          * Decode a string encoded using a given encoding.
          * @param string item to be decoded
          * @param opts object or string specifying the encoding(s)
          */
-        function baseDecode(string: String | Buffer, opts: encodingConversion | String): String;
+        function baseDecode(string: string | Buffer, opts: encodingConversion | string): string;
 
         /**
          * Decode a string encoded using a given encoding to a buffer.
          * @param string item to be decoded
          * @param fromEncoding encoding used to encode the string
          */
-        function baseDecodeToBuffer(string: String | Buffer, fromEncoding: String): Buffer;
+        function baseDecodeToBuffer(string: string | Buffer, fromEncoding: string): Buffer;
 
         /**
          * Compute hash of a string using given algorithm
@@ -536,42 +526,42 @@ declare module 'sm-utils' {
          * @param string string to be hashed
          * @param opts
          */
-        function hash(algo: String, string: String, opts?: encodingOpts): String;
+        function hash(algo: string, string: string, opts?: encodingOpts): string;
 
         /**
          * Compute hash of a string using md5
          * @param string string to be hashed
          * @param options object of {encoding}
          */
-        function md5(string: String, options?: encodingOpts): String;
+        function md5(string: string, options?: encodingOpts): string;
 
         /**
          * Compute hash of a string using sha1
          * @param string string to be hashed
          * @param options object of {encoding}
          */
-        function sha1(string: String, options?: encodingOpts): String;
+        function sha1(string: string, options?: encodingOpts): string;
 
         /**
          * Compute hash of a string using sha256
          * @param string string to be hashed
          * @param options object of {encoding}
          */
-        function sha256(string: String, options?: encodingOpts): String;
+        function sha256(string: string, options?: encodingOpts): string;
 
         /**
          * Compute hash of a string using sha384
          * @param string string to be hashed
          * @param options object of {encoding}
          */
-        function sha384(string: String, options?: encodingOpts): String;
+        function sha384(string: string, options?: encodingOpts): string;
 
         /**
          * Compute hash of a string using sha512
          * @param string string to be hashed
          * @param options object of {encoding}
          */
-        function sha512(string: String, options?: encodingOpts): String;
+        function sha512(string: string, options?: encodingOpts): string;
 
         /**
          * Create cryptographic HMAC digests using given algo
@@ -579,25 +569,25 @@ declare module 'sm-utils' {
          * @param string string to be hashed
          * @param options object of {encoding}
          */
-        function hmac(algo: String, string: String, options?: encodingOpts): String;
+        function hmac(algo: string, string: string, options?: encodingOpts): string;
 
         /**
          * Create cryptographic HMAC digests using sha1
          * @param string string to be hashed
          * @param options object of {encoding}
          */
-        function sha1Hmac(string: String, options?: encodingOpts): String;
+        function sha1Hmac(string: string, options?: encodingOpts): string;
 
         /**
          * Create cryptographic HMAC digests using sha256
          * @param string string to be hashed
          * @param options object of {encoding}
          */
-        function sha256Hmac(string: String, options?: encodingOpts): String;
+        function sha256Hmac(string: string, options?: encodingOpts): string;
 
         /**
          * Sign a message using a private key.
-         *
+         * 
          * NOTE: Generate a key pair using:
          * ```sh
          * openssl ecparam -genkey -name secp256k1 | openssl ec -aes128 -out private.pem
@@ -607,12 +597,12 @@ declare module 'sm-utils' {
          * @param privateKey self-descriptive
          * @param opts opts can have {encoding (default 'hex')
          */
-        function sign(message: String, privateKey: String | Object, opts: encodingOpts): String;
+        function sign(message: string, privateKey: string | object, opts: encodingOpts): string;
 
         /**
          * Verify a message using a public key
          * opts can have {encoding (default 'hex')}
-         *
+         * 
          * NOTE: Generate a key pair using:
          * ```sh
          * openssl ecparam -genkey -name secp256k1 | openssl ec -aes128 -out private.pem
@@ -623,7 +613,7 @@ declare module 'sm-utils' {
          * @param publicKey self-descriptive
          * @param opts opts can have {encoding (default 'hex')}
          */
-        function verify(message: String, signature: String, publicKey: String | Object, opts?: encodingOpts): Boolean;
+        function verify(message: string, signature: string, publicKey: string | object, opts?: encodingOpts): boolean;
 
         /**
          * Encrypt the given string with the given key using AES 256
@@ -633,7 +623,7 @@ declare module 'sm-utils' {
          * @param key key to be used
          * @param options object of {encoding} (default: 'base64url')
          */
-        function encrypt(string: String, key: String, options?: encodingOpts): String;
+        function encrypt(string: string, key: string, options?: encodingOpts): string;
 
         /**
          * Decrypt the given string with the given key encrypted using encrypt
@@ -641,7 +631,7 @@ declare module 'sm-utils' {
          * @param key key to be used
          * @param options object of {encoding} (default: 'base64url')
          */
-        function decrypt(string: String, key: String, options?: encodingOpts): String;
+        function decrypt(string: string, key: string, options?: encodingOpts): string;
 
         /**
          * Encrypt the given string with the given key using AES 256
@@ -652,7 +642,7 @@ declare module 'sm-utils' {
          * @param key key to be used
          * @param options object of {encoding} (default: 'base64url')
          */
-        function encryptStatic(string: String, key: String, options?: encodingOpts): String;
+        function encryptStatic(string: string, key: string, options?: encodingOpts): string;
 
         /**
          * Decrypt the given string with the given key encrypted using encryptStatic
@@ -660,7 +650,7 @@ declare module 'sm-utils' {
          * @param key key to be used
          * @param options object of {encoding} (default: 'base64url')
          */
-        function decryptStatic(string: String, key: String, options?: encodingOpts): String;
+        function decryptStatic(string: string, key: string, options?: encodingOpts): string;
 
         /**
          * Convert a message into an encrypted token by:
@@ -726,13 +716,13 @@ declare module 'sm-utils' {
          * Pack many numbers into a single string
          * @param numbers array of numbers to be packed
          */
-        function packNumbers(numbers: any[]): String;
+        function packNumbers(numbers: any[]): string;
 
         /**
          * Unpack a string packed with packNumbers
          * @param str string to be unpacked
          */
-        function unpackNumbers(str: String): any[];
+        function unpackNumbers(str: string): any[];
 
         /**
          * Generate a random encrypted string that contains a timestamp.
@@ -740,7 +730,7 @@ declare module 'sm-utils' {
          * @param options.length
          * @param options.time epoch time / 1000
          */
-        function encryptedTimestampedId(options: encryptedTimestampedId_options): String;
+        function encryptedTimestampedId(options: encryptedTimestampedId_options): string;
 
         const rot13: typeof Str.rot13;
 
@@ -765,7 +755,7 @@ declare module 'sm-utils' {
         /**
          * if true will use BASE_36 charset
          */
-        base36: Boolean;
+        base36: boolean;
         /**
          * provide a charset string
          */
@@ -984,27 +974,27 @@ declare module 'sm-utils' {
         /**
          * File System utilities wrapped in a class
          */
-        constructor(path: String);
+        constructor(path: string);
 
         /**
          * Checks whether a file exists already.
          */
-        exists(): Boolean;
+        exists(): boolean;
 
         /**
          * Checks whether a file exists already.
          */
-        existsSync(): Boolean;
+        existsSync(): boolean;
 
         /**
          * Returns whether this File object represents a file.
          */
-        isFile(): Boolean;
+        isFile(): boolean;
 
         /**
          * Returns whether this File object represents a directory.
          */
-        isDir(): Boolean;
+        isDir(): boolean;
 
         /**
          * Returns a Date object representing the time when file was last modified.
@@ -1030,61 +1020,61 @@ declare module 'sm-utils' {
          * Returns an object with the stats of the file. If the path for the file
          * is a symlink, then stats of the symlink are returned.
          */
-        lstat(): Object;
+        lstat(): object;
 
         /**
          * Returns an object with the stats of the file. If the path for the file
          * is a symlink, then stats of the target of the symlink are returned.
          */
-        stat(): Object;
+        stat(): object;
 
         /**
          * Returns the size of the file in bytes. If the file is not found
          * or can't be read successfully, 0 is returned.
          */
-        size(): Number;
+        size(): number;
 
         /**
          * Change the mode of the file.
          * @param mode An octal number or a string representing the file mode
          */
-        chmod(mode: Number | String): Number;
+        chmod(mode: number | string): number;
 
         /**
          * Change the mode of the file or directory recursively.
          * @param mode An octal number or a string representing the file mode
          */
-        chmodr(mode: Number | String): Number;
+        chmodr(mode: number | string): number;
 
         /**
          * Change the owner and group of the file.
          * @param user user id, or user name
          * @param group group id, or group name
          */
-        chown(user: Number | String, group: Number | String): Number;
+        chown(user: number | string, group: number | string): number;
 
         /**
          * Change the owner and group of the file recursively.
          * @param user user id, or user name
          * @param group group id, or group name
          */
-        chownr(user: Number | String, group: Number | String): Number;
+        chownr(user: number | string, group: number | string): number;
 
         /**
          * Change the name or location of the file.
          * @param newName new path/location (not just name) for the file
          */
-        rename(newName: String): Number;
+        rename(newName: string): number;
 
         /**
          * Move file to a new location
          * @param newName new location (or path) for the file
          */
-        mv(newName: String): Number;
+        mv(newName: string): number;
 
         /**
          * Unlink the path from the file.
-         *
+         * 
          * NOTE: If the path referred to a
          * symbolic link, the link is removed. If the path is the only link
          * to the file then the file will be deleted.
@@ -1093,7 +1083,7 @@ declare module 'sm-utils' {
 
         /**
          * Remove the file.
-         *
+         * 
          * NOTE: The path is unlinked from the file, but the file
          * is deleted only if the path was the only link to the file and
          * the file was not opened in any other process.
@@ -1102,7 +1092,7 @@ declare module 'sm-utils' {
 
         /**
          * Remove the directory.
-         *
+         * 
          * NOTE: The directory will be deleted only if it is empty.
          */
         rmdir(): void;
@@ -1116,13 +1106,13 @@ declare module 'sm-utils' {
          * Create a directory.
          * @param mode  file mode for the directory
          */
-        mkdir(mode?: Number): void;
+        mkdir(mode?: number): void;
 
         /**
          * Create a new directory and any necessary subdirectories.
          * @param mode  file mode for the directory
          */
-        mkdirp(mode?: Number): void;
+        mkdirp(mode?: number): void;
 
         /**
          * Perform a glob search with the path of the file as the pattern.
@@ -1132,52 +1122,52 @@ declare module 'sm-utils' {
         /**
          * Read contents of the file.
          */
-        read(): String | Buffer;
+        read(): string | Buffer;
 
         /**
          * Create (all necessary directories for) the path of the file/directory.
          * @param mode  file mode for the directory
          */
-        mkdirpPath(mode?: Number): void;
+        mkdirpPath(mode?: number): void;
 
         /**
          * Write contents to the file.
          * @param contents contents to be written to the file
          * @param options  contains options for writing to the file
-         *
+         *        
          *        The options can include parameters such as fileMode, dirMode, retries and encoding.
          */
-        write(contents: String | Buffer, options?: Object): void;
+        write(contents: string | Buffer, options?: object): void;
 
         /**
          * Append contents to the file.
          * @param contents contents to be written to the file
          * @param options  contains options for appending to the file
-         *
+         *        
          *        The options can include parameters such as fileMode, dirMode, retries and encoding.
          */
-        append(contents: String | Buffer, options?: Object): void;
+        append(contents: string | Buffer, options?: object): void;
 
         /**
          * Copy the file to some destination.
          * @param destination path of the destination
          * @param options  options for copying the file
-         *
+         *        
          *        If the overwrite option is explicitly set to false, only then
          *        will the function not attempt to overwrite the file if it (already)
          *        exists at the destination.
          */
-        copy(destination: String, options?: Object): void;
+        copy(destination: string, options?: object): void;
 
         /**
          * Return the canonicalized absolute pathname
          */
-        realpath(): String;
+        realpath(): string;
 
         /**
          * Return the canonicalized absolute pathname
          */
-        realpathSync(): String;
+        realpathSync(): string;
 
     }
 
@@ -1185,19 +1175,19 @@ declare module 'sm-utils' {
      * Returns a new File object representing the file located at 'path'.
      * @param path path of the file
      */
-    function file(path: String): File;
+    function file(path: string): File;
 
     class Lock {
         constructor();
 
         /**
-         *
+         * 
          * @param key
          */
         tryAcquire(key: string): boolean;
 
         /**
-         *
+         * 
          * @param key
          */
         acquire(key: string): boolean | void;
@@ -1217,7 +1207,7 @@ declare module 'sm-utils' {
         /**
          * Job Queue
          */
-        constructor(name: String, redis?: Object, enableWatchdog?: Boolean);
+        constructor(name: string, redis?: object, options?: boolean | queueOpts);
 
         /**
          * Initialise the redis connection
@@ -1225,14 +1215,14 @@ declare module 'sm-utils' {
          * @param enableWatchdog Will watch for stuck jobs due to any connection issues
          * @see https://github.com/Automattic/kue#unstable-redis-connections
          */
-        static init(redis?: Object, enableWatchdog?: Boolean): void;
+        static init(redis?: object, enableWatchdog?: boolean): void;
 
         /**
          * Add a job to the Queue
          * @param input Job data
          * @param opts
          */
-        addJob(input: any, opts: addOpts): Number;
+        addJob(input: any, opts: addOpts): number;
 
         /**
          * Add a job to the Queue, wait for it to process and return result
@@ -1248,47 +1238,47 @@ declare module 'sm-utils' {
          * Set default number of retry attempts for any job added later
          * @param attempts Number of attempts (>= 0), default = 1
          */
-        setAttempts(attempts: Number): void;
+        setAttempts(attempts: number): void;
 
         /**
          * Set delay b/w successive jobs for any job added later
          * @param delay Delay b/w jobs, milliseconds, default = 0
          */
-        setDelay(delay: Number): void;
+        setDelay(delay: number): void;
 
         /**
          * Set default TTL (time to live) for new jobs added from now on,
          * will fail job if not completed in TTL time
          * @param ttl Time in milliseconds, infinite when 0. default = 0
          */
-        setTTL(ttl: Number): void;
+        setTTL(ttl: number): void;
 
         /**
          * Sets default removeOnComplete for any job added to this Queue from now on
          * @param removeOnComplete default = false
          */
-        setRemoveOnCompletion(removeOnComplete: Boolean): void;
+        setRemoveOnCompletion(removeOnComplete: boolean): void;
 
         /**
          * Sets default noFailure for any job added to this Queue from now on.
          * This will mark the job complete even if it fails when true
          * @param noFailure default = false
          */
-        setNoFailure(noFailure: Boolean): void;
+        setNoFailure(noFailure: boolean): void;
 
         /**
          * Attach a processor to the Queue which will keep getting jobs as it completes them
          * @param processor Function to be called to process the job data
          * @param concurrency The number of jobs this processor can handle parallely
          */
-        addProcessor(processor: processorCallback, concurrency?: Number): void;
+        addProcessor(processor: processorCallback, concurrency?: number): void;
 
         /**
          * Pause Queue processing
          * Gives timeout time to all workers to complete their current jobs then stops them
          * @param timeout Time to complete current jobs in ms
          */
-        pauseProcessor(timeout?: Number): void;
+        pauseProcessor(timeout?: number): void;
 
         /**
          * Resume Queue processing
@@ -1300,38 +1290,38 @@ declare module 'sm-utils' {
          * @param queue Queue name
          * @param jobType One of {'inactive', 'delayed' ,'active', 'complete', 'failed'}
          */
-        static getCount(queue: String, jobType: String): Number;
+        static getCount(queue: string, jobType: string): number;
 
         /**
          * Return count of inactive jobs in Queue
          */
-        inactiveJobs(): Number;
+        inactiveJobs(): number;
 
         /**
          * Alias for inactiveJobs
          */
-        pendingJobs(): Number;
+        pendingJobs(): number;
 
         /**
          * Return count of completed jobs in Queue
          * Might return 0 if removeOnComplete was true
          */
-        completedJobs(): Number;
+        completedJobs(): number;
 
         /**
          * Return count of failed jobs in Queue
          */
-        failedJobs(): Number;
+        failedJobs(): number;
 
         /**
          * Return count of delayed jobs in Queue
          */
-        delayedJobs(): Number;
+        delayedJobs(): number;
 
         /**
          * Return count of active jobs in Queue
          */
-        activeJobs(): Number;
+        activeJobs(): number;
 
         /**
          * Process a single job in the Queue and mark it complete or failed,
@@ -1345,35 +1335,46 @@ declare module 'sm-utils' {
          * resets active jobs older than specified time
          * @param olderThan Time in milliseconds, default = 5000
          */
-        cleanup(olderThan?: Number): void;
+        cleanup(olderThan?: number): void;
 
         /**
          * Removes any old jobs from queue
          * older than specified time
          * @param olderThan Time in milliseconds, default = 3600000 (1 hr)
          */
-        delete(olderThan?: Number): void;
+        delete(olderThan?: number): void;
 
         /**
          * Function to query the status of a job
          * @param jobId Job id for which status info is required
          */
-        static status(jobId: Number): jobDetails;
+        static status(jobId: number): jobDetails;
 
         /**
          * Manualy process a specific Job. Returns existing result if job already processed
          * @param jobId Id of the job to be processed
          * @param processor Function to be called to process the job data, without ctx
          */
-        static processJobById(jobId: Number, processor: processorCallback): jobDetails;
+        static processJobById(jobId: number, processor: processorCallback): jobDetails;
 
         /**
          * Function shuts down the Queue gracefully.
          * Waits for active jobs to complete until timeout, then marks them failed.
          * @param timeout Time in milliseconds, default = 10000
          */
-        static exit(timeout?: Number): Boolean;
+        static exit(timeout?: number): boolean;
 
+    }
+
+    interface queueOpts {
+        /**
+         * Will watch for stuck jobs default: false
+         */
+        enableWatchdog?: boolean;
+        /**
+         * default logs to console
+         */
+        logger?: Console;
     }
 
     interface addOpts {
@@ -1381,27 +1382,27 @@ declare module 'sm-utils' {
          * Priority of the job, lower number is better
          * Options are : low: 10, normal: 0, medium: -5, high: -10, critical: -15 | Or any integer
          */
-        priority?: Number | String;
+        priority?: number | string;
         /**
          * Number of attempts
          */
-        attempts?: Number;
+        attempts?: number;
         /**
          * Delay in between jobs
          */
-        delay?: Number;
+        delay?: number;
         /**
          * Time to live for job
          */
-        ttl?: Number;
+        ttl?: number;
         /**
          * Remove job on completion
          */
-        removeOnComplete?: Boolean;
+        removeOnComplete?: boolean;
         /**
          * Mark job as complete even if it fails
          */
-        noFailure?: Boolean;
+        noFailure?: boolean;
     }
 
     /**
@@ -1421,18 +1422,18 @@ declare module 'sm-utils' {
         /**
          * Internal options used to set noFailure and extra properties
          */
-        options: Object;
+        options: object;
     }
 
     /**
      * Job status object.
      */
     interface jobDetails {
-        id: Number;
+        id: number;
         /**
          * Name of the Queue
          */
-        type: String;
+        type: string;
         /**
          * Internal data object, includes input and options
          */
@@ -1444,20 +1445,20 @@ declare module 'sm-utils' {
         /**
          * One of {'inactive', 'delayed' ,'active', 'complete', 'failed'}
          */
-        state: String;
+        state: string;
         error: any;
         /**
          * unix time stamp
          */
-        created_at: Number;
+        created_at: number;
         /**
          * unix time stamp
          */
-        updated_at: Number;
+        updated_at: number;
         /**
          * Attempts Object
          */
-        attempts: Object;
+        attempts: object;
     }
 
     /**
@@ -1569,10 +1570,6 @@ declare module 'sm-utils' {
 
         /**
          * memoizes a function (caches the return value of the function)
-         * ```js
-         * const cachedFn = cache.memoize('expensiveFn', expensiveFn);
-         * const result = cachedFn('a', 'b');
-         * ```
          * @param key cache key with which to memoize the results
          * @param fn function to memoize
          * @param options ttl in ms/timestring('1d 3h') (default: 0)
@@ -1591,7 +1588,7 @@ declare module 'sm-utils' {
          * Return a global instance of Redis cache
          * @param redis redis redisConf
          */
-        static globalCache(redis: Object): RedisCache;
+        static globalCache(redis: object): RedisCache;
 
         /**
          * gets a value from the cache immediately without waiting
@@ -1764,7 +1761,6 @@ declare module 'sm-utils' {
 
         /**
          * transform a string by replacing characters from from string to to string
-         * eg. `Str.transform('abc', 'bc', 'de') // returns ade`
          * @param str string to transform
          * @param from characters to replace in the string
          * @param to characters to replace with in the string
@@ -1798,19 +1794,19 @@ declare module 'sm-utils' {
          * Rotate a string by 13 characters
          * @param str the string to be rotated
          */
-        function rot13(str: String): String;
+        function rot13(str: string): string;
 
         /**
          * Rotate a string by 47 characters
          * @param str the string to be rotated
          */
-        function rot47(str: String): String;
+        function rot47(str: string): string;
 
         /**
          * Parses a json string, returns null if string is invalid (instead of throwing error)
          * @param str
          */
-        function tryParseJson(str: string): Object | null;
+        function tryParseJson(str: string): object | null;
 
         /**
          * Strip html tags from a string
@@ -1819,7 +1815,7 @@ declare module 'sm-utils' {
          *        allowed: array of allowed tags eg. ['p', 'b', 'span'], default: []
          *        blocked: array of blocked tags eg. ['p'], default: []
          *        replaceWith: replace the removed tags with this string, default: ''
-         *
+         *        
          *        if allowed is not given and blocked is given
          *        then by default all tags not mentioned in blocked are allowed
          */
@@ -1864,7 +1860,7 @@ declare module 'sm-utils' {
          * @param options options object
          *        options: {timeout (in ms), cwd, uid, gid, env (object), shell (eg. /bin/sh), encoding}
          */
-        function exec(command: String, options: Object): Promise<processObject>;
+        function exec(command: string, options: object): Promise<processObject>;
 
         /**
          * Similar to exec but instead executes a given file
@@ -1876,13 +1872,13 @@ declare module 'sm-utils' {
          * execute a command and return its output
          * @param args
          */
-        function execOut(...args: any[]): String;
+        function execOut(...args: any[]): string;
 
         /**
          * execute a file and return its output
          * @param args
          */
-        function execFileOut(...args: any[]): String;
+        function execFileOut(...args: any[]): string;
 
         /**
          * turn off umask for the current process
@@ -1897,40 +1893,40 @@ declare module 'sm-utils' {
         /**
          * get the uid of the user running current process
          */
-        function getuid(): Number;
+        function getuid(): number;
 
         /**
          * get user info from username or uid
          * currently gets user info from /etc/passwd
          * @param user username or uid
          */
-        function getUserInfo(user: String | Number): Object;
+        function getUserInfo(user: string | number): object;
 
         /**
          * get all users in the system
          * currently gets user info from /etc/passwd
          */
-        function getAllUsers(): Object;
+        function getAllUsers(): object;
 
         /**
          * get current time in seconds
          */
-        function time(): Number;
+        function time(): number;
 
         /**
          * get current time in milliseconds (as double)
          */
-        function millitime(): Number;
+        function millitime(): number;
 
         /**
          * get current time in nanoseconds (as double)
          */
-        function nanotime(): Number;
+        function nanotime(): number;
 
         /**
          * get current time in microseconds (as double)
          */
-        function microtime(): Number;
+        function microtime(): number;
 
         /**
          * Sleep for a specified time (in milliseconds)
@@ -1951,7 +1947,7 @@ declare module 'sm-utils' {
          * if a message is given then it will be logged to console before exiting
          * @param code exit code or the message to be logged
          */
-        function exit(code: number | String): void;
+        function exit(code: number | string): void;
 
         /**
          * force exit the process
@@ -1959,7 +1955,7 @@ declare module 'sm-utils' {
          * same as original process.exit (which we override)
          * @param code exit code or the message to be logged
          */
-        function forceExit(code: number | String): void;
+        function forceExit(code: number | string): void;
 
         /**
          * Add an exit handler that runs when process receives an exit signal
@@ -1970,7 +1966,7 @@ declare module 'sm-utils' {
         function onExit(callback: Function, options?: number | timeoutOpts): Promise<void>;
 
         /**
-         *
+         * 
          * @param server
          * @param options
          */
@@ -2120,7 +2116,7 @@ declare module 'sm-utils' {
 
     namespace cfg {
         /**
-         *
+         * 
          * @param key
          * @param defaultValue
          */
@@ -2161,7 +2157,7 @@ declare module 'sm-utils' {
          * read the file specified by the key, and then cache it
          * @param key
          */
-        function read(key: String): any;
+        function read(key: string): any;
 
         function isProduction(): boolean;
 
@@ -2190,7 +2186,6 @@ declare module 'sm-utils' {
     const system: typeof System;
 
     const baseConvert: typeof Crypt.baseConvert;
-
 }
 
 
