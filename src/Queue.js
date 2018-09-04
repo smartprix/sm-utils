@@ -89,14 +89,18 @@ class Queue {
 	}
 
 	/**
+	 * @typedef {object} queueOpts
+	 * @property {boolean} [enableWatchdog=false] Will watch for stuck jobs default: false
+	 * @property {Console} [logger] default logs to console
+	 */
+
+	/**
 	 * Create a new Queue
 	 * The redis and enableWatchdog settings are required only the first time to init
 	 * Can also be set beforehand by calling Queue.init()
 	 * @param {string} name Name of the queue
 	 * @param {object} [redis={port: 6379, host: '127.0.0.1'}] Redis connection settings object
-	 * @param {boolean|object} [options={}]
-	 * @param {boolean} [options.enableWatchdog=false] Will watch for stuck jobs
-	 * @param {Console} [options.logger]
+	 * @param {boolean|queueOpts} [options={}] enableWatchdog or opts object (default = {})
 	 * Read more here :  https://github.com/Automattic/kue#unstable-redis-connections
 	 */
 	constructor(name, redis = {port: 6379, host: '127.0.0.1'}, options = {}) {
