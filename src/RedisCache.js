@@ -698,7 +698,7 @@ class RedisCache {
 
 	/**
 	 * Return a global instance of Redis cache
-	 * @param {Object} redis redis redisConf
+	 * @param {object} redis redis redisConf
 	 * @return {RedisCache}
 	 */
 	static globalCache(redis) {

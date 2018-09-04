@@ -43,7 +43,7 @@ class File {
 	/**
 	 * Creates a new File object.
 	 *
-	 * @param  {String} path path to the file
+	 * @param  {string} path path to the file
 	 */
 	constructor(path) {
 		this.path = path;
@@ -52,7 +52,7 @@ class File {
 	/**
 	 * Checks whether a file exists already.
 	 *
-	 * @return {Boolean} true, if the file exists; false, otherwise
+	 * @return {boolean} true, if the file exists; false, otherwise
 	 */
 	async exists() {
 		try {
@@ -67,7 +67,7 @@ class File {
 	/**
 	* Checks whether a file exists already.
 	*
-	* @return {Boolean} true, if the file exists; false, otherwise
+	* @return {boolean} true, if the file exists; false, otherwise
 	 */
 	existsSync() {
 		try {
@@ -82,7 +82,7 @@ class File {
 	/**
 	 * Returns whether this File object represents a file.
 	 *
-	 * @return {Boolean} true, if this object represents a file; false, otherwise
+	 * @return {boolean} true, if this object represents a file; false, otherwise
 	 */
 	async isFile() {
 		try {
@@ -96,7 +96,7 @@ class File {
 	/**
 	 * Returns whether this File object represents a directory.
 	 *
-	 * @return {Boolean} true, if this object represents a directory; false, otherwise
+	 * @return {boolean} true, if this object represents a directory; false, otherwise
 	 */
 	async isDir() {
 		try {
@@ -167,7 +167,7 @@ class File {
 	 * Returns an object with the stats of the file. If the path for the file
 	 * is a symlink, then stats of the symlink are returned.
 	 *
-	 * @return {Object} Stats object
+	 * @return {object} Stats object
 	 */
 	async lstat() {
 		return fs.lstat(this.path);
@@ -177,7 +177,7 @@ class File {
 	 * Returns an object with the stats of the file. If the path for the file
 	 * is a symlink, then stats of the target of the symlink are returned.
 	 *
-	 * @return {Object} Stats object
+	 * @return {object} Stats object
 	 */
 	async stat() {
 		return fs.stat(this.path);
@@ -188,7 +188,7 @@ class File {
 	 * Returns the size of the file in bytes. If the file is not found
 	 * or can't be read successfully, 0 is returned.
 	 *
-	 * @return {Number} Size of file (in bytes)
+	 * @return {number} Size of file (in bytes)
 	 */
 	async size() {
 		try {
@@ -202,8 +202,8 @@ class File {
 	/**
 	 * Change the mode of the file.
 	 *
-	 * @param  {Number|String}  mode An octal number or a string representing the file mode
-	 * @return {Number}              0, on success; -1, if some error occurred
+	 * @param  {number|string}  mode An octal number or a string representing the file mode
+	 * @return {number}              0, on success; -1, if some error occurred
 	 */
 	async chmod(mode) {
 		return fs.chmod(this.path, mode);
@@ -212,8 +212,8 @@ class File {
 	/**
 	 * Change the mode of the file or directory recursively.
 	 *
-	 * @param  {Number|String}  mode An octal number or a string representing the file mode
-	 * @return {Number}              0, on success; -1, if some error occurred
+	 * @param  {number|string}  mode An octal number or a string representing the file mode
+	 * @return {number}              0, on success; -1, if some error occurred
 	 */
 	async chmodr(mode) {
 		return getModule('chmodr')(this.path, mode);
@@ -222,9 +222,9 @@ class File {
 	/**
 	 * Change the owner and group of the file.
 	 *
-	 * @param  {Number|String} user  user id, or user name
-	 * @param  {Number|String} group group id, or group name
-	 * @return {Number}              0, on success; any other number, if some error occurred
+	 * @param  {number|string} user  user id, or user name
+	 * @param  {number|string} group group id, or group name
+	 * @return {number}              0, on success; any other number, if some error occurred
 	 *
 	 * NOTE: If the owner or group is specified as -1, then that ID is not changed
 	 */
@@ -239,9 +239,9 @@ class File {
 	/**
 	 * Change the owner and group of the file recursively.
 	 *
-	 * @param  {Number|String} user  user id, or user name
-	 * @param  {Number|String} group group id, or group name
-	 * @return {Number}              0, on success; any other number, if some error occurred
+	 * @param  {number|string} user  user id, or user name
+	 * @param  {number|string} group group id, or group name
+	 * @return {number}              0, on success; any other number, if some error occurred
 	 *
 	 * NOTE: If the owner or group is specified as -1, then that ID is not changed
 	 */
@@ -256,8 +256,8 @@ class File {
 	/**
 	 * Change the name or location of the file.
 	 *
-	 * @param  {String} newName new path/location (not just name) for the file
-	 * @return {Number}         0, on success; -1, if some error occurred
+	 * @param  {string} newName new path/location (not just name) for the file
+	 * @return {number}         0, on success; -1, if some error occurred
 	 */
 	async rename(newName) {
 		try {
@@ -274,8 +274,8 @@ class File {
 	/**
 	 * Move file to a new location
 	 *
-	 * @param  {String} newName new location (or path) for the file
-	 * @return {Number}         0, on success; -1, if some error occurred
+	 * @param  {string} newName new location (or path) for the file
+	 * @return {number}         0, on success; -1, if some error occurred
 	 */
 	async mv(newName) {
 		return this.rename(newName);
@@ -322,7 +322,7 @@ class File {
 	/**
 	 * Create a directory.
 	 *
-	 * @param  {Number} [mode = 0o755] file mode for the directory
+	 * @param  {number} [mode = 0o755] file mode for the directory
 	 */
 	async mkdir(mode = 0o755) {
 		return fs.mkdir(this.path, mode);
@@ -331,7 +331,7 @@ class File {
 	/**
 	 * Create a new directory and any necessary subdirectories.
 	 *
-	 * @param  {Number} [mode = 0o755] file mode for the directory
+	 * @param  {number} [mode = 0o755] file mode for the directory
 	 */
 	async mkdirp(mode = 0o755) {
 		return getModule('mkdirp')(this.path, mode);
@@ -349,7 +349,7 @@ class File {
 	/**
 	 * Read contents of the file.
 	 *
-	 * @return {String|Buffer} contents of the file
+	 * @return {string|Buffer} contents of the file
 	 */
 	async read() {
 		return fs.readFile(this.path, 'utf8');
@@ -358,7 +358,7 @@ class File {
 	/**
 	 * Create (all necessary directories for) the path of the file/directory.
 	 *
-	 * @param  {Number} [mode = 0o755] file mode for the directory
+	 * @param  {number} [mode = 0o755] file mode for the directory
 	 */
 	async mkdirpPath(mode = 0o755) {
 		return getModule('mkdirp')(_path.dirname(this.path), mode);
@@ -367,8 +367,8 @@ class File {
 	/**
 	 * Write contents to the file.
 	 *
-	 * @param  {String|Buffer} contents contents to be written to the file
-	 * @param  {Object} [options = {}]  contains options for writing to the file
+	 * @param  {string|Buffer} contents contents to be written to the file
+	 * @param  {object} [options = {}]  contains options for writing to the file
 	 *
 	 * The options can include parameters such as fileMode, dirMode, retries and encoding.
 	 */
@@ -396,8 +396,8 @@ class File {
 	/**
 	 * Append contents to the file.
 	 *
-	 * @param  {String|Buffer} contents contents to be written to the file
-	 * @param  {Object} [options = {}]  contains options for appending to the file
+	 * @param  {string|Buffer} contents contents to be written to the file
+	 * @param  {object} [options = {}]  contains options for appending to the file
 	 *
 	 * The options can include parameters such as fileMode, dirMode, retries and encoding.
 	 */
@@ -425,8 +425,8 @@ class File {
 	/**
 	 * Copy the file to some destination.
 	 *
-	 * @param  {String} destination    path of the destination
-	 * @param  {Object} [options = {}] options for copying the file
+	 * @param  {string} destination    path of the destination
+	 * @param  {object} [options = {}] options for copying the file
 	 *
 	 * If the overwrite option is explicitly set to false, only then
 	 * will the function not attempt to overwrite the file if it (already)
@@ -447,7 +447,7 @@ class File {
 	/**
 	 * Return the canonicalized absolute pathname
 	 *
-	 * @return {String} the resolved path
+	 * @return {string} the resolved path
 	 */
 	async realpath() {
 		return fs.realpath(this.path);
@@ -456,7 +456,7 @@ class File {
 	/**
 	 * Return the canonicalized absolute pathname
 	 *
-	 * @return {String} the resolved path
+	 * @return {string} the resolved path
 	 */
 	realpathSync() {
 		return _fs.realpathSync(this.path);
@@ -466,7 +466,7 @@ class File {
 /**
  * Returns a new File object representing the file located at 'path'.
  *
- * @param {String} path path of the file
+ * @param {string} path path of the file
  * @return {File} File object representing the file located at the path
  */
 function file(path) {

@@ -35,7 +35,7 @@ function merge(conf, confPrivate) {
 
 /**
  * Reads a config value
- * @param {String} key key to read, can be nested like `a.b.c`
+ * @param {string} key key to read, can be nested like `a.b.c`
  * @param {*} defaultValue value to return if key is not found
  * @return {any}
  */
@@ -76,7 +76,7 @@ function readDefaultConfigFiles() {
 	readEnvVariables();
 }
 /**
- * @memberOf config
+ * @memberof config
  * @param {string} key
  * @param {any} defaultValue
  * @return {any}
@@ -87,7 +87,7 @@ cfg.get = function (key, defaultValue) {
 
 /** set values in global config
  * you can also give key as an object to assign all key values from it
- * @memberOf config
+ * @memberof config
  * @return {null}
  */
 cfg.set = function (key, value) {
@@ -110,7 +110,7 @@ cfg.set = function (key, value) {
  * set values in global config with an object to assign all key values from it
  * if a key already exists then it is merged with new value
  * if obj is not an Object then nothing happens
- * @memberOf config
+ * @memberof config
  * @return {null}
  */
 cfg.merge = function (obj) {
@@ -130,7 +130,7 @@ cfg.merge = function (obj) {
  * set values in global config with an object to assign all key values from it
  * if a key already exists then it is assigned with new value
  * if obj is not an Object then nothing happens
- * @memberOf config
+ * @memberof config
  * @return {null}
  */
 cfg.assign = function (obj) {
@@ -146,7 +146,7 @@ cfg.assign = function (obj) {
 };
 
 /**
- * @memberOf config
+ * @memberof config
  * @return {void}
  */
 cfg.delete = function (key) {
@@ -156,7 +156,7 @@ cfg.delete = function (key) {
 
 /**
  * read config from a file, and merge with existing config
- * @memberOf config
+ * @memberof config
  * @param {string} file path of the file to read (only absolute paths)
  * @param {object} options
  * 	options = {ignoreErrors = ignore all errors, ignoreNotFound = ignore if file not found}
@@ -189,8 +189,8 @@ cfg.file = function (file, options = {}) {
 
 /**
  * read the file specified by the key, and then cache it
- * @memberOf config
- * @param {String} key
+ * @memberof config
+ * @param {string} key
  * @return {any} value
  */
 cfg.read = function (key) {
@@ -215,7 +215,7 @@ cfg.read = function (key) {
 };
 
 /**
- * @memberOf config
+ * @memberof config
  * @return {boolean}
  */
 cfg.isProduction = function () {
@@ -223,7 +223,7 @@ cfg.isProduction = function () {
 };
 
 /**
- * @memberOf config
+ * @memberof config
  * @return {boolean}
  */
 cfg.isStaging = function () {
@@ -232,7 +232,7 @@ cfg.isStaging = function () {
 
 /**
  * Returns true if env is production or staging
- * @memberOf config
+ * @memberof config
  * @return {boolean}
  */
 cfg.isProductionLike = function () {
@@ -240,7 +240,7 @@ cfg.isProductionLike = function () {
 };
 
 /**
- * @memberOf config
+ * @memberof config
  * @return {boolean}
  */
 cfg.isTest = function () {
@@ -248,7 +248,7 @@ cfg.isTest = function () {
 };
 
 /**
- * @memberOf config
+ * @memberof config
  * @return {boolean}
  */
 cfg.isDev = function () {

@@ -115,8 +115,8 @@ function execWrapper(method, args) {
 /**
  * Execute the given command in a shell.
  * @memberof System
- * @param {String} command
- * @param {Object} options options object
+ * @param {string} command
+ * @param {object} options options object
  * options: {timeout (in ms), cwd, uid, gid, env (object), shell (eg. /bin/sh), encoding}
  * @return {Promise&lt;processObject>}
  */
@@ -139,7 +139,7 @@ function execFile(...args) {
  *
  * @memberof System
  * @param {Array&lt;any>} args
- * @return {String} output of the command's execution
+ * @return {string} output of the command's execution
  */
 async function execOut(...args) {
 	return (await exec.apply(this, args)).stdout.toString();
@@ -150,7 +150,7 @@ async function execOut(...args) {
  *
  * @memberof System
  * @param {Array&lt;any>} args
- * @return {String} output of the file's execution
+ * @return {string} output of the file's execution
  */
 async function execFileOut(...args) {
 	return (await execFile.apply(this, args)).stdout.toString();
@@ -184,7 +184,7 @@ function yesUmask() {
  * get the uid of the user running current process
  *
  * @memberof System
- * @return {Number}  uid
+ * @return {number}  uid
  */
 function getuid() {
 	return process.getuid();
@@ -195,8 +195,8 @@ function getuid() {
  * currently gets user info from /etc/passwd
  *
  * @memberof System
- * @param  {String|Number} user username or uid
- * @return {Object}             the user's information
+ * @param  {string|number} user username or uid
+ * @return {object}             the user's information
  */
 function getUserInfo(user) {
 	user = (user === undefined) ? process.getuid() : user;
@@ -222,7 +222,7 @@ function getUserInfo(user) {
  * currently gets user info from /etc/passwd
  *
  * @memberof System
- * @return {Object}  object containing info for all users, as username:info pairs
+ * @return {object}  object containing info for all users, as username:info pairs
  */
 function getAllUsers() {
 	return new Promise((resolve, reject) => {
@@ -246,7 +246,7 @@ function getAllUsers() {
  * get current time in seconds
  *
  * @memberof System
- * @return {Number}  current time in seconds
+ * @return {number}  current time in seconds
  */
 function time() {
 	return Math.floor(Date.now() / 1000);
@@ -256,7 +256,7 @@ function time() {
  * get current time in milliseconds (as double)
  *
  * @memberof System
- * @return {Number}  current time in milliseconds
+ * @return {number}  current time in milliseconds
  */
 function millitime() {
 	return (Date.now() / 1000);
@@ -266,7 +266,7 @@ function millitime() {
  * get current time in nanoseconds (as double)
  *
  * @memberof System
- * @return {Number}  current time in nanoseconds
+ * @return {number}  current time in nanoseconds
  */
 function nanotime() {
 	const hrtime = process.hrtime();
@@ -279,7 +279,7 @@ function nanotime() {
  * get current time in microseconds (as double)
  *
  * @memberof System
- * @return {Number}  current time in microseconds
+ * @return {number}  current time in microseconds
  */
 function microtime() {
 	return nanotime();
@@ -316,7 +316,7 @@ function tick() {
  * if a message is given then it will be logged to console before exiting
  *
  * @memberof System
- * @param {number|String} code exit code or the message to be logged
+ * @param {number|string} code exit code or the message to be logged
  * @return {void}
  */
 function exit(code) {
@@ -336,7 +336,7 @@ function exit(code) {
  * same as original process.exit (which we override)
  *
  * @memberof System
- * @param {number|String} code exit code or the message to be logged
+ * @param {number|string} code exit code or the message to be logged
  * @return {void}
  */
 function forceExit(code) {

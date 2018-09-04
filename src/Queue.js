@@ -70,8 +70,8 @@ class Queue {
 
 	/**
 	 * Initialise the redis connection
-	 * @param {Object} [redis={port: 6379, host: '127.0.0.1'}] Redis connection settings object
-	 * @param {Boolean} [enableWatchdog=false] Will watch for stuck jobs due to any connection issues
+	 * @param {object} [redis={port: 6379, host: '127.0.0.1'}] Redis connection settings object
+	 * @param {boolean} [enableWatchdog=false] Will watch for stuck jobs due to any connection issues
 	 * @see https://github.com/Automattic/kue#unstable-redis-connections
 	 */
 	static init(redis, enableWatchdog) {
@@ -89,14 +89,18 @@ class Queue {
 	}
 
 	/**
+	 * @typedef {object} queueOpts
+	 * @property {boolean} [enableWatchdog=false] Will watch for stuck jobs default: false
+	 * @property {Console} [logger] default logs to console
+	 */
+
+	/**
 	 * Create a new Queue
 	 * The redis and enableWatchdog settings are required only the first time to init
 	 * Can also be set beforehand by calling Queue.init()
-	 * @param {String} name Name of the queue
-	 * @param {Object} [redis={port: 6379, host: '127.0.0.1'}] Redis connection settings object
-	 * @param {Boolean|Object} [options={}]
-	 * @param {Boolean} [options.enableWatchdog=false] Will watch for stuck jobs
-	 * @param {Console} [options.logger]
+	 * @param {string} name Name of the queue
+	 * @param {object} [redis={port: 6379, host: '127.0.0.1'}] Redis connection settings object
+	 * @param {boolean|queueOpts} [options={}] enableWatchdog or opts object (default = {})
 	 * Read more here :  https://github.com/Automattic/kue#unstable-redis-connections
 	 */
 	constructor(name, redis = {port: 6379, host: '127.0.0.1'}, options = {}) {
@@ -115,21 +119,21 @@ class Queue {
 
 
 	/**
-	 * @typedef {Object} addOpts
-	 * @property {Number|String} [priority=0] Priority of the job, lower number is better
+	 * @typedef {object} addOpts
+	 * @property {number|string} [priority=0] Priority of the job, lower number is better
 	 * Options are : low: 10, normal: 0, medium: -5, high: -10, critical: -15 | Or any integer
-	 * @property {Number} [attempts] Number of attempts
-	 * @property {Number} [delay] Delay in between jobs
-	 * @property {Number} [ttl] Time to live for job
-	 * @property {Boolean} [removeOnComplete] Remove job on completion
-	 * @property {Boolean} [noFailure] Mark job as complete even if it fails
+	 * @property {number} [attempts] Number of attempts
+	 * @property {number} [delay] Delay in between jobs
+	 * @property {number} [ttl] Time to live for job
+	 * @property {boolean} [removeOnComplete] Remove job on completion
+	 * @property {boolean} [noFailure] Mark job as complete even if it fails
 	 */
 
 	/**
 	 * Add a job to the Queue
 	 * @param {*} input Job data
 	 * @param {addOpts} opts
-	 * @return {Number} The ID of the job created
+	 * @return {number} The ID of the job created
 	 */
 	async addJob(input, {
 		priority = 0,
@@ -223,7 +227,7 @@ class Queue {
 
 	/**
 	 * Set default number of retry attempts for any job added later
-	 * @param {Number} attempts Number of attempts (>= 0), default = 1
+	 * @param {number} attempts Number of attempts (>= 0), default = 1
 	 */
 	setAttempts(attempts) {
 		this.attempts = attempts;
@@ -231,7 +235,7 @@ class Queue {
 
 	/**
 	 * Set delay b/w successive jobs for any job added later
-	 * @param {Number} delay Delay b/w jobs, milliseconds, default = 0
+	 * @param {number} delay Delay b/w jobs, milliseconds, default = 0
 	 */
 	setDelay(delay) {
 		this.delay = delay;
@@ -240,7 +244,7 @@ class Queue {
 	/**
 	 * Set default TTL (time to live) for new jobs added from now on,
 	 * will fail job if not completed in TTL time
-	 * @param {Number} ttl Time in milliseconds, infinite when 0. default = 0
+	 * @param {number} ttl Time in milliseconds, infinite when 0. default = 0
 	 */
 	setTTL(ttl) {
 		this.ttl = ttl;
@@ -248,7 +252,7 @@ class Queue {
 
 	/**
 	 * Sets default removeOnComplete for any job added to this Queue from now on
-	 * @param {Boolean} removeOnComplete default = false
+	 * @param {boolean} removeOnComplete default = false
 	 */
 	setRemoveOnCompletion(removeOnComplete) {
 		this.removeOnComplete = removeOnComplete;
@@ -257,7 +261,7 @@ class Queue {
 	/**
 	 * Sets default noFailure for any job added to this Queue from now on.
 	 * This will mark the job complete even if it fails when true
-	 * @param {Boolean} noFailure default = false
+	 * @param {boolean} noFailure default = false
 	 */
 	setNoFailure(noFailure) {
 		this.noFailure = noFailure;
@@ -273,7 +277,7 @@ class Queue {
 	/**
 	 * Attach a processor to the Queue which will keep getting jobs as it completes them
 	 * @param {processorCallback} processor Function to be called to process the job data
-	 * @param {Number} [concurrency=1] The number of jobs this processor can handle parallely
+	 * @param {number} [concurrency=1] The number of jobs this processor can handle parallely
 	 */
 	async addProcessor(processor, concurrency = 1) {
 		if (Queue.queues[this.name].processorAdded) {
@@ -333,7 +337,7 @@ class Queue {
 	/**
 	 * Pause Queue processing
 	 * Gives timeout time to all workers to complete their current jobs then stops them
-	 * @param {Number} [timeout=5000] Time to complete current jobs in ms
+	 * @param {number} [timeout=5000] Time to complete current jobs in ms
 	 */
 	async pauseProcessor(timeout = 5000) {
 		if (!Queue.queues[this.name].processorAdded) throw new Error('No processor present');
@@ -366,9 +370,9 @@ class Queue {
 
 	/**
 	 * Return count of jobs in Queue of JobType
-	 * @param {String} queue Queue name
-	 * @param {String} jobType One of {'inactive', 'delayed' ,'active', 'complete', 'failed'}
-	 * @return {Number} count
+	 * @param {string} queue Queue name
+	 * @param {string} jobType One of {'inactive', 'delayed' ,'active', 'complete', 'failed'}
+	 * @return {number} count
 	 */
 	static async getCount(queue, jobType) {
 		return new Promise((resolve, reject) => {
@@ -380,7 +384,7 @@ class Queue {
 	}
 	/**
 	 * Return count of inactive jobs in Queue
-	 * @return {Number} inactiveCount
+	 * @return {number} inactiveCount
 	 */
 	async inactiveJobs() {
 		return Queue.getCount(this.name, 'inactive');
@@ -388,7 +392,7 @@ class Queue {
 
 	/**
 	 * Alias for inactiveJobs
- 	 * @return {Number} inactiveCount
+ 	 * @return {number} inactiveCount
 	 */
 	pendingJobs() {
 		return this.inactiveJobs();
@@ -397,7 +401,7 @@ class Queue {
 	/**
 	 * Return count of completed jobs in Queue
 	 * Might return 0 if removeOnComplete was true
-	 * @return {Number} completeCount
+	 * @return {number} completeCount
 	 */
 	async completedJobs() {
 		return Queue.getCount(this.name, 'complete');
@@ -405,7 +409,7 @@ class Queue {
 
 	/**
 	 * Return count of failed jobs in Queue
-	 * @return {Number} failedCount
+	 * @return {number} failedCount
 	 */
 	async failedJobs() {
 		return Queue.getCount(this.name, 'failed');
@@ -413,7 +417,7 @@ class Queue {
 
 	/**
 	 * Return count of delayed jobs in Queue
-	 * @return {Number} delayedCount
+	 * @return {number} delayedCount
 	 */
 	async delayedJobs() {
 		return Queue.getCount(this.name, 'delayed');
@@ -421,7 +425,7 @@ class Queue {
 
 	/**
 	 * Return count of active jobs in Queue
-	 * @return {Number} activeCount
+	 * @return {number} activeCount
 	 */
 	async activeJobs() {
 		return Queue.getCount(this.name, 'active');
@@ -429,23 +433,23 @@ class Queue {
 
 	/**
 	 * Internal data object
-	 * @typedef {Object} internalData
+	 * @typedef {object} internalData
 	 * @property {*} input Input data given to job
-	 * @property {Object} options Internal options used to set noFailure and extra properties
+	 * @property {object} options Internal options used to set noFailure and extra properties
 	 */
 
 	/**
 	 * Job status object.
-	 * @typedef {Object} jobDetails
-	 * @property {Number} id
-	 * @property {String} type Name of the Queue
+	 * @typedef {object} jobDetails
+	 * @property {number} id
+	 * @property {string} type Name of the Queue
 	 * @property {internalData} data Internal data object, includes input and options
 	 * @property {*} result Result of the processor callback
-	 * @property {String} state One of {'inactive', 'delayed' ,'active', 'complete', 'failed'}
+	 * @property {string} state One of {'inactive', 'delayed' ,'active', 'complete', 'failed'}
 	 * @property {*} error
-	 * @property {Number} created_at unix time stamp
-	 * @property {Number} updated_at unix time stamp
-	 * @property {Object} attempts Attempts Object
+	 * @property {number} created_at unix time stamp
+	 * @property {number} updated_at unix time stamp
+	 * @property {object} attempts Attempts Object
 	 */
 
 	/**
@@ -469,7 +473,7 @@ class Queue {
 	/**
 	 * Cleanup function to be called during startup,
 	 * resets active jobs older than specified time
-	 * @param {Number} [olderThan=5000] Time in milliseconds, default = 5000
+	 * @param {number} [olderThan=5000] Time in milliseconds, default = 5000
 	 */
 	async cleanup(olderThan = 5000) {
 		const n = await Queue.getCount(this.name, 'active');
@@ -479,7 +483,7 @@ class Queue {
 	/**
 	 * Removes any old jobs from queue
 	 * older than specified time
-	 * @param {Number} [olderThan=3600000] Time in milliseconds, default = 3600000 (1 hr)
+	 * @param {number} [olderThan=3600000] Time in milliseconds, default = 3600000 (1 hr)
 	 */
 	async delete(olderThan = 3600000) {
 		const completed = await this.completedJobs();
@@ -502,7 +506,7 @@ class Queue {
 
 	/**
 	 * Function to query the status of a job
-	 * @param {Number} jobId Job id for which status info is required
+	 * @param {number} jobId Job id for which status info is required
 	 * @return {jobDetails} Object full of job details like state, time, attempts, etc.
 	 */
 	static async status(jobId) {
@@ -520,7 +524,7 @@ class Queue {
 
 	/**
 	 * Manualy process a specific Job. Returns existing result if job already processed
-	 * @param {Number} jobId Id of the job to be processed
+	 * @param {number} jobId Id of the job to be processed
 	 * @param {processorCallback} processor Function to be called to process the job data, without ctx
 	 * @return {jobDetails} Result of processor function and job object of completed job
 	 */
@@ -539,8 +543,8 @@ class Queue {
 	/**
 	 * Function shuts down the Queue gracefully.
 	 * Waits for active jobs to complete until timeout, then marks them failed.
-	 * @param {Number} [timeout=10000] Time in milliseconds, default = 10000
-	 * @return {Boolean}
+	 * @param {number} [timeout=10000] Time in milliseconds, default = 10000
+	 * @return {boolean}
 	 */
 	static async exit(timeout = 10000) {
 		return new Promise((resolve) => {
