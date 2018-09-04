@@ -35,7 +35,7 @@ function merge(conf, confPrivate) {
 
 /**
  * Reads a config value
- * @param {String} key key to read, can be nested like `a.b.c`
+ * @param {string} key key to read, can be nested like `a.b.c`
  * @param {*} defaultValue value to return if key is not found
  * @return {any}
  */
@@ -190,7 +190,7 @@ cfg.file = function (file, options = {}) {
 /**
  * read the file specified by the key, and then cache it
  * @memberOf config
- * @param {String} key
+ * @param {string} key
  * @return {any} value
  */
 cfg.read = function (key) {
