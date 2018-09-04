@@ -29,6 +29,8 @@
   "author": "Hitesh Khandelwal <hitesh@smartprix.com> (http://www.smartprix.com/)",
   "license": "ISC",
   "dependencies": {
+    "@types/node": "^10.9.3",
+    "@types/request": "^2.47.1",
     "chalk": "^2.4.1",
     "chmodr": "^1.0.2",
     "chownr": "^1.0.1",
@@ -54,8 +56,6 @@
     "@babel/preset-env": "^7.0.0",
     "@babel/register": "^7.0.0",
     "@otris/jsdoc-tsd": "^1.0.3",
-    "@types/node": "^10.9.3",
-    "@types/request": "^2.47.1",
     "chai": "^4.1.2",
     "docdash": "^1.0.0",
     "eslint": "^5.4.0",
