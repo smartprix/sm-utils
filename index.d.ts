@@ -1,3 +1,6 @@
+import {CookieJar} from 'request';
+import {ChildProcess} from 'child_process';
+
 declare module 'sm-utils' {
     /**
      * Local cache with dogpile prevention
