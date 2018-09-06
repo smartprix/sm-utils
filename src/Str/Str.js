@@ -257,12 +257,16 @@ function rot47(str) {
 
 /**
  * Parses a json string, returns null if string is invalid (instead of throwing error)
+ * If the input is not a string (already parsed), returns the input itself
  *
  * @memberof Str
- * @param {string} str
+ * @param {any} str
  * @return {object|null}
  */
 function tryParseJson(str) {
+	if (str == null) return null;
+	if (typeof str !== 'string') return str;
+
 	try {
 		return JSON.parse(str);
 	}

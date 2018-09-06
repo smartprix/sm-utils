@@ -145,7 +145,7 @@ declare module 'sm-utils' {
         static clear(): void;
 
         /**
-         * 
+         *
          * @param key
          * @param fn
          * @param options ttl in ms/timestring('1d 3h') or opts (default: 0)
@@ -177,13 +177,13 @@ declare module 'sm-utils' {
         url(url: string): Connect;
 
         /**
-         * 
+         *
          * @param url self-descriptive
          */
         static url(url: string): Connect;
 
         /**
-         * 
+         *
          * @param args
          */
         static newCookieJar(...args: any[]): CookieJar;
@@ -447,7 +447,7 @@ declare module 'sm-utils' {
         /**
          * Generate a random string based on the options passed.
          * It can be treated as a Random UUID.
-         * 
+         *
          * You can give length and charset in options.
          * If options is an integer it will treated as length.
          * By default, length is 20 and charset is ALPHA_NUMERIC
@@ -465,7 +465,7 @@ declare module 'sm-utils' {
         function shuffle(itemToShuffle: any[] | string, options: shuffle_options): any[] | string;
 
         /**
-         * 
+         *
          * @param seed integer
          */
         function seededRandom(seed: number): randomFunctions;
@@ -479,7 +479,7 @@ declare module 'sm-utils' {
         /**
          * Generate a sequential id based on current time in millisecond and some randomness.
          * It can be treated as a Sequential UUID. Ideal for use as a DB primary key.
-         * 
+         *
          * NOTE: For best results use atleast 15 characters in base62 and 18 characters in base36 encoding
          * @param options length of the id or object of {length: int, base36: bool}
          */
@@ -587,7 +587,7 @@ declare module 'sm-utils' {
 
         /**
          * Sign a message using a private key.
-         * 
+         *
          * NOTE: Generate a key pair using:
          * ```sh
          * openssl ecparam -genkey -name secp256k1 | openssl ec -aes128 -out private.pem
@@ -602,7 +602,7 @@ declare module 'sm-utils' {
         /**
          * Verify a message using a public key
          * opts can have {encoding (default 'hex')}
-         * 
+         *
          * NOTE: Generate a key pair using:
          * ```sh
          * openssl ecparam -genkey -name secp256k1 | openssl ec -aes128 -out private.pem
@@ -1074,7 +1074,7 @@ declare module 'sm-utils' {
 
         /**
          * Unlink the path from the file.
-         * 
+         *
          * NOTE: If the path referred to a
          * symbolic link, the link is removed. If the path is the only link
          * to the file then the file will be deleted.
@@ -1083,7 +1083,7 @@ declare module 'sm-utils' {
 
         /**
          * Remove the file.
-         * 
+         *
          * NOTE: The path is unlinked from the file, but the file
          * is deleted only if the path was the only link to the file and
          * the file was not opened in any other process.
@@ -1092,7 +1092,7 @@ declare module 'sm-utils' {
 
         /**
          * Remove the directory.
-         * 
+         *
          * NOTE: The directory will be deleted only if it is empty.
          */
         rmdir(): void;
@@ -1134,7 +1134,7 @@ declare module 'sm-utils' {
          * Write contents to the file.
          * @param contents contents to be written to the file
          * @param options  contains options for writing to the file
-         *        
+         *
          *        The options can include parameters such as fileMode, dirMode, retries and encoding.
          */
         write(contents: string | Buffer, options?: object): void;
@@ -1143,7 +1143,7 @@ declare module 'sm-utils' {
          * Append contents to the file.
          * @param contents contents to be written to the file
          * @param options  contains options for appending to the file
-         *        
+         *
          *        The options can include parameters such as fileMode, dirMode, retries and encoding.
          */
         append(contents: string | Buffer, options?: object): void;
@@ -1152,7 +1152,7 @@ declare module 'sm-utils' {
          * Copy the file to some destination.
          * @param destination path of the destination
          * @param options  options for copying the file
-         *        
+         *
          *        If the overwrite option is explicitly set to false, only then
          *        will the function not attempt to overwrite the file if it (already)
          *        exists at the destination.
@@ -1181,13 +1181,13 @@ declare module 'sm-utils' {
         constructor();
 
         /**
-         * 
+         *
          * @param key
          */
         tryAcquire(key: string): boolean;
 
         /**
-         * 
+         *
          * @param key
          */
         acquire(key: string): boolean | void;
@@ -1806,7 +1806,7 @@ declare module 'sm-utils' {
          * Parses a json string, returns null if string is invalid (instead of throwing error)
          * @param str
          */
-        function tryParseJson(str: string): object | null;
+        function tryParseJson(str: any): object | null;
 
         /**
          * Strip html tags from a string
@@ -1815,7 +1815,7 @@ declare module 'sm-utils' {
          *        allowed: array of allowed tags eg. ['p', 'b', 'span'], default: []
          *        blocked: array of blocked tags eg. ['p'], default: []
          *        replaceWith: replace the removed tags with this string, default: ''
-         *        
+         *
          *        if allowed is not given and blocked is given
          *        then by default all tags not mentioned in blocked are allowed
          */
@@ -1966,7 +1966,7 @@ declare module 'sm-utils' {
         function onExit(callback: Function, options?: number | timeoutOpts): Promise<void>;
 
         /**
-         * 
+         *
          * @param server
          * @param options
          */
@@ -2116,7 +2116,7 @@ declare module 'sm-utils' {
 
     namespace cfg {
         /**
-         * 
+         *
          * @param key
          * @param defaultValue
          */
