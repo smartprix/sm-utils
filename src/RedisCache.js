@@ -400,6 +400,7 @@ class RedisCache {
 	 * NOTE: RedisCache.bypass will turn on bypassing for all instances of RedisCache
 	 * For bypassing a particular instance, use [`instance.bypass()`]{@link RedisCache#bypass}
 	 * @see [bypass]{@link RedisCache#bypass}
+	 * @param {boolean} [bypass=true] default true
 	 */
 	static bypass(bypass = true) {
 		this._bypass = bypass;
