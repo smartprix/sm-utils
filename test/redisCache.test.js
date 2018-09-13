@@ -206,6 +206,34 @@ describe('redis cache library', () => {
 		});
 	});
 
+	it('should log writes to local cache', async () => {
+		const lines = [];
+		const logger = {
+			log(line) {
+				lines.push(line);
+			},
+		};
+
+		RedisCache.logOnLocalWrite = true;
+		const redisCache = new RedisCache('test', {}, {logger});
+
+		const key = 'localCacheWriteTest';
+		const value = {a: 'b'};
+
+		const result = await redisCache.getOrSet(key, () => value);
+		// const result = await redisCache.get(key);
+
+		const a = result.a; // eslint-disable-line
+		result.a = 'c';
+		result.b = 'd';
+
+		expect(lines.length).to.equal(2);
+		expect(lines[0]).to.contain('localCacheWriteTest.a');
+		expect(lines[1]).to.contain('localCacheWriteTest.b');
+
+		RedisCache.logOnLocalWrite = false;
+	});
+
 	it('should correctly use parse', async () => {
 		const redisCache = new RedisCache('test');
 		let parseCount = 0;

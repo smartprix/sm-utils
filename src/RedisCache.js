@@ -29,6 +29,8 @@ class RedisCache {
 	static useLocalCache = true;
 	static logger = console;
 	static _bypass = false;
+	// this cause performace issues, use only when debugging
+	static logOnLocalWrite = false;
 
 	constructor(prefix, redisConf = {}, options = {}) {
 		this.prefix = prefix;
@@ -414,6 +416,28 @@ class RedisCache {
 	}
 
 	/**
+	 * wrap a value in a Proxy object for debugging writes to it
+	 * @param {string} key
+	 * @param {any} localValue
+	 * @returns {any}
+	 * @private
+	 */
+	_wrapInProxy(key, localValue) {
+		if (!this.constructor.logOnLocalWrite || !this.useLocalCache) return localValue;
+		if (!localValue || typeof localValue !== 'object') return localValue;
+
+		// log writes to the local object in case logOnLocalWrite is true
+		return new Proxy(localValue, {
+			set: (obj, prop, value) => {
+				const stack = new Error().stack.split('\n').map(line => `  ${line.trim()}`).slice(2).join('\n');
+				this.logger.log(`[RedisCache] attempt to write to local object ${key}.${prop}\n${stack}`);
+				obj[prop] = value;
+				return true;
+			},
+		});
+	}
+
+	/**
 	 * gets a value from the cache immediately without waiting
 	 * @param {string} key
 	 * @param {any} defaultValue
@@ -503,7 +527,7 @@ class RedisCache {
 				// value is a Promise
 				// resolve it and then cache it
 				this._setting(key, value);
-				const resolvedValue = await value;
+				const resolvedValue = this._wrapInProxy(key, await value);
 				if (this.useLocalCache) {
 					this._localCache(key, resolvedValue, ttl);
 				}
@@ -520,6 +544,7 @@ class RedisCache {
 
 			// value is normal
 			// just set it in the store
+			value = this._wrapInProxy(key, value);
 			this._setting(key, Promise.resolve(value));
 			if (this.useLocalCache) {
 				this._localCache(key, value, ttl);
