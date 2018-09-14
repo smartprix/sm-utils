@@ -29,12 +29,30 @@ class RedisCache {
 	static useLocalCache = true;
 	static logger = console;
 	static _bypass = false;
-	// this cause performace issues, use only when debugging
+	// this causes performace issues, use only when debugging
 	static logOnLocalWrite = false;
 
+	/**
+	 * @typedef {object} redisConf
+	 * @property {string} host
+	 * @property {number} port
+	 * @property {string} [auth]
+	 * @property {string} [password]
+	 */
+
+	/**
+	 *
+	 * @param {string} prefix
+	 * @param {Redis|redisConf} redisConf
+	 * @param {object} [options={}] These options can also be set on a global level
+	 * @param {boolean} options.useLocalCache
+	 * @param {boolean} options.logOnLocalWrite Enable/disable logs on writes to local cache object
+	 * @param {Partial<Console>} options.logger; Custom logger to use instead of console
+	 */
 	constructor(prefix, redisConf = {}, options = {}) {
 		this.prefix = prefix;
 		this.logger = options.logger || RedisCache.logger;
+		this.logOnLocalWrite = options.logOnLocalWrite || RedisCache.logOnLocalWrite;
 
 		if (redisConf instanceof Redis) {
 			this.redis = redisConf;
@@ -424,7 +442,7 @@ class RedisCache {
 	 * @private
 	 */
 	_wrapInProxy(key, localValue) {
-		if (!this.constructor.logOnLocalWrite || !this.useLocalCache) return localValue;
+		if (!this.logOnLocalWrite || !this.useLocalCache) return localValue;
 		if (!localValue || typeof localValue !== 'object') return localValue;
 
 		// log writes to the local object in case logOnLocalWrite is true
