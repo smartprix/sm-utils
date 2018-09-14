@@ -29,6 +29,7 @@
   "author": "Hitesh Khandelwal <hitesh@smartprix.com> (http://www.smartprix.com/)",
   "license": "ISC",
   "dependencies": {
+    "@types/ioredis": "^4.0.1",
     "@types/node": "^10.9.3",
     "@types/request": "^2.47.1",
     "chalk": "^2.4.1",

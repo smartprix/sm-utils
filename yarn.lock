@@ -593,6 +593,12 @@
   dependencies:
     "@types/node" "*"
 
+"@types/ioredis@^4.0.1":
+  version "4.0.1"
+  resolved "https://registry.yarnpkg.com/@types/ioredis/-/ioredis-4.0.1.tgz#dfe9de0d5dce54193975c1909f0d082e5574e2f2"
+  dependencies:
+    "@types/node" "*"
+
 "@types/node@*", "@types/node@^10.9.3":
   version "10.9.4"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-10.9.4.tgz#0f4cb2dc7c1de6096055357f70179043c33e9897"
