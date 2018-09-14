@@ -449,7 +449,7 @@ class RedisCache {
 		return new Proxy(localValue, {
 			set: (obj, prop, value) => {
 				const stack = new Error().stack.split('\n').map(line => `  ${line.trim()}`).slice(2).join('\n');
-				this.logger.log(`[RedisCache] attempt to write to local object ${key}.${prop}\n${stack}`);
+				this.logger.log(`[RedisCache] attempt to write to local object ${this._key(key)}.${prop}\n${stack}`);
 				obj[prop] = value;
 				return true;
 			},
