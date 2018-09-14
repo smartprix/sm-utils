@@ -45,9 +45,9 @@ class RedisCache {
 	 * @param {string} prefix
 	 * @param {Redis|redisConf} redisConf
 	 * @param {object} [options={}] These options can also be set on a global level
-	 * @param {boolean} options.useLocalCache
-	 * @param {boolean} options.logOnLocalWrite Enable/disable logs on writes to local cache object
-	 * @param {Partial<Console>} options.logger; Custom logger to use instead of console
+	 * @param {boolean} [options.useLocalCache]
+	 * @param {boolean} [options.logOnLocalWrite] Enable/disable logs on writes to local cache object
+	 * @param {Partial<Console>} [options.logger]; Custom logger to use instead of console
 	 */
 	constructor(prefix, redisConf = {}, options = {}) {
 		this.prefix = prefix;
