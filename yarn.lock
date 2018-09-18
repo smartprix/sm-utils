@@ -3057,7 +3057,7 @@ methods@~1.1.2:
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/methods/-/methods-1.1.2.tgz#5529a4d67654134edcc5266656835b0f851afcee"
 
-micro-observer@^0.0.9:
+micro-observer@0.0.9:
   version "0.0.9"
   resolved "https://registry.yarnpkg.com/micro-observer/-/micro-observer-0.0.9.tgz#b3531141112abcfdd4a185627b402dec256186c8"
 
