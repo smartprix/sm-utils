@@ -1,5 +1,6 @@
 import {CookieJar} from 'request';
 import {ChildProcess} from 'child_process';
+import {Redis} from 'ioredis';
 
 declare module 'sm-utils' {
     /**
@@ -1468,10 +1469,17 @@ declare module 'sm-utils' {
      * Cache backed by Redis
      */
     class RedisCache {
+        static globalPrefix: string;
+        static useLocalCache: boolean;
+        static logger: Partial<Console>;
+        /**
+         * this causes performace issues, use only when debugging
+         */
+        static logOnLocalWrite: boolean;
         /**
          * Cache backed by Redis
          */
-        constructor();
+        constructor(prefix: string, redisConf?: redisConf|Redis, options?: redisCacheOpts);
 
         /**
          * bypass the cache and compute value directly (useful for debugging / testing)
@@ -1663,6 +1671,19 @@ declare module 'sm-utils' {
          */
         static memoize(key: string, fn: Function, options?: number | string | setRedisOpts): Function;
 
+    }
+
+    interface redisConf {
+        host: string;
+        port: number;
+        auth?: string;
+        password?: string;
+    }
+
+    interface redisCacheOpts {
+        useLocalCache?: boolean;
+        logOnLocalWrite?: boolean;
+        logger?: Partial<Console>;
     }
 
     interface setRedisOpts {
