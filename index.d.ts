@@ -1829,9 +1829,18 @@ declare module 'sm-utils' {
 
         /**
          * Parses a json string, returns null if string is invalid (instead of throwing error)
+         * If the input is not a string (already parsed), returns the input itself
          * @param str
          */
-        function tryParseJson(str: any): object | null;
+		function tryParseJson(str: any): object | null;
+
+		/**
+         * Stringifies an object only if it is not already a string
+		 * If it is already a string returns the string itself
+		 * If it is undefined, returns 'null'
+         * @param obj
+         */
+        function tryStringifyJson(obj: any): string;
 
         /**
          * Strip html tags from a string

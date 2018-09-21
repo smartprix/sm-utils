@@ -32,6 +32,24 @@ describe('@str library', () => {
 		expect(Str.numberToWords(100000000)).to.equal('one hundred million');
 	});
 
+	it('should correctly tryParseJson', () => {
+		expect(Str.tryParseJson(undefined)).to.equal(null);
+		expect(Str.tryParseJson(null)).to.equal(null);
+		expect(Str.tryParseJson([1, 2, 3, 'a'])).to.deep.equal([1, 2, 3, 'a']);
+		expect(Str.tryParseJson({a: 1, b: 2})).to.deep.equal({a: 1, b: 2});
+		expect(Str.tryParseJson(1)).to.equal(1);
+		expect(Str.tryParseJson('{"a": 1, "b": 2}')).to.deep.equal({a: 1, b: 2});
+		expect(Str.tryParseJson('{a: "1", b: "2"}')).to.equal(null);
+	});
+
+	it('should correctly tryStringifyJson', () => {
+		expect(Str.tryStringifyJson(undefined)).to.equal('null');
+		expect(Str.tryStringifyJson(null)).to.equal('null');
+		expect(Str.tryStringifyJson('{"a": "1", "b": "2"}')).to.equal('{"a": "1", "b": "2"}');
+		expect(Str.tryStringifyJson([1, 2, 3, 'a'])).to.equal('[1,2,3,"a"]');
+		expect(Str.tryStringifyJson({a: 1, b: 2})).to.equal('{"a":1,"b":2}');
+	});
+
 	it('should correctly strip tags', () => {
 		expect(Str.stripTags('Kevin <b>van</b> <u></u> <i>Zonneveld</i>')).to.equal('Kevin van  Zonneveld');
 		expect(Str.stripTags('<p>Kevin <img src="someimage.png" onmouseover="someFunction()">van <i>Zonneveld</i></p>'))
