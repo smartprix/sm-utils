@@ -1,5 +1,6 @@
 import Redis from 'ioredis';
 import timestring from 'timestring';
+import {Observer} from 'micro-observer';
 
 const DELETE = Symbol('DELETE');
 const DEL_CONTAINS = Symbol('DEL_CONTAINS');
@@ -29,12 +30,31 @@ class RedisCache {
 	static useLocalCache = true;
 	static logger = console;
 	static _bypass = false;
-	// this cause performace issues, use only when debugging
+	// this causes performace issues, use only when debugging
 	static logOnLocalWrite = false;
 
+	/**
+	 * @ignore
+	 * @typedef {object} redisConf
+	 * @property {string} host
+	 * @property {number} port
+	 * @property {string} [auth]
+	 * @property {string} [password]
+	 */
+
+	/**
+	 *
+	 * @param {string} prefix
+	 * @param {Redis|redisConf} redisConf
+	 * @param {object} [options={}] These options can also be set on a global level
+	 * @param {boolean} [options.useLocalCache]
+	 * @param {boolean} [options.logOnLocalWrite] Enable/disable logs on writes to local cache object
+	 * @param {object} [options.logger] Custom logger to use instead of console
+	 */
 	constructor(prefix, redisConf = {}, options = {}) {
 		this.prefix = prefix;
 		this.logger = options.logger || RedisCache.logger;
+		this.logOnLocalWrite = options.logOnLocalWrite || RedisCache.logOnLocalWrite;
 
 		if (redisConf instanceof Redis) {
 			this.redis = redisConf;
@@ -424,18 +444,18 @@ class RedisCache {
 	 * @private
 	 */
 	_wrapInProxy(key, localValue) {
-		if (!this.constructor.logOnLocalWrite || !this.useLocalCache) return localValue;
+		if (!this.logOnLocalWrite || !this.useLocalCache) return localValue;
 		if (!localValue || typeof localValue !== 'object') return localValue;
 
 		// log writes to the local object in case logOnLocalWrite is true
-		return new Proxy(localValue, {
-			set: (obj, prop, value) => {
-				const stack = new Error().stack.split('\n').map(line => `  ${line.trim()}`).slice(2).join('\n');
-				this.logger.log(`[RedisCache] attempt to write to local object ${key}.${prop}\n${stack}`);
-				obj[prop] = value;
-				return true;
-			},
+		const proxy = Observer.create(localValue, (change) => {
+			if (change.type === 'set-prop' || change.type === 'delete-prop') {
+				const stack = new Error().stack.split('\n').map(line => `  ${line.trim()}`).slice(3).join('\n');
+				this.logger.log(`[RedisCache] Attempt to write to local object ${this._key(key)}.${change.path}\n${stack}`);
+			}
+			return true;
 		});
+		return proxy;
 	}
 
 	/**

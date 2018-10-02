@@ -1,5 +1,6 @@
 import {CookieJar} from 'request';
 import {ChildProcess} from 'child_process';
+import {Redis} from 'ioredis';
 
 declare module 'sm-utils' {
     /**
@@ -1468,10 +1469,17 @@ declare module 'sm-utils' {
      * Cache backed by Redis
      */
     class RedisCache {
+        static globalPrefix: string;
+        static useLocalCache: boolean;
+        static logger: Partial<Console>;
+        /**
+         * this causes performace issues, use only when debugging
+         */
+        static logOnLocalWrite: boolean;
         /**
          * Cache backed by Redis
          */
-        constructor();
+        constructor(prefix: string, redisConf?: redisConf|Redis, options?: redisCacheOpts);
 
         /**
          * bypass the cache and compute value directly (useful for debugging / testing)
@@ -1665,6 +1673,19 @@ declare module 'sm-utils' {
 
     }
 
+    interface redisConf {
+        host: string;
+        port: number;
+        auth?: string;
+        password?: string;
+    }
+
+    interface redisCacheOpts {
+        useLocalCache?: boolean;
+        logOnLocalWrite?: boolean;
+        logger?: Partial<Console>;
+    }
+
     interface setRedisOpts {
         /**
          * in ms / timestring ('1d 3h') default: 0
@@ -1808,9 +1829,18 @@ declare module 'sm-utils' {
 
         /**
          * Parses a json string, returns null if string is invalid (instead of throwing error)
+         * If the input is not a string (already parsed), returns the input itself
          * @param str
          */
-        function tryParseJson(str: any): object | null;
+		function tryParseJson(str: any): object | null;
+
+		/**
+         * Stringifies an object only if it is not already a string
+		 * If it is already a string returns the string itself
+		 * If it is undefined, returns 'null'
+         * @param obj
+         */
+        function tryStringifyJson(obj: any): string;
 
         /**
          * Strip html tags from a string

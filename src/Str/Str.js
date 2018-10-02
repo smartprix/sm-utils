@@ -276,6 +276,21 @@ function tryParseJson(str) {
 }
 
 /**
+ * Stringifies an object only if it is not already a string
+ * If it is already a string returns the string itself
+ * If it is undefined, returns 'null'
+ *
+ * @memberof Str
+ * @param {any} obj
+ * @returns {string}
+ */
+function tryStringifyJson(obj) {
+	if (obj == null) return 'null';
+	if (typeof obj === 'string') return obj;
+	return JSON.stringify(obj);
+}
+
+/**
  * Strip html tags from a string
  * @memberof Str
  * @param {string} str the string to remove tags from
@@ -352,6 +367,7 @@ export default {
 	rot13,
 	rot47,
 	tryParseJson,
+	tryStringifyJson,
 	stripTags,
 	escapeRegex,
 };
