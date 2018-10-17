@@ -280,7 +280,6 @@ function exit(code) {
 		return _exitHandler({exitCode: code});
 	}
 
-	console.log(code);		// eslint-disable-line
 	// eslint-disable-next-line no-use-before-define
 	return _exitHandler({exitCode: code});
 }
