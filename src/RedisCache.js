@@ -215,13 +215,13 @@ class RedisCache {
 	}
 
 	_del(key) {
-		return this.redis.del(this._key(key));
+		return this.redis.unlink(this._key(key));
 	}
 
 	_clear() {
 		const keyGlob = this._key('*');
 		return this.redis.eval(
-			`for i, name in ipairs(redis.call('KEYS', '${keyGlob}')) do redis.call('DEL', name); end`,
+			`for i, name in ipairs(redis.call('KEYS', '${keyGlob}')) do redis.call('UNLINK', name); end`,
 			0,
 		);
 	}
@@ -737,7 +737,7 @@ class RedisCache {
 
 		this._localCache(str, DEL_CONTAINS);
 		return this.redis.eval(
-			`local j=0; for i, name in ipairs(redis.call('KEYS', '${keyGlob}')) do redis.call('DEL', name); j=i end return j`,
+			`local j=0; for i, name in ipairs(redis.call('KEYS', '${keyGlob}')) do redis.call('UNLINK', name); j=i end return j`,
 			0,
 		);
 	}
