@@ -306,6 +306,8 @@ describe('redis cache library', () => {
 
 	it('should correctly bypass the cache globally', async () => {
 		const redisCache = new RedisCache('test_bypass');
+		await redisCache.clear();
+
 		let i = 0;
 		expect(await redisCache.getOrSet('bypass', () => ++i)).to.equal(1);
 		expect(await redisCache.getOrSet('bypass', () => ++i)).to.equal(1);
