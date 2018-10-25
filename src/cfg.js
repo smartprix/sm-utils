@@ -214,12 +214,21 @@ cfg.read = function (key) {
 	return fileCache[key];
 };
 
+const env = process.env.NODE_ENV || 'development';
+/**
+ * @memberof config
+ * @return {string}
+ */
+cfg.getEnv = function () {
+	return env;
+};
+
 /**
  * @memberof config
  * @return {boolean}
  */
 cfg.isProduction = function () {
-	return process.env.NODE_ENV === 'production';
+	return env === 'production';
 };
 
 /**
@@ -227,7 +236,7 @@ cfg.isProduction = function () {
  * @return {boolean}
  */
 cfg.isStaging = function () {
-	return process.env.NODE_ENV === 'staging';
+	return env === 'staging';
 };
 
 /**
@@ -236,7 +245,7 @@ cfg.isStaging = function () {
  * @return {boolean}
  */
 cfg.isProductionLike = function () {
-	return (process.env.NODE_ENV === 'production') || (process.env.NODE_ENV === 'staging');
+	return (env === 'production') || (env === 'staging');
 };
 
 /**
@@ -244,7 +253,7 @@ cfg.isProductionLike = function () {
  * @return {boolean}
  */
 cfg.isTest = function () {
-	return process.env.NODE_ENV === 'test';
+	return env === 'test';
 };
 
 /**
@@ -252,7 +261,7 @@ cfg.isTest = function () {
  * @return {boolean}
  */
 cfg.isDev = function () {
-	return (process.env.NODE_ENV !== 'production') && (process.env.NODE_ENV !== 'staging');
+	return (env !== 'production') && (env !== 'staging');
 };
 
 cfg.is_production = cfg.isProduction;
