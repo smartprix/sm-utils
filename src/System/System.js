@@ -403,7 +403,7 @@ function gracefulServerExit(server, options = {}) {
 
 /**
  * set the max memory that the current node process can use
- * @member System
+ * @memberof System
  * @param {number} memory max memory in megabytes
  */
 function setMaxMemory(memory) {
