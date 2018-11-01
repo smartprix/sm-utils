@@ -390,12 +390,34 @@ function onExit(callback, options = {}) {
 }
 
 /**
+ * install graceful server exit handler on a tcp server
+ * this will make sure that the process exits only
+ * after all the current requests are served
  * @memberof System
  * @param {*} server
  * @param {number|timeoutOpts} [options={}]
  */
 function gracefulServerExit(server, options = {}) {
 	onExit(gracefulServerShutdown(server), options);
+}
+
+/**
+ * set the max memory that the current node process can use
+ * @member System
+ * @param {number} memory max memory in megabytes
+ */
+function setMaxMemory(memory) {
+	if (typeof memory !== 'number') {
+		throw new TypeError('memory must be a number');
+	}
+	if (memory < 128) {
+		throw new TypeError('memory is too low, must be >= 128');
+	}
+
+	// eslint-disable-next-line global-require
+	const v8 = require('v8');
+	const memoryInt = Math.floor(memory);
+	v8.setFlagsFromString(`--max_old_space_size=${memoryInt}`);
 }
 
 module.exports = {
@@ -419,4 +441,5 @@ module.exports = {
 	forceExit,
 	onExit,
 	gracefulServerExit,
+	setMaxMemory,
 };
