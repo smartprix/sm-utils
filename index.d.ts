@@ -2183,9 +2183,12 @@ declare module 'sm-utils' {
         /**
          * read config from a file, and merge with existing config
          * @param file path of the file to read (only absolute paths)
-         * @param options options = {ignoreErrors = ignore all errors, ignoreNotFound = ignore if file not found}
+         * @param options
+         * @param options.ignoreErrors ignore all errors
+         * @param options.ignoreNotFound ignore if file not found
+         * @param options.overwrite Overwrite config not merge
          */
-        function file(file: string, options: object): void;
+        function file(file: string, options: {ignoreErrors: boolean, ignoreNotFound: boolean, overwrite: boolean}): void;
 
         /**
          * read the file specified by the key, and then cache it

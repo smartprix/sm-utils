@@ -1,7 +1,7 @@
 const fs = require('fs');
 const _ = require('lodash');
 
-const config = {};
+let config = {};
 const fileCache = {};
 let configRead = false;
 
@@ -131,6 +131,7 @@ cfg.merge = function (obj) {
  * if a key already exists then it is assigned with new value
  * if obj is not an Object then nothing happens
  * @memberof config
+ * @param {object} obj
  * @return {null}
  */
 cfg.assign = function (obj) {
@@ -158,8 +159,10 @@ cfg.delete = function (key) {
  * read config from a file, and merge with existing config
  * @memberof config
  * @param {string} file path of the file to read (only absolute paths)
- * @param {object} options
- * 	options = {ignoreErrors = ignore all errors, ignoreNotFound = ignore if file not found}
+ * @param {object} options options obj
+ * @param {boolean} options.ignoreErrors ignore all errors
+ * @param {boolean} options.ignoreNotFound ignore if file not found
+ * @param {boolean} options.overwrite Overwrite config not merge
  */
 cfg.file = function (file, options = {}) {
 	if (!file.startsWith('/')) {
@@ -171,7 +174,12 @@ cfg.file = function (file, options = {}) {
 	try {
 		// eslint-disable-next-line global-require, import/no-dynamic-require
 		const data = require(file);
-		cfg.merge(data);
+		if (options.overwrite === true && typeof data === 'object') {
+			config = data;
+		}
+		else {
+			cfg.merge(data);
+		}
 	}
 	catch (e) {
 		if (e.code === 'MODULE_NOT_FOUND' && options.ignoreNotFound) {
