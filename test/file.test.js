@@ -1,4 +1,3 @@
-/* global before, after, describe, it */
 import fs from 'fs';
 import {promisify} from 'util';
 import {expect} from 'chai';
