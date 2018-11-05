@@ -11,4 +11,16 @@ describe('cfg', () => {
 		expect(cfg('a.b')).to.equal('c');
 		expect(cfg('a.b.c', 'd')).to.equal('d');
 	});
+
+	it('should merge values', () => {
+		cfg.file(`${__dirname}/config.json`);
+		expect(cfg('a.b')).to.equal('c');
+		expect(cfg('test')).to.equal('data');
+	});
+
+	it('should overwrite values', () => {
+		cfg.file(`${__dirname}/config.json`, {overwrite: true});
+		expect(cfg('a.b')).to.equal(undefined);
+		expect(cfg('test')).to.equal('data');
+	});
 });
