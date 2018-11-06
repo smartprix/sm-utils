@@ -71,6 +71,10 @@
     "extends": "smartprix",
     "rules": {
       "vue/script-indent": 0
+    },
+    "env": {
+      "node": true,
+      "browser": false
     }
   },
   "babel": {
