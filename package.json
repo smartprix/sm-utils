@@ -21,7 +21,7 @@
     "build": "rm -rf dist && babel src --out-dir dist",
     "docs": "rm -rf docs && jsdoc -c jsdoc.json",
     "types": "jsdoc -t node_modules/@otris/jsdoc-tsd -r ./src/",
-    "lint": "eslint src",
+    "lint": "eslint src test",
     "test-only": "NODE_ENV=test mocha --slow 0 --exit --require @babel/register test/*.test.js",
     "-precommit": "npm run build && npm test && npm run check-coverage",
     "prepublishOnly": "npm run build"
