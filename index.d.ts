@@ -2004,7 +2004,13 @@ declare module 'sm-utils' {
          * @param server
          * @param options
          */
-        function gracefulServerExit(server: any, options?: number | timeoutOpts): void;
+		function gracefulServerExit(server: any, options?: number | timeoutOpts): void;
+		
+		/**
+		 * set the max memory that the current node process can use
+		 * @param memory max memory in megabytes
+		 */
+		function setMaxMemory(memory: number): void;
 
     }
 
@@ -2196,20 +2202,33 @@ declare module 'sm-utils' {
          */
         function read(key: string): any;
 
-        function getEnv(): string;
+		function getEnv(): string;
+		
+		function env(): string;
 
-        function isProduction(): boolean;
+		function isProduction(): boolean;
+		function is_production(): boolean;
+		function isProd(): boolean;
+		function is_prod(): boolean;
 
-        function isStaging(): boolean;
+		function isStaging(): boolean;
+		function is_staging(): boolean;
 
         /**
          * Returns true if env is production or staging
          */
-        function isProductionLike(): boolean;
+		function isProductionLike(): boolean;
+		function isProdLike(): boolean;
 
-        function isTest(): boolean;
+		function isTest(): boolean;
+		function is_test(): boolean;
 
-        function isDev(): boolean;
+		/**
+		 * returns true in environments not 'staging' or 'production'
+		 */
+		function isDev(): boolean;
+		function isDevelopment(): boolean;
+		function is_dev(): boolean;
 
     }
 
