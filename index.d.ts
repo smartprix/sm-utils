@@ -1838,393 +1838,410 @@ declare module 'sm-utils' {
 		 * Stringifies an object only if it is not already a string
 		 * If it is already a string returns the string itself
 		 * If it is undefined, returns 'null'
-		 * @param obj
-		 */
-		function tryStringifyJson(obj: any): string;
+         * @param obj
+         */
+        function tryStringifyJson(obj: any): string;
 
-		/**
-		 * Strip html tags from a string
-		 * @param str the string to remove tags from
-		 * @param options object containing:
-		 *        allowed: array of allowed tags eg. ['p', 'b', 'span'], default: []
-		 *        blocked: array of blocked tags eg. ['p'], default: []
-		 *        replaceWith: replace the removed tags with this string, default: ''
-		 *
-		 *        if allowed is not given and blocked is given
-		 *        then by default all tags not mentioned in blocked are allowed
-		 */
-		function stripTags(str: string, options: object): string;
+        /**
+         * Strip html tags from a string
+         * @param str the string to remove tags from
+         * @param options object containing:
+         *        allowed: array of allowed tags eg. ['p', 'b', 'span'], default: []
+         *        blocked: array of blocked tags eg. ['p'], default: []
+         *        replaceWith: replace the removed tags with this string, default: ''
+         *
+         *        if allowed is not given and blocked is given
+         *        then by default all tags not mentioned in blocked are allowed
+         */
+        function stripTags(str: string, options: object): string;
 
-		/**
-		 * Escape a string for including in regular expressions
-		 * @param str string to escape
-		 */
-		function escapeRegex(str: string): string;
+        /**
+         * Escape a string for including in regular expressions
+         * @param str string to escape
+         */
+        function escapeRegex(str: string): string;
 
-		/**
-		 * Convert a number into words
-		 * @param number
-		 */
-		function numberToWords(number: number): string;
+        /**
+         * Convert a number into words
+         * @param number
+         */
+        function numberToWords(number: number): string;
 
-	}
+    }
 
-	interface numberFormatOpts {
-		/**
-		 * like 'en-IN'
-		 */
-		locale: string;
-		/**
-		 * like 'INR'
-		 */
-		currency: string;
-		/**
-		 * number of decimal places to return
-		 */
-		decimals: number;
-	}
+    interface numberFormatOpts {
+        /**
+         * like 'en-IN'
+         */
+        locale: string;
+        /**
+         * like 'INR'
+         */
+        currency: string;
+        /**
+         * number of decimal places to return
+         */
+        decimals: number;
+    }
 
-	/**
-	 * System and process utilities
-	 */
-	namespace System {
-		/**
-		 * Execute the given command in a shell.
-		 * @param command
-		 * @param options options object
-		 *        options: {timeout (in ms), cwd, uid, gid, env (object), shell (eg. /bin/sh), encoding}
-		 */
-		function exec(command: string, options: object): Promise<processObject>;
+    /**
+     * System and process utilities
+     */
+    namespace System {
+        /**
+         * Execute the given command in a shell.
+         * @param command
+         * @param options options object
+         *        options: {timeout (in ms), cwd, uid, gid, env (object), shell (eg. /bin/sh), encoding}
+         */
+        function exec(command: string, options: object): Promise<processObject>;
 
-		/**
-		 * Similar to exec but instead executes a given file
-		 * @param args
-		 */
-		function execFile(...args: any[]): Promise<processObject>;
+        /**
+         * Similar to exec but instead executes a given file
+         * @param args
+         */
+        function execFile(...args: any[]): Promise<processObject>;
 
-		/**
-		 * execute a command and return its output
-		 * @param args
-		 */
-		function execOut(...args: any[]): string;
+        /**
+         * execute a command and return its output
+         * @param args
+         */
+        function execOut(...args: any[]): string;
 
-		/**
-		 * execute a file and return its output
-		 * @param args
-		 */
-		function execFileOut(...args: any[]): string;
+        /**
+         * execute a file and return its output
+         * @param args
+         */
+        function execFileOut(...args: any[]): string;
 
-		/**
-		 * turn off umask for the current process
-		 */
-		function noUmask(): number;
+        /**
+         * turn off umask for the current process
+         */
+        function noUmask(): number;
 
-		/**
-		 * restores (turns on) the previous umask
-		 */
-		function yesUmask(): number;
+        /**
+         * restores (turns on) the previous umask
+         */
+        function yesUmask(): number;
 
-		/**
-		 * get the uid of the user running current process
-		 */
-		function getuid(): number;
+        /**
+         * get the uid of the user running current process
+         */
+        function getuid(): number;
 
-		/**
-		 * get user info from username or uid
-		 * currently gets user info from /etc/passwd
-		 * @param user username or uid
-		 */
-		function getUserInfo(user: string | number): object;
+        /**
+         * get user info from username or uid
+         * currently gets user info from /etc/passwd
+         * @param user username or uid
+         */
+        function getUserInfo(user: string | number): object;
 
-		/**
-		 * get all users in the system
-		 * currently gets user info from /etc/passwd
-		 */
-		function getAllUsers(): object;
+        /**
+         * get all users in the system
+         * currently gets user info from /etc/passwd
+         */
+        function getAllUsers(): object;
 
-		/**
-		 * get current time in seconds
-		 */
-		function time(): number;
+        /**
+         * get current time in seconds
+         */
+        function time(): number;
 
-		/**
-		 * get current time in milliseconds (as double)
-		 */
-		function millitime(): number;
+        /**
+         * get current time in milliseconds (as double)
+         */
+        function millitime(): number;
 
-		/**
-		 * get current time in nanoseconds (as double)
-		 */
-		function nanotime(): number;
+        /**
+         * get current time in nanoseconds (as double)
+         */
+        function nanotime(): number;
 
-		/**
-		 * get current time in microseconds (as double)
-		 */
-		function microtime(): number;
+        /**
+         * get current time in microseconds (as double)
+         */
+        function microtime(): number;
 
-		/**
-		 * Sleep for a specified time (in milliseconds)
-		 * Example: await System.sleep(2000);
-		 */
-		function sleep(): Promise<void>;
+        /**
+         * Sleep for a specified time (in milliseconds)
+         * Example: await System.sleep(2000);
+         */
+        function sleep(): Promise<void>;
 
-		/**
-		 * wait till the next event loop cycle
-		 * this function is useful if we are running a long blocking task
-		 * and need to make sure that other callbacks can complete.
-		 */
-		function tick(): Promise<void>;
+        /**
+         * wait till the next event loop cycle
+         * this function is useful if we are running a long blocking task
+         * and need to make sure that other callbacks can complete.
+         */
+        function tick(): Promise<void>;
 
-		/**
-		 * exit and kill the process gracefully (after completing all onExit handlers)
-		 * code can be an exit code or a message (string)
-		 * if a message is given then it will be logged to console before exiting
-		 * @param code exit code or the message to be logged
-		 */
-		function exit(code: number | string): void;
+        /**
+         * exit and kill the process gracefully (after completing all onExit handlers)
+         * code can be an exit code or a message (string)
+         * if a message is given then it will be logged to console before exiting
+         * @param code exit code or the message to be logged
+         */
+        function exit(code: number | string): void;
 
-		/**
-		 * force exit the process
-		 * no onExit handler will run when force exiting a process
-		 * same as original process.exit (which we override)
-		 * @param code exit code or the message to be logged
-		 */
-		function forceExit(code: number | string): void;
+        /**
+         * force exit the process
+         * no onExit handler will run when force exiting a process
+         * same as original process.exit (which we override)
+         * @param code exit code or the message to be logged
+         */
+        function forceExit(code: number | string): void;
 
-		/**
-		 * Add an exit handler that runs when process receives an exit signal
-		 * callback can be an async function, process will exit when all handlers have completed
-		 * @param callback function to call on exit
-		 * @param options can be {timeout} or a number
-		 */
-		function onExit(callback: Function, options?: number | timeoutOpts): Promise<void>;
+        /**
+         * Add an exit handler that runs when process receives an exit signal
+         * callback can be an async function, process will exit when all handlers have completed
+         * @param callback function to call on exit
+         * @param options can be {timeout} or a number
+         */
+        function onExit(callback: Function, options?: number | timeoutOpts): Promise<void>;
 
-		/**
-		 * install graceful server exit handler on a tcp server
-		 * this will make sure that the process exits only
-		 * after all the current requests are served
-		 * @param server
-		 * @param options
-		 */
+        /**
+         *
+         * @param server
+         * @param options
+         */
 		function gracefulServerExit(server: any, options?: number | timeoutOpts): void;
-
+		
 		/**
 		 * set the max memory that the current node process can use
 		 * @param memory max memory in megabytes
 		 */
-		function setMaxMemory(memory: number)
-	}
+		function setMaxMemory(memory: number): void;
 
-	interface processObject {
-		childProcess: ChildProcess;
-		stdout: Buffer;
-		stderr: Buffer;
-	}
+    }
 
-	interface timeoutOpts {
-		/**
-		 * Milliseconds before timing out (default 10000)
-		 */
-		timeout?: number;
-	}
+    interface processObject {
+        childProcess: ChildProcess;
+        stdout: Buffer;
+        stderr: Buffer;
+    }
 
-	/**
-	 * Promise utility functions
-	 */
-	class Vachan {
-		/**
-		 * Promise utility functions
-		 */
-		constructor();
+    interface timeoutOpts {
+        /**
+         * Milliseconds before timing out (default 10000)
+         */
+        timeout?: number;
+    }
 
-		/**
-		 * identity function is to make sure returned value is a promise.
-		 * returns the following if the input is a:
-		 * - promise: returns the promise itself
-		 * - function: executes the function and returns the result wrapped in a promise
-		 * - any: returns the input wrapped in a promise
-		 * @param promise
-		 */
-		static identity(promise: Function | Promise<any> | any): Promise<any>;
+    /**
+     * Promise utility functions
+     */
+    class Vachan {
+        /**
+         * Promise utility functions
+         */
+        constructor();
 
-		/**
-		 * Execute a promise / function, and exit when it completes
-		 * @param promise
-		 * @param options
-		 */
-		static exit(promise: Promise<any> | Function, options: object): void;
+        /**
+         * identity function is to make sure returned value is a promise.
+         * returns the following if the input is a:
+         * - promise: returns the promise itself
+         * - function: executes the function and returns the result wrapped in a promise
+         * - any: returns the input wrapped in a promise
+         * @param promise
+         */
+        static identity(promise: Function | Promise<any> | any): Promise<any>;
 
-		/**
-		 * Execute a promise / function, without caring about its results
-		 * @param promise
-		 * @param options
-		 */
-		static exec(promise: Promise<any> | Function, options: object): void;
+        /**
+         * Execute a promise / function, and exit when it completes
+         * @param promise
+         * @param options
+         */
+        static exit(promise: Promise<any> | Function, options: object): void;
 
-		/**
-		 * create a lazy promise from an executor function ((resolve, reject) => {})
-		 * a lazy promise defers execution till .then() or .catch() is called
-		 * @param executor function(resolve, reject) {}, same as promise constructor
-		 */
-		static lazy(executor: Function): Promise<any>;
+        /**
+         * Execute a promise / function, without caring about its results
+         * @param promise
+         * @param options
+         */
+        static exec(promise: Promise<any> | Function, options: object): void;
 
-		/**
-		 * create a lazy promise from an async function
-		 * a lazy promise defers execution till .then() or .catch() is called
-		 */
-		static lazyFrom(): void;
+        /**
+         * create a lazy promise from an executor function ((resolve, reject) => {})
+         * a lazy promise defers execution till .then() or .catch() is called
+         * @param executor function(resolve, reject) {}, same as promise constructor
+         */
+        static lazy(executor: Function): Promise<any>;
 
-		/**
-		 * Returns a promise that resolves after the specified duration
-		 * Can be used to delay / sleep
-		 * Example: await Vachan.sleep(2000);
-		 * @param duration milliseconds to delay for
-		 */
-		static sleep(duration: number): void;
+        /**
+         * create a lazy promise from an async function
+         * a lazy promise defers execution till .then() or .catch() is called
+         */
+        static lazyFrom(): void;
 
-		/**
-		 * Promise.finally polyfill
-		 * Invoked when the promise is settled regardless of outcome
-		 * @see https://github.com/sindresorhus/p-finally
-		 * @param promise
-		 * @param onFinally
-		 */
-		static finally(promise: Promise<any>, onFinally: Function): Promise<any>;
+        /**
+         * Returns a promise that resolves after the specified duration
+         * Can be used to delay / sleep
+         * Example: await Vachan.sleep(2000);
+         * @param duration milliseconds to delay for
+         */
+        static sleep(duration: number): void;
 
-		/**
-		 * Returns a promise the rejects on specified timeout
-		 * @param promise A Promise or an async function
-		 * @param options can be {timeout} or a number
-		 *        timeout: Milliseconds before timing out
-		 */
-		static timeout(promise: Promise<any> | Function, options: object | number): void;
+        /**
+         * Promise.finally polyfill
+         * Invoked when the promise is settled regardless of outcome
+         * @see https://github.com/sindresorhus/p-finally
+         * @param promise
+         * @param onFinally
+         */
+        static finally(promise: Promise<any>, onFinally: Function): Promise<any>;
 
-		/**
-		 * Returns a Promise that resolves when condition returns true.
-		 * Rejects if condition throws or returns a Promise that rejects.
-		 * @see https://github.com/sindresorhus/p-wait-for
-		 * @param conditionFn function that returns a boolean
-		 * @param options can be {interval, timeout} or a number
-		 *        interval: Number of milliseconds to wait before retrying condition (default 50)
-		 *        timeout: will reject the promise on timeout (in ms)
-		 */
-		static waitFor(conditionFn: Function, options: object | number): void;
+        /**
+         * Returns a promise the rejects on specified timeout
+         * @param promise A Promise or an async function
+         * @param options can be {timeout} or a number
+         *        timeout: Milliseconds before timing out
+         */
+        static timeout(promise: Promise<any> | Function, options: object | number): void;
 
-		/**
-		 * Returns an async function that delays calling fn
-		 * until after wait milliseconds have elapsed since the last time it was called
-		 * @see https://github.com/sindresorhus/p-debounce
-		 * @param fn function to debounce
-		 * @param delay ms to wait before calling fn.
-		 * @param options object of {leading, fixed}
-		 *        leading: (default false)
-		 *        Call the fn on the leading edge of the timeout.
-		 *        Meaning immediately, instead of waiting for wait milliseconds.
-		 *        fixed: fixed delay, each call won't reset the timer to 0
-		 */
-		static debounce(fn: Function, delay: number, options: object): void;
+        /**
+         * Returns a Promise that resolves when condition returns true.
+         * Rejects if condition throws or returns a Promise that rejects.
+         * @see https://github.com/sindresorhus/p-wait-for
+         * @param conditionFn function that returns a boolean
+         * @param options can be {interval, timeout} or a number
+         *        interval: Number of milliseconds to wait before retrying condition (default 50)
+         *        timeout: will reject the promise on timeout (in ms)
+         */
+        static waitFor(conditionFn: Function, options: object | number): void;
 
-		/**
-		 * Returns a Promise that is fulfilled when all promises in input
-		 * and ones returned from mapper are fulfilled, or rejects if any
-		 * of the promises reject. The fulfilled value is an Array of the
-		 * fulfilled values returned from mapper in input order.
-		 * @param iterable collection to iterate over
-		 * @param mapper The function invoked per iteration, should return a promise
-		 *        mapper is invoked with (value, index|key, iterable)
-		 * @param options object of {concurrency}
-		 *        concurrency: Number of maximum concurrently running promises, default is Infinity
-		 */
-		static promiseMap(iterable: any[] | object | Map<any, any> | Set<any>, mapper: Function, options: object): Promise<Array<any>>;
+        /**
+         * Returns an async function that delays calling fn
+         * until after wait milliseconds have elapsed since the last time it was called
+         * @see https://github.com/sindresorhus/p-debounce
+         * @param fn function to debounce
+         * @param delay ms to wait before calling fn.
+         * @param options object of {leading, fixed}
+         *        leading: (default false)
+         *        Call the fn on the leading edge of the timeout.
+         *        Meaning immediately, instead of waiting for wait milliseconds.
+         *        fixed: fixed delay, each call won't reset the timer to 0
+         */
+        static debounce(fn: Function, delay: number, options: object): void;
 
-		/**
-		 * Like promiseMap but for keys
-		 * @param iterable
-		 * @param mapper
-		 * @param options
-		 */
-		static promiseMapKeys(iterable: any[] | object | Map<any, any> | Set<any>, mapper: Function, options: object): Promise<Array<any>>;
+        /**
+         * Returns a Promise that is fulfilled when all promises in input
+         * and ones returned from mapper are fulfilled, or rejects if any
+         * of the promises reject. The fulfilled value is an Array of the
+         * fulfilled values returned from mapper in input order.
+         * @param iterable collection to iterate over
+         * @param mapper The function invoked per iteration, should return a promise
+         *        mapper is invoked with (value, index|key, iterable)
+         * @param options object of {concurrency}
+         *        concurrency: Number of maximum concurrently running promises, default is Infinity
+         */
+        static promiseMap(iterable: any[] | object | Map<any, any> | Set<any>, mapper: Function, options: object): Promise<Array<any>>;
 
-		/**
-		 * Like promiseMap but for values
-		 * @param iterable
-		 * @param mapper
-		 * @param options
-		 */
-		static promiseMapValues(iterable: any[] | object | Map<any, any> | Set<any>, mapper: Function, options: object): Promise<Array<any>>;
+        /**
+         * Like promiseMap but for keys
+         * @param iterable
+         * @param mapper
+         * @param options
+         */
+        static promiseMapKeys(iterable: any[] | object | Map<any, any> | Set<any>, mapper: Function, options: object): Promise<Array<any>>;
 
-	}
+        /**
+         * Like promiseMap but for values
+         * @param iterable
+         * @param mapper
+         * @param options
+         */
+        static promiseMapValues(iterable: any[] | object | Map<any, any> | Set<any>, mapper: Function, options: object): Promise<Array<any>>;
 
-	namespace cfg {
-		/**
-		 *
-		 * @param key
-		 * @param defaultValue
-		 */
-		function get(key: string, defaultValue: any): any;
+    }
 
-		/**
-		 * set values in global config
-		 * you can also give key as an object to assign all key values from it
-		 */
-		function set(): null;
+    namespace cfg {
+        /**
+         *
+         * @param key
+         * @param defaultValue
+         */
+        function get(key: string, defaultValue: any): any;
 
-		/**
-		 * set values in global config with an object to assign all key values from it
-		 * if a key already exists then it is merged with new value
-		 * if obj is not an Object then nothing happens
-		 */
-		function merge(): null;
+        /**
+         * set values in global config
+         * you can also give key as an object to assign all key values from it
+         */
+        function set(): null;
 
-		/**
-		 * set values in global config with an object to assign all key values from it
-		 * if a key already exists then it is assigned with new value
-		 * if obj is not an Object then nothing happens
-		 */
-		function assign(): null;
+        /**
+         * set values in global config with an object to assign all key values from it
+         * if a key already exists then it is merged with new value
+         * if obj is not an Object then nothing happens
+         */
+        function merge(): null;
 
-		/* Illegal function name 'delete' can't be used here
-		function delete(): void;
-		*/
+        /**
+         * set values in global config with an object to assign all key values from it
+         * if a key already exists then it is assigned with new value
+         * if obj is not an Object then nothing happens
+         */
+        function assign(): null;
 
-		/**
-		 * read config from a file, and merge with existing config
-		 * @param file path of the file to read (only absolute paths)
-		 * @param options options = {ignoreErrors = ignore all errors, ignoreNotFound = ignore if file not found}
-		 */
-		function file(file: string, options: object): void;
+        /* Illegal function name 'delete' can't be used here
+        function delete(): void;
+        */
 
-		/**
-		 * read the file specified by the key, and then cache it
-		 * @param key
-		 */
-		function read(key: string): any;
+        /**
+         * read config from a file, and merge with existing config
+         * @param file path of the file to read (only absolute paths)
+         * @param options
+         * @param options.ignoreErrors ignore all errors
+         * @param options.ignoreNotFound ignore if file not found
+         * @param options.overwrite Overwrite config not merge
+         */
+        function file(file: string, options: {ignoreErrors: boolean, ignoreNotFound: boolean, overwrite: boolean}): void;
+
+        /**
+         * read the file specified by the key, and then cache it
+         * @param key
+         */
+        function read(key: string): any;
+
+		function getEnv(): string;
+		
+		function env(): string;
 
 		function isProduction(): boolean;
+		function is_production(): boolean;
+		function isProd(): boolean;
+		function is_prod(): boolean;
 
 		function isStaging(): boolean;
+		function is_staging(): boolean;
 
-		/**
-		 * Returns true if env is production or staging
-		 */
+        /**
+         * Returns true if env is production or staging
+         */
 		function isProductionLike(): boolean;
+		function isProdLike(): boolean;
 
 		function isTest(): boolean;
+		function is_test(): boolean;
 
+		/**
+		 * returns true in environments not 'staging' or 'production'
+		 */
 		function isDev(): boolean;
+		function isDevelopment(): boolean;
+		function is_dev(): boolean;
 
-	}
+    }
 
-	/**
-	 * Reads a config value
-	 * @param key key to read, can be nested like `a.b.c`
-	 * @param defaultValue value to return if key is not found
-	 */
-	function cfg(key: string, defaultValue?: any): any
+    /**
+     * Reads a config value
+     * @param key key to read, can be nested like `a.b.c`
+     * @param defaultValue value to return if key is not found
+     */
+    function cfg(key: string, defaultValue?: any): any
 
-	const crypt: typeof Crypt;
+    const crypt: typeof Crypt;
 
-	const system: typeof System;
+    const system: typeof System;
 
-	const baseConvert: typeof Crypt.baseConvert;
+    const baseConvert: typeof Crypt.baseConvert;
 }

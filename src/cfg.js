@@ -1,9 +1,13 @@
 const fs = require('fs');
 const _ = require('lodash');
 
-const config = {};
+let config = {};
 const fileCache = {};
 let configRead = false;
+
+const env = function () {
+	return process.env.NODE_ENV || 'development';
+};
 
 /**
  * These are all available through cfg
@@ -64,11 +68,10 @@ function readDefaultConfigFiles() {
 	if (configRead) return;
 	configRead = true;
 
-	const env = process.env.NODE_ENV || 'development';
 	cfg.file(`${process.cwd()}/config.js`, {ignoreNotFound: true});
-	cfg.file(`${process.cwd()}/config.${env}.js`, {ignoreNotFound: true});
+	cfg.file(`${process.cwd()}/config.${env()}.js`, {ignoreNotFound: true});
 	cfg.file(`${process.cwd()}/private/config.js`, {ignoreNotFound: true});
-	cfg.file(`${process.cwd()}/private/config.${env}.js`, {ignoreNotFound: true});
+	cfg.file(`${process.cwd()}/private/config.${env()}.js`, {ignoreNotFound: true});
 
 	if (config.$privateConfigFile) {
 		cfg.file(config.$privateConfigFile, {ignoreNotFound: true});
@@ -95,9 +98,8 @@ cfg.set = function (key, value) {
 
 	// if key is Object then merge it with existing config
 	if (value === undefined && key instanceof Object) {
-		const env = process.env.NODE_ENV || 'development';
 		Object.assign(config, key);
-		Object.assign(config, key[`$env_${env}`]);
+		Object.assign(config, key[`$env_${env()}`]);
 		return null;
 	}
 
@@ -117,9 +119,8 @@ cfg.merge = function (obj) {
 	readDefaultConfigFiles();
 
 	if (obj instanceof Object) {
-		const env = process.env.NODE_ENV || 'development';
 		merge(config, obj);
-		merge(config, obj[`$env_${env}`]);
+		merge(config, obj[`$env_${env()}`]);
 		return null;
 	}
 
@@ -131,15 +132,15 @@ cfg.merge = function (obj) {
  * if a key already exists then it is assigned with new value
  * if obj is not an Object then nothing happens
  * @memberof config
+ * @param {object} obj
  * @return {null}
  */
 cfg.assign = function (obj) {
 	readDefaultConfigFiles();
 
 	if (obj instanceof Object) {
-		const env = process.env.NODE_ENV || 'development';
 		Object.assign(config, obj);
-		Object.assign(config, obj[`$env_${env}`]);
+		Object.assign(config, obj[`$env_${env()}`]);
 		return null;
 	}
 	return null;
@@ -158,8 +159,10 @@ cfg.delete = function (key) {
  * read config from a file, and merge with existing config
  * @memberof config
  * @param {string} file path of the file to read (only absolute paths)
- * @param {object} options
- * 	options = {ignoreErrors = ignore all errors, ignoreNotFound = ignore if file not found}
+ * @param {object} options options obj
+ * @param {boolean} options.ignoreErrors ignore all errors
+ * @param {boolean} options.ignoreNotFound ignore if file not found
+ * @param {boolean} options.overwrite Overwrite config not merge
  */
 cfg.file = function (file, options = {}) {
 	if (!file.startsWith('/')) {
@@ -171,7 +174,12 @@ cfg.file = function (file, options = {}) {
 	try {
 		// eslint-disable-next-line global-require, import/no-dynamic-require
 		const data = require(file);
-		cfg.merge(data);
+		if (options.overwrite === true && typeof data === 'object') {
+			config = data;
+		}
+		else {
+			cfg.merge(data);
+		}
 	}
 	catch (e) {
 		if (e.code === 'MODULE_NOT_FOUND' && options.ignoreNotFound) {
@@ -216,10 +224,16 @@ cfg.read = function (key) {
 
 /**
  * @memberof config
+ * @return {string}
+ */
+cfg.getEnv = env;
+
+/**
+ * @memberof config
  * @return {boolean}
  */
 cfg.isProduction = function () {
-	return process.env.NODE_ENV === 'production';
+	return env() === 'production';
 };
 
 /**
@@ -227,7 +241,7 @@ cfg.isProduction = function () {
  * @return {boolean}
  */
 cfg.isStaging = function () {
-	return process.env.NODE_ENV === 'staging';
+	return env() === 'staging';
 };
 
 /**
@@ -236,7 +250,7 @@ cfg.isStaging = function () {
  * @return {boolean}
  */
 cfg.isProductionLike = function () {
-	return (process.env.NODE_ENV === 'production') || (process.env.NODE_ENV === 'staging');
+	return (env() === 'production') || (env() === 'staging');
 };
 
 /**
@@ -244,7 +258,7 @@ cfg.isProductionLike = function () {
  * @return {boolean}
  */
 cfg.isTest = function () {
-	return process.env.NODE_ENV === 'test';
+	return env() === 'test';
 };
 
 /**
@@ -252,8 +266,14 @@ cfg.isTest = function () {
  * @return {boolean}
  */
 cfg.isDev = function () {
-	return (process.env.NODE_ENV !== 'production') && (process.env.NODE_ENV !== 'staging');
+	return (env() !== 'production') && (env() !== 'staging');
 };
+
+/**
+ * @memberof config
+ * @returns {string}
+ */
+cfg.env = cfg.getEnv;
 
 cfg.is_production = cfg.isProduction;
 cfg.isProd = cfg.isProduction;

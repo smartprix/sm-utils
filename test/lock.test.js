@@ -1,4 +1,3 @@
-/* global describe, it, before, after */
 /* eslint-disable no-unused-expressions, max-nested-callbacks */
 
 import {expect} from 'chai';
