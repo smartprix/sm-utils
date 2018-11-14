@@ -165,6 +165,9 @@ declare module 'sm-utils' {
 		ttl: number | string;
 	}
 
+	interface Constructor<M> {
+		new (...args: any[]): M
+	}
 	/**
 	 * Simple & Powerful HTTP request client.
 	 */
@@ -833,7 +836,7 @@ declare module 'sm-utils' {
 		/**
 		 * Custom implementation of a double ended queue.
 		 */
-		constructor();
+		constructor(array: any[]);
 
 		/**
 		 * Returns the item at the specified index from the list.
@@ -1188,19 +1191,19 @@ declare module 'sm-utils' {
 		 *
 		 * @param key
 		 */
-		tryAcquire(key: string): boolean;
+		tryAcquire(key: string): Promise<boolean>;
 
 		/**
 		 *
 		 * @param key
 		 */
-		acquire(key: string): boolean | void;
+		acquire(key: string): Promise<boolean | void>;
 
 		/**
 		 * release a lock
 		 * @param key
 		 */
-		release(key: string): void;
+		release(key: string): Promise<void>;
 
 	}
 
@@ -1226,7 +1229,7 @@ declare module 'sm-utils' {
 		 * @param input Job data
 		 * @param opts
 		 */
-		addJob(input: any, opts: addOpts): number;
+		addJob(input: any, opts: addOpts): Promise<number>;
 
 		/**
 		 * Add a job to the Queue, wait for it to process and return result
@@ -1236,7 +1239,7 @@ declare module 'sm-utils' {
 		 * @param opts
 		 * @param timeout wait for this time else throw err
 		 */
-		addAndProcess(input: any, opts: addOpts, timeout?: number): any;
+		addAndProcess(input: any, opts: addOpts, timeout?: number): Promise<any>;
 
 		/**
 		 * Set default number of retry attempts for any job added later
@@ -1275,14 +1278,14 @@ declare module 'sm-utils' {
 		 * @param processor Function to be called to process the job data
 		 * @param concurrency The number of jobs this processor can handle parallely
 		 */
-		addProcessor(processor: processorCallback, concurrency?: number): void;
+		addProcessor(processor: processorCallback, concurrency?: number): Promise<void>;
 
 		/**
 		 * Pause Queue processing
 		 * Gives timeout time to all workers to complete their current jobs then stops them
 		 * @param timeout Time to complete current jobs in ms
 		 */
-		pauseProcessor(timeout?: number): void;
+		pauseProcessor(timeout?: number): Promise<void>;
 
 		/**
 		 * Resume Queue processing
@@ -1294,79 +1297,79 @@ declare module 'sm-utils' {
 		 * @param queue Queue name
 		 * @param jobType One of {'inactive', 'delayed' ,'active', 'complete', 'failed'}
 		 */
-		static getCount(queue: string, jobType: string): number;
+		static getCount(queue: string, jobType: string): Promise<number>;
 
 		/**
 		 * Return count of inactive jobs in Queue
 		 */
-		inactiveJobs(): number;
+		inactiveJobs(): Promise<number>;
 
 		/**
 		 * Alias for inactiveJobs
 		 */
-		pendingJobs(): number;
+		pendingJobs(): Promise<number>;
 
 		/**
 		 * Return count of completed jobs in Queue
 		 * Might return 0 if removeOnComplete was true
 		 */
-		completedJobs(): number;
+		completedJobs(): Promise<number>;
 
 		/**
 		 * Return count of failed jobs in Queue
 		 */
-		failedJobs(): number;
+		failedJobs(): Promise<number>;
 
 		/**
 		 * Return count of delayed jobs in Queue
 		 */
-		delayedJobs(): number;
+		delayedJobs(): Promise<number>;
 
 		/**
 		 * Return count of active jobs in Queue
 		 */
-		activeJobs(): number;
+		activeJobs(): Promise<number>;
 
 		/**
 		 * Process a single job in the Queue and mark it complete or failed,
 		 * for when you want to manually process jobs
 		 * @param processor Function to be called to process the job data, without ctx
 		 */
-		processJob(processor: processorCallback): jobDetails;
+		processJob(processor: processorCallback): Promise<jobDetails>;
 
 		/**
 		 * Cleanup function to be called during startup,
 		 * resets active jobs older than specified time
 		 * @param olderThan Time in milliseconds, default = 5000
 		 */
-		cleanup(olderThan?: number): void;
+		cleanup(olderThan?: number): Promise<void>;
 
 		/**
 		 * Removes any old jobs from queue
 		 * older than specified time
 		 * @param olderThan Time in milliseconds, default = 3600000 (1 hr)
 		 */
-		delete(olderThan?: number): void;
+		delete(olderThan?: number): Promise<void>;
 
 		/**
 		 * Function to query the status of a job
 		 * @param jobId Job id for which status info is required
 		 */
-		static status(jobId: number): jobDetails;
+		static status(jobId: number): Promise<jobDetails>;
 
 		/**
 		 * Manualy process a specific Job. Returns existing result if job already processed
 		 * @param jobId Id of the job to be processed
 		 * @param processor Function to be called to process the job data, without ctx
 		 */
-		static processJobById(jobId: number, processor: processorCallback): jobDetails;
+		static processJobById(jobId: number, processor: processorCallback): Promise<jobDetails>;
 
 		/**
 		 * Function shuts down the Queue gracefully.
 		 * Waits for active jobs to complete until timeout, then marks them failed.
 		 * @param timeout Time in milliseconds, default = 10000
 		 */
-		static exit(timeout?: number): boolean;
+		static exit(timeout?: number): Promise<boolean>;
 
 	}
 
@@ -1513,27 +1516,23 @@ declare module 'sm-utils' {
 		 * gets a value from the cache immediately without waiting
 		 * @param key
 		 * @param defaultValue
-		 * @param options object of {
-		 *        parse => function to parse when value is fetched from redis
-		 *        }
+		 * @param options
 		 */
-		getStale(key: string, defaultValue: any, options: object): void;
+		getStale(key: string, defaultValue?: any, options?: getRedisOpts): Promise<any>;
 
 		/**
 		 * gets a value from the cache
 		 * @param key
 		 * @param defaultValue
-		 * @param options object of {
-		 *        parse => function to parse when value is fetched from redis
-		 *        }
+		 * @param options
 		 */
-		get(key: string, defaultValue: any, options: object): void;
+		get(key: string, defaultValue?: any, options?: getRedisOpts): Promise<any>;
 
 		/**
 		 * checks if a key exists in the cache
 		 * @param key
 		 */
-		has(key: string): void;
+		has(key: string): Promise<boolean>;
 
 		/**
 		 * sets a value in the cache
@@ -1542,7 +1541,7 @@ declare module 'sm-utils' {
 		 * @param value
 		 * @param options ttl in ms/timestring('1d 3h') or opts (default: 0)
 		 */
-		set(key: string, value: any, options?: number | string | setOpts): boolean;
+		set(key: string, value: any, options?: number | string | setRedisOpts): Promise<boolean>;
 
 		/**
 		 * gets a value from the cache, or sets it if it doesn't exist
@@ -1550,126 +1549,126 @@ declare module 'sm-utils' {
 		 * @param key key to get
 		 * @param value value to set if the key does not exist
 		 * @param options ttl in ms/timestring('1d 3h') (default: 0)
-		 *        or opts with parse and ttl
+		 *	or opts with parse and ttl
 		 */
-		getOrSet(key: string, value: any, options?: number | string | setRedisOpts): any;
+		getOrSet<T>(key: string, value: T | Promise<T> | ((...args: any[]) => T | Promise<T>), options?: number | string | setRedisOpts): Promise<T>;
 
 		/**
 		 * alias for getOrSet
 		 * @param key key to get
 		 * @param value value to set if the key does not exist
 		 * @param options ttl in ms/timestring('1d 3h') (default: 0)
-		 *        or opts with parse and ttl
+		 *	or opts with parse and ttl
 		 */
-		$(key: string, value: any, options?: number | string | setRedisOpts): any;
+		$<T>(key: string, value: T | Promise<T> | ((...args: any[]) => T | Promise<T>), options?: number | string | setRedisOpts): Promise<T>;
 
 		/**
 		 * deletes a value from the cache
 		 * @param key
 		 */
-		del(key: string): void;
+		del(key: string): Promise<void>;
 
 		/**
 		 * NOTE: this method is expensive, so don't use it unless absolutely necessary
 		 */
-		size(): number;
+		size(): Promise<number>;
 
 		/**
 		 * clears the cache (deletes all keys)
 		 * NOTE: this method is expensive, so don't use it unless absolutely necessary
 		 */
-		clear(): void;
+		clear(): Promise<void>;
 
 		/**
 		 * memoizes a function (caches the return value of the function)
 		 * @param key cache key with which to memoize the results
 		 * @param fn function to memoize
 		 * @param options ttl in ms/timestring('1d 3h') (default: 0)
-		 *        or opts with parse and ttl
+		 *	or opts with parse and ttl
 		 */
-		memoize(key: string, fn: Function, options?: number | string | setRedisOpts): Function;
+		memoize<T, U extends any[]>(key: string, fn: ((...args: U) => T | Promise<T>), options?: number | string | setRedisOpts): (...args: U) => Promise<T>;
 
 		/**
 		 * delete everything from cache if the key includes a particular string
 		 * to delete everything from cache, use `_all_` as string
 		 * @param str
 		 */
-		delContains(str: string): number;
+		delContains(str: string): Promise<number>;
 
 		/**
 		 * Return a global instance of Redis cache
 		 * @param redis redis redisConf
 		 */
-		static globalCache(redis: object): RedisCache;
+		static globalCache<T extends RedisCache>(this: Constructor<T>, redis: object): T;
 
 		/**
 		 * gets a value from the cache immediately without waiting
 		 * @param key
 		 * @param defaultValue
 		 */
-		static getStale(key: string, defaultValue: any): void;
+		static getStale(key: string, defaultValue: any): Promise<any>;
 
 		/**
 		 * gets a value from the global cache
 		 * @param key
 		 * @param defaultValue
 		 */
-		static get(key: string, defaultValue: any): void;
+		static get(key: string, defaultValue: any): Promise<any>;
 
 		/**
 		 * checks if a key exists in the global cache
 		 * @param key
 		 */
-		static has(key: string): void;
+		static has(key: string): Promise<boolean>;
 
 		/**
 		 * sets a value in the global cache
 		 * @param key
 		 * @param value
 		 * @param options ttl in ms/timestring('1d 3h') (default: 0)
-		 *        or opts with parse and ttl
+		 *	or opts with parse and ttl
 		 */
-		static set(key: string, value: any, options?: number | string | setRedisOpts): boolean;
+		static set(key: string, value: any, options?: number | string | setRedisOpts): Promise<boolean>;
 
 		/**
 		 * gets a value from the global cache, or sets it if it doesn't exist
 		 * @param key key to get
 		 * @param value value to set if the key does not exist
 		 * @param options ttl in ms/timestring('1d 3h') (default: 0)
-		 *        or opts with parse and ttl
+		 *	or opts with parse and ttl
 		 */
-		static getOrSet(key: string, value: any, options?: number | string | setRedisOpts): void;
+		static getOrSet<T>(key: string, value: T | Promise<T> | ((...args: any[]) => T | Promise<T>), options?: number | string | setRedisOpts): Promise<T>;
 
 		/**
 		 * alias for getOrSet
 		 * @param key key to get
 		 * @param value value to set if the key does not exist
 		 * @param options ttl in ms/timestring('1d 3h') (default: 0)
-		 *        or opts with parse and ttl
+		 *	or opts with parse and ttl
 		 */
-		static $(key: string, value: any, options?: number | string | setRedisOpts): void;
+		static $<T>(key: string, value: T | Promise<T> | ((...args: any[]) => T | Promise<T>), options?: number | string | setRedisOpts): Promise<T>;
 
 		/**
 		 * deletes a value from the global cache
 		 * @param key
 		 */
-		static del(key: string): void;
+		static del(key: string): Promise<void>;
 
-		static size(): number;
+		static size(): Promise<number>;
 
 		/**
 		 * clears the global cache (deletes all keys)
 		 */
-		static clear(): void;
+		static clear(): Promise<void>;
 
 		/**
 		 * memoizes a function (caches the return value of the function)
 		 * @param key
 		 * @param fn
 		 * @param options ttl in ms/timestring('1d 3h') (default: 0)
-		 *        or opts with parse and ttl
+		 *	or opts with parse and ttl
 		 */
-		static memoize(key: string, fn: Function, options?: number | string | setRedisOpts): Function;
+		static memoize<T, U extends any[]>(key: string, fn: ((...args: U) => T | Promise<T>), options?: number | string | setRedisOpts): (...args: U) => Promise<T>;
 
 	}
 
@@ -1686,15 +1685,18 @@ declare module 'sm-utils' {
 		logger?: Partial<Console>;
 	}
 
-	interface setRedisOpts {
-		/**
-		 * in ms / timestring ('1d 3h') default: 0
-		 */
-		ttl: number | string;
+	interface getRedisOpts {
 		/**
 		 * function to parse when value is fetched from redis
 		 */
-		parse: Function;
+		parse?: (val: any) => Promise<any> | any;
+	}
+
+	interface setRedisOpts extends getRedisOpts{
+		/**
+		 * in ms / timestring ('1d 3h') default: 0
+		 */
+		ttl?: number | string;
 	}
 
 	/**

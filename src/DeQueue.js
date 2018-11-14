@@ -7,6 +7,9 @@
  * @class
  */
 class DeQueue {
+	/**
+	 * @param {any[]} array
+	 */
 	constructor(array) {
 		this._head = 0;
 		this._tail = 0;

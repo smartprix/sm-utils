@@ -394,7 +394,7 @@ class Queue {
 	 * Alias for inactiveJobs
  	 * @return {number} inactiveCount
 	 */
-	pendingJobs() {
+	async pendingJobs() {
 		return this.inactiveJobs();
 	}
 

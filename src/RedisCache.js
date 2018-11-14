@@ -67,6 +67,7 @@ class RedisCache {
 			password: redisConf.password || redisConf.auth || undefined,
 		};
 
+		/** @type {Redis} */
 		this.redis = this.constructor.getRedis(redis);
 
 		if ('useLocalCache' in redisConf) {
@@ -459,13 +460,16 @@ class RedisCache {
 	}
 
 	/**
+	 * @typedef {object} getRedisOpts
+	 * @property {(val: any) => Promise<any> | any} [parse] function to parse value fetched from redis
+	 */
+
+	/**
 	 * gets a value from the cache immediately without waiting
 	 * @param {string} key
-	 * @param {any} defaultValue
-	 * @param {object} options
-	 * 	object of {
-	 * 		parse => function to parse when value is fetched from redis
-	 * 	}
+	 * @param {any} [defaultValue]
+	 * @param {getRedisOpts} [options]
+	 * @returns {Promise<any>}
 	 */
 	async getStale(key, defaultValue = undefined, options = {}) {
 		if (this.useLocalCache) {
@@ -503,11 +507,9 @@ class RedisCache {
 	/**
 	 * gets a value from the cache
 	 * @param {string} key
-	 * @param {any} defaultValue
-	 * @param {object} options
-	 * 	object of {
-	 * 		parse => function to parse when value is fetched from redis
-	 * 	}
+	 * @param {any} [defaultValue]
+	 * @param {getRedisOpts} [options]
+	 * @returns {Promise<any>}
 	 */
 	async get(key, defaultValue = undefined, options = {}) {
 		const settingPromise = this._setting(key);
@@ -521,6 +523,7 @@ class RedisCache {
 	/**
 	 * checks if a key exists in the cache
 	 * @param {string} key
+	 * @returns {boolean}
 	 */
 	async has(key) {
 		return this._has(key);
@@ -531,7 +534,8 @@ class RedisCache {
 	 * avoids dogpiling if the value is a promise or a function returning a promise
 	 * @param {string} key
 	 * @param {any} value
-	 * @param {number|string|setOpts} [options={}] ttl in ms/timestring('1d 3h') or opts (default: 0)
+	 * @param {number|string|setRedisOpts} [options={}] ttl in ms/timestring('1d 3h')
+	 * or opts (default: 0)
 	 * @return {boolean}
 	 */
 	async set(key, value, options = {}, ret = {}) {
@@ -603,9 +607,8 @@ class RedisCache {
 	/**
 	 * @typedef {object} setRedisOpts
 	 * @property {number|string} ttl in ms / timestring ('1d 3h') default: 0
-	 * @property {function} parse function to parse when value is fetched from redis
+	 * @property {(val: any) => Promise<any> | any} parse function to parse value fetched from redis
 	 */
-
 
 	/**
 	 * gets a value from the cache, or sets it if it doesn't exist
