@@ -11,3 +11,4 @@ yarn.lock
 jsdoc.json
 index2.d.ts
 out
+.travis.yml
