@@ -3,5 +3,7 @@ node_js:
   - node
   - lts/*
 cache: yarn
+before_script:
+  - yarn global add pm2
 services:
   - redis-server
