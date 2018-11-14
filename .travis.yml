@@ -5,5 +5,12 @@ node_js:
 cache: yarn
 before_script:
   - yarn global add pm2
+  - yarn global add typescript
+script:
+  - yarn test
+  - yarn compile
 services:
   - redis-server
+git:
+  quiet: true
+  depth: 3
