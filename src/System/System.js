@@ -41,7 +41,7 @@ globalData.exitCalled = globalData.exitCalled || false;
   * @param {Array<any>} args
   * @return {Promise<processObject>}
   */
-function execWrapper(method, args) {
+async function execWrapper(method, args) {
 	return new Promise((resolve, reject) => {
 		let cp;
 
@@ -75,7 +75,7 @@ function execWrapper(method, args) {
  * options: {timeout (in ms), cwd, uid, gid, env (object), shell (eg. /bin/sh), encoding}
  * @return {Promise<processObject>}
  */
-function exec(...args) {
+async function exec(...args) {
 	return execWrapper('exec', args);
 }
 
@@ -85,7 +85,7 @@ function exec(...args) {
  * @param {Array<any>} args
  * @return {Promise<processObject>}
  */
-function execFile(...args) {
+async function execFile(...args) {
 	return execWrapper('execFile', args);
 }
 
@@ -153,7 +153,7 @@ function getuid() {
  * @param  {string|number} user username or uid
  * @return {object}             the user's information
  */
-function getUserInfo(user) {
+async function getUserInfo(user) {
 	user = (user === undefined) ? process.getuid() : user;
 	let opts;
 
@@ -179,7 +179,7 @@ function getUserInfo(user) {
  * @memberof System
  * @return {object}  object containing info for all users, as username:info pairs
  */
-function getAllUsers() {
+async function getAllUsers() {
 	return new Promise((resolve, reject) => {
 		passwd.getUsers((err, users) => {
 			if (err) {
@@ -246,7 +246,7 @@ function microtime() {
  * @memberof System
  * @return {Promise<void>}
  */
-function sleep(timeout) {
+async function sleep(timeout) {
 	return new Promise((resolve) => {
 		setTimeout(resolve, timeout);
 	});
@@ -259,7 +259,7 @@ function sleep(timeout) {
  * @memberof System
  * @return {Promise<void>}
  */
-function tick() {
+async function tick() {
 	return new Promise((resolve) => {
 		setImmediate(resolve);
 	});
@@ -298,7 +298,7 @@ function forceExit(code) {
 		return globalData.processExit(code);
 	}
 
-	console.log(code);		// eslint-disable-line
+	console.log(code);
 	return globalData.processExit(0);
 }
 
