@@ -14,23 +14,53 @@ declare module 'sm-utils' {
 
 		/**
 		 * gets a value from the cache
+		 * this is sync version, so it'll not help with dogpiling issues
 		 * @param key
 		 * @param defaultValue
 		 */
-		get(key: string, defaultValue: any): void;
+		getSync(key: string, defaultValue: any):  any;
+
+		/**
+		 * gets a value from the cache
+		 * @param key
+		 * @param defaultValue
+		 */
+		get(key: string, defaultValue: any): any;
 
 		/**
 		 * gets a value from the cache immediately without waiting
 		 * @param key
 		 * @param defaultValue
 		 */
-		getStale(key: string, defaultValue: any): void;
+		getStaleSync(key: string, defaultValue: any): any;
+
+		/**
+		 * gets a value from the cache immediately without waiting
+		 * @param key
+		 * @param defaultValue
+		 */
+		getStale(key: string, defaultValue: any): any;
 
 		/**
 		 * checks if a key exists in the cache
 		 * @param key
 		 */
-		has(key: string): void;
+		hasSync(key: string): boolean;
+
+		/**
+		 * checks if a key exists in the cache
+		 * @param key
+		 */
+		has(key: string): boolean;
+
+		/**
+		 * sets a value in the cache
+		 * this is sync version, so value should not be a promise or async function
+		 * @param key
+		 * @param value
+		 * @param options ttl in ms/timestring('1d 3h') or opts (default: 0)
+		 */
+		setSync(key: string, value: any, options?: number | string | setOpts): boolean;
 
 		/**
 		 * sets a value in the cache
@@ -40,6 +70,15 @@ declare module 'sm-utils' {
 		 * @param options ttl in ms/timestring('1d 3h') or opts (default: 0)
 		 */
 		set(key: string, value: any, options?: number | string | setOpts): boolean;
+
+		/**
+		 * gets a value from the cache, or sets it if it doesn't exist
+		 * this is sync version, so value should not be a promise or async function
+		 * @param key key to get
+		 * @param value value to set if the key does not exist
+		 * @param options ttl in ms/timestring('1d 3h') or opts (default: 0)
+		 */
+		getOrSetSync(key: string, value: any, options?: number | string | setOpts): any;
 
 		/**
 		 * gets a value from the cache, or sets it if it doesn't exist
@@ -57,6 +96,12 @@ declare module 'sm-utils' {
 		 * @param options ttl in ms/timestring('1d 3h') or opts (default: 0)
 		 */
 		$(key: string, value: any, options?: number | string | setOpts): any;
+
+		/**
+		 * deletes a value from the cache
+		 * @param key
+		 */
+		delSync(key: string): void;
 
 		/**
 		 * deletes a value from the cache
@@ -80,6 +125,19 @@ declare module 'sm-utils' {
 		 * const cachedFn = cache.memoize('expensiveFn', expensiveFn);
 		 * const result = cachedFn('a', 'b');
 		 * ```
+		 * This is sync version, so fn should not be async
+		 * @param key cache key with which to memoize the results
+		 * @param fn function to memoize
+		 * @param options ttl in ms/timestring('1d 3h') or opts (default: 0)
+		 */
+		memoizeSync(key: string, fn: Function, options?: number | string | setOpts): Function;
+
+		/**
+		 * memoizes a function (caches the return value of the function)
+		 * ```js
+		 * const cachedFn = cache.memoize('expensiveFn', expensiveFn);
+		 * const result = cachedFn('a', 'b');
+		 * ```
 		 * @param key cache key with which to memoize the results
 		 * @param fn function to memoize
 		 * @param options ttl in ms/timestring('1d 3h') or opts (default: 0)
@@ -92,24 +150,54 @@ declare module 'sm-utils' {
 		static globalCache(): Cache;
 
 		/**
-		 * get value from global cache
+		 * gets a value from the global cache
+		 * this is sync version, so it'll not help with dogpiling issues
+		 * @param key
+		 * @param defaultValue
+		 */
+		static getSync(key: string, defaultValue: any): any;
+
+		/**
+		 * get a value from the global cache
 		 * @param key
 		 * @param defaultValue
 		 */
 		static get(key: string, defaultValue: any): any;
 
 		/**
-		 * gets a value from the cache immediately without waiting
+		 * gets a value from the global cache immediately without waiting
+		 * @param key
+		 * @param defaultValue
+		 */
+		static getStaleSync(key: string, defaultValue: any): any;
+
+		/**
+		 * gets a value from the global cache immediately without waiting
 		 * @param key
 		 * @param defaultValue
 		 */
 		static getStale(key: string, defaultValue: any): any;
 
 		/**
-		 * checks if value exists in global cache
+		 * checks if a key exists in the global cache
+		 * @param key
+		 */
+		static hasSync(key: string): boolean;
+
+		/**
+		 * checks if value exists in the global cache
 		 * @param key
 		 */
 		static has(key: string): boolean;
+
+		/**
+		 * sets a value in the global cache
+		 * this is sync version, so value should not be a promise or async function
+		 * @param key
+		 * @param value
+		 * @param options ttl in ms/timestring('1d 3h') or opts (default: 0)
+		 */
+		static setSync(key: string, value: any, options?: number | string | setOpts): boolean;
 
 		/**
 		 * sets a value in the global cache
@@ -120,7 +208,16 @@ declare module 'sm-utils' {
 		static set(key: string, value: any, options?: number | string | setOpts): boolean;
 
 		/**
-		 * get or set a value in the global cache
+		 * gets a value from the global cache, or sets it if it doesn't exist
+		 * this is sync version, so value should not be a promise or async function
+		 * @param key key to get
+		 * @param value value to set if the key does not exist
+		 * @param options ttl in ms/timestring('1d 3h') or opts (default: 0)
+		 */
+		static getOrSetSync(key: string, value: any, options?: number | string | setOpts): any;
+
+		/**
+		 * gets a value from the global cache, or sets it if it doesn't exist
 		 * @param key
 		 * @param value
 		 * @param options ttl in ms/timestring('1d 3h') or opts (default: 0)
@@ -139,6 +236,12 @@ declare module 'sm-utils' {
 		 * deletes a value from the global cache
 		 * @param key
 		 */
+		static delSync(key: string): void;
+
+		/**
+		 * deletes a value from the global cache
+		 * @param key
+		 */
 		static del(key: string): void;
 
 		static size(): number;
@@ -149,7 +252,20 @@ declare module 'sm-utils' {
 		static clear(): void;
 
 		/**
-		 *
+		 * memoizes a function (caches the return value of the function)
+		 * ```js
+		 * const cachedFn = cache.memoize('expensiveFn', expensiveFn);
+		 * const result = cachedFn('a', 'b');
+		 * ```
+		 * This is sync version, so fn should not be async
+		 * @param key cache key with which to memoize the results
+		 * @param fn function to memoize
+		 * @param options ttl in ms/timestring('1d 3h') or opts (default: 0)
+		 */
+		static memoizeSync(key: string, fn: Function, options?: number | string | setOpts): Function;
+
+		/**
+		 * memoizes a function (caches the return value of the function)
 		 * @param key
 		 * @param fn
 		 * @param options ttl in ms/timestring('1d 3h') or opts (default: 0)
@@ -2005,7 +2121,7 @@ declare module 'sm-utils' {
          * @param options
          */
 		function gracefulServerExit(server: any, options?: number | timeoutOpts): void;
-		
+
 		/**
 		 * set the max memory that the current node process can use
 		 * @param memory max memory in megabytes
@@ -2203,7 +2319,7 @@ declare module 'sm-utils' {
         function read(key: string): any;
 
 		function getEnv(): string;
-		
+
 		function env(): string;
 
 		function isProduction(): boolean;

@@ -17,6 +17,14 @@ describe('cache library', () => {
 		expect(await cache.get(key)).to.equal(value);
 	});
 
+	it('should getSync and setSync values', () => {
+		const key = 'aSync';
+		const value = 'this';
+		expect(cache.getSync(key)).to.be.undefined;
+		expect(cache.setSync(key, value)).to.be.true;
+		expect(cache.getSync(key)).to.equal(value);
+	});
+
 	it('should correctly resolve promises', async () => {
 		const key = 'b';
 		const val = 'is';
@@ -44,6 +52,17 @@ describe('cache library', () => {
 		expect(await cache.get(key)).to.equal(val);
 		expect(await promise).to.be.true;
 		expect(await cache.get(key)).to.equal(val);
+	});
+
+	it('should correctly resolve sync functions', () => {
+		const key = 'cSync';
+		const val = 'really';
+		const value = () => val;
+		expect(cache.getSync(key)).to.be.undefined;
+		const result = cache.setSync(key, value);
+		expect(cache.getSync(key)).to.equal(val);
+		expect(result).to.be.true;
+		expect(cache.getSync(key)).to.equal(val);
 	});
 
 	it('should correctly resolve functions with promises', async () => {
@@ -93,6 +112,31 @@ describe('cache library', () => {
 		expect(counter).to.equal(1);
 	});
 
+	it('should correctly getOrSetSync', () => {
+		let key = 'eSync';
+		let val = 'man';
+		let value = val;
+		expect(cache.getOrSetSync(key, value)).to.equal(val);
+		expect(cache.getOrSetSync(key, 'anything')).to.equal(val);
+
+		key = 'fSync';
+		val = 'do';
+		let counter = 0;
+		value = () => {
+			counter++;
+			return val;
+		};
+
+		const result1 = cache.getOrSetSync(key, value);
+		const result2 = cache.getOrSetSync(key, value);
+		const result3 = cache.getOrSetSync(key, value);
+		expect(cache.getOrSetSync(key, value)).to.equal(val);
+		expect(result1).to.equal(val);
+		expect(result2).to.equal(val);
+		expect(result3).to.equal(val);
+		expect(counter).to.equal(1);
+	});
+
 	it('should return default value when event returns undefined', async () => {
 		cache.set('k', undefined);
 		const value = await cache.get('k', 'default');
@@ -128,15 +172,26 @@ describe('cache library', () => {
 		expect(await cache.get('e')).to.be.undefined;
 	});
 
+	it('should correctly delSync', () => {
+		expect(cache.getSync('eSync')).to.equal('man');
+		cache.delSync('eSync');
+		expect(cache.getSync('eSync')).to.be.undefined;
+	});
+
 	it('should correctly check for existance', async () => {
 		expect(await cache.has('d')).to.be.true;
 		expect(await cache.has('d1')).to.be.false;
 	});
 
+	it('should correctly check for sync existance', () => {
+		expect(cache.hasSync('d')).to.be.true;
+		expect(cache.hasSync('d1')).to.be.false;
+	});
+
 	it('should correctly return the size', async () => {
 		const cache1 = new Cache();
 		expect(await cache1.size()).to.equal(0);
-		expect(await cache.size()).to.equal(7);
+		expect(await cache.size()).to.equal(10);
 	});
 
 	it('should correctly memoize a function', async () => {
@@ -152,6 +207,22 @@ describe('cache library', () => {
 		await sum(1, 2);
 		await sum(1, 2);
 		await sum(2, 3);
+		expect(count).to.equal(2);
+	});
+
+	it('should correctly memoizeSync a function', () => {
+		let count = 0;
+		const sum = cache.memoizeSync('myFuncSync', (a, b) => {
+			count++;
+			return a + b;
+		});
+
+		expect(sum(1, 2)).to.equal(3);
+		expect(sum(2, 3)).to.equal(5);
+		sum(1, 2);
+		sum(1, 2);
+		sum(1, 2);
+		sum(2, 3);
 		expect(count).to.equal(2);
 	});
 
