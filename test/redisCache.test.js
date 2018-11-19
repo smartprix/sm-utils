@@ -1,4 +1,3 @@
-/* global describe, it, before */
 /* eslint-disable no-unused-expressions */
 import {expect} from 'chai';
 import _ from 'lodash';

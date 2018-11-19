@@ -1,4 +1,3 @@
-/* global before, after, describe, it */
 import {expect} from 'chai';
 import {Queue} from '../src';
 

@@ -1,4 +1,4 @@
-/* global before, after, describe, it */
+/* eslint-disable no-unused-expressions */
 import fs from 'fs';
 import {promisify} from 'util';
 import {expect} from 'chai';

@@ -1,4 +1,3 @@
-/* global it, describe */
 /* eslint-disable no-unused-expressions */
 
 import {expect} from 'chai';
@@ -108,9 +107,9 @@ describe('cache library', () => {
 		expect(await cache.get(key)).to.equal(value);
 		await sleep('', 10);
 		expect(await cache.get(key)).to.equal(value);
-		await sleep('', 7);
+		await sleep('', 5);
 		expect(await cache.get(key)).to.equal(value);
-		await sleep('', 4);
+		await sleep('', 6);
 		expect(await cache.get(key)).to.be.undefined;
 	});
 

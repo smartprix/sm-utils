@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-expressions */
 import fs from 'fs';
 import {expect} from 'chai';
 import {Crypt} from '../src/index';
