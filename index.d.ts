@@ -113,12 +113,22 @@ declare module 'sm-utils' {
 		/**
 		 * returns the size of the cache (no. of keys)
 		 */
-		size(): number;
+		sizeSync(): number;
 
 		/**
 		 * clears the cache (deletes all keys)
 		 */
-		clear(): void;
+		clearSync(): void;
+
+		/**
+		 * returns the size of the cache (no. of keys)
+		 */
+		size(): Promise<number>;
+
+		/**
+		 * clears the cache (deletes all keys)
+		 */
+		clear(): Promise<void>;
 
 		/**
 		 * memoizes a function (caches the return value of the function)
@@ -245,12 +255,19 @@ declare module 'sm-utils' {
 		 */
 		static del(key: string): void;
 
-		static size(): number;
+		static sizeSync(): number;
 
 		/**
 		 * clear the global cache
 		 */
-		static clear(): void;
+		static clearSync(): void;
+
+		static size(): Promise<number>;
+
+		/**
+		 * clear the global cache
+		 */
+		static clear(): Promise<void>;
 
 		/**
 		 * memoizes a function (caches the return value of the function)

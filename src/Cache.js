@@ -302,7 +302,15 @@ class Cache {
 	 * returns the size of the cache (no. of keys)
 	 * @return {number}
 	 */
-	size() {
+	async size() {
+		return this.data.size;
+	}
+
+	/**
+	 * returns the size of the cache (no. of keys)
+	 * @return {number}
+	 */
+	sizeSync() {
 		return this.data.size;
 	}
 
@@ -310,7 +318,15 @@ class Cache {
 	 * clears the cache (deletes all keys)
 	 * @return {void}
 	 */
-	clear() {
+	async clear() {
+		return this._clear();
+	}
+
+	/**
+	 * clears the cache (deletes all keys)
+	 * @return {void}
+	 */
+	clearSync() {
 		return this._clear();
 	}
 
@@ -503,16 +519,31 @@ class Cache {
 	/**
 	 * @return {number} the size of the global cache
 	 */
-	static size() {
+	static async size() {
 		return this.globalCache().size();
+	}
+
+	/**
+	 * @return {number} the size of the global cache
+	 */
+	static sizeSync() {
+		return this.globalCache().sizeSync();
 	}
 
 	/**
 	 * clear the global cache
 	 * @return {void}
 	 */
-	static clear() {
+	static async clear() {
 		return this.globalCache().clear();
+	}
+
+	/**
+	 * clear the global cache
+	 * @return {void}
+	 */
+	static clearSync() {
+		return this.globalCache().clearSync();
 	}
 
 	/**
