@@ -1,6 +1,7 @@
 import Redis from 'ioredis';
 import timestring from 'timestring';
 import {Observer} from 'micro-observer';
+import _ from 'lodash';
 
 const DELETE = Symbol('DELETE');
 const DEL_CONTAINS = Symbol('DEL_CONTAINS');
@@ -32,6 +33,11 @@ class RedisCache {
 	static _bypass = false;
 	// this causes performace issues, use only when debugging
 	static logOnLocalWrite = false;
+	static globalRedisConf = {
+		host: '127.0.0.1',
+		port: 6379,
+		password: undefined,
+	};
 
 	/**
 	 * @ignore
@@ -53,19 +59,19 @@ class RedisCache {
 	 */
 	constructor(prefix, redisConf = {}, options = {}) {
 		this.prefix = prefix;
-		this.logger = options.logger || RedisCache.logger;
-		this.logOnLocalWrite = options.logOnLocalWrite || RedisCache.logOnLocalWrite;
+		this.logger = options.logger || this.constructor.logger;
+		this.logOnLocalWrite = options.logOnLocalWrite || this.constructor.logOnLocalWrite;
 
 		if (redisConf instanceof Redis) {
 			this.redis = redisConf;
 			return;
 		}
 
-		const redis = {
-			host: redisConf.host || '127.0.0.1',
-			port: redisConf.port || 6379,
-			password: redisConf.password || redisConf.auth || undefined,
-		};
+		const redis = _.merge({}, this.constructor.globalRedisConf, {
+			host: redisConf.host,
+			port: redisConf.port,
+			password: redisConf.password || redisConf.auth,
+		});
 
 		this.redis = this.constructor.getRedis(redis);
 
@@ -101,7 +107,7 @@ class RedisCache {
 
 		redisIns.subscribe(channelName, (err) => {
 			if (err) {
-				RedisCache.logger.error(`[RedisCache] can't subscribe to channel ${channelName}`, err);
+				this.logger.error(`[RedisCache] can't subscribe to channel ${channelName}`, err);
 			}
 		});
 
@@ -139,7 +145,7 @@ class RedisCache {
 			this._localCache(prefix, key, value, ttl);
 		}
 		else {
-			RedisCache.logger.error(`[RedisCache] unknown subscribe command ${command}`);
+			this.logger.error(`[RedisCache] unknown subscribe command ${command}`);
 		}
 	}
 
@@ -744,7 +750,7 @@ class RedisCache {
 
 	/**
 	 * Return a global instance of Redis cache
-	 * @param {object} redis redis redisConf
+	 * @param {object} [redis] redis redisConf
 	 * @return {RedisCache}
 	 */
 	static globalCache(redis) {
