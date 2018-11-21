@@ -186,7 +186,7 @@ cfg.file = function (file, options = {}) {
 			// Ignore Not Found Errors
 			return;
 		}
-		else if (options.ignoreErrors) {
+		if (options.ignoreErrors) {
 			// Ignore All Errors
 			return;
 		}

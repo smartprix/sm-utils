@@ -82,11 +82,11 @@ function plural(str) {
 		// you drop the y and add -ies to make it plural.
 		return str.slice(0, -1) + 'ies';
 	}
-	else if (str.substring(str.length - 2) === 'us') {
+	if (str.substring(str.length - 2) === 'us') {
 		// ends in us -> i, needs to preceed the generic 's' rule
 		return str.slice(0, -2) + 'i';
 	}
-	else if (
+	if (
 		['ch', 'sh'].indexOf(str.substring(str.length - 2)) !== -1 ||
 		['x', 's'].indexOf(str.charAt(str.length - 1)) !== -1
 	) {
