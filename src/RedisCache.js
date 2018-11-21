@@ -1,6 +1,7 @@
 import Redis from 'ioredis';
 import timestring from 'timestring';
 import {Observer} from 'micro-observer';
+import _ from 'lodash';
 
 const DELETE = Symbol('DELETE');
 const DEL_CONTAINS = Symbol('DEL_CONTAINS');
@@ -65,8 +66,8 @@ class RedisCache {
 			this.redis = redisConf;
 			return;
 		}
-
-		const redis = Object.assign({}, this.constructor.defaultRedisConf, {
+		// Use merge because it ignores undefined values unlike Object.assign
+		const redis = _.merge({}, this.constructor.defaultRedisConf, {
 			host: redisConf.host,
 			port: redisConf.port,
 			password: redisConf.password || redisConf.auth,
@@ -85,12 +86,19 @@ class RedisCache {
 		}
 	}
 
+	/**
+	 * @param {redisConf} redis
+	 */
 	static getRedis(redis) {
 		const address = `${redis.host}:${redis.port}`;
 
 		// cache redis connections in a map to prevent a new connection on each instance
 		if (!redisMap[address]) {
 			redisMap[address] = new Redis(redis);
+
+			redisMap[address].on('error', (err) => {
+				this.logger.error(`[RedisCache] error in redis connection on ${address}`, err);
+			});
 
 			// we need a different connection for subscription, because once subscribed
 			// no other commands can be issued
@@ -100,8 +108,16 @@ class RedisCache {
 		return redisMap[address];
 	}
 
+	/**
+	 * @param {redisConf} redis
+	 */
 	static subscribe(redis) {
 		const redisIns = new Redis(redis);
+
+		redisIns.on('error', (err) => {
+			this.logger.error(`[RedisCache] error in redis connection on ${redis.host}:${redis.port}`, err);
+		});
+
 		const channelName = `RC:${this.globalPrefix}`;
 
 		redisIns.subscribe(channelName, (err) => {
@@ -562,7 +578,7 @@ class RedisCache {
 				ret.__value = resolvedValue;
 				return true;
 			}
-			else if (typeof value === 'function') {
+			if (typeof value === 'function') {
 				// value is a function
 				// call it and set the result
 				return this.set(key, value(key), ttl, ret);
