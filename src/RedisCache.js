@@ -32,6 +32,11 @@ class RedisCache {
 	static _bypass = false;
 	// this causes performace issues, use only when debugging
 	static logOnLocalWrite = false;
+	static defaultRedisConf = {
+		host: '127.0.0.1',
+		port: 6379,
+		password: undefined,
+	};
 
 	/**
 	 * @ignore
@@ -53,19 +58,19 @@ class RedisCache {
 	 */
 	constructor(prefix, redisConf = {}, options = {}) {
 		this.prefix = prefix;
-		this.logger = options.logger || RedisCache.logger;
-		this.logOnLocalWrite = options.logOnLocalWrite || RedisCache.logOnLocalWrite;
+		this.logger = options.logger || this.constructor.logger;
+		this.logOnLocalWrite = options.logOnLocalWrite || this.constructor.logOnLocalWrite;
 
 		if (redisConf instanceof Redis) {
 			this.redis = redisConf;
 			return;
 		}
 
-		const redis = {
-			host: redisConf.host || '127.0.0.1',
-			port: redisConf.port || 6379,
-			password: redisConf.password || redisConf.auth || undefined,
-		};
+		const redis = Object.assign({}, this.constructor.defaultRedisConf, {
+			host: redisConf.host,
+			port: redisConf.port,
+			password: redisConf.password || redisConf.auth,
+		});
 
 		this.redis = this.constructor.getRedis(redis);
 
@@ -101,7 +106,7 @@ class RedisCache {
 
 		redisIns.subscribe(channelName, (err) => {
 			if (err) {
-				RedisCache.logger.error(`[RedisCache] can't subscribe to channel ${channelName}`, err);
+				this.logger.error(`[RedisCache] can't subscribe to channel ${channelName}`, err);
 			}
 		});
 
@@ -139,7 +144,7 @@ class RedisCache {
 			this._localCache(prefix, key, value, ttl);
 		}
 		else {
-			RedisCache.logger.error(`[RedisCache] unknown subscribe command ${command}`);
+			this.logger.error(`[RedisCache] unknown subscribe command ${command}`);
 		}
 	}
 
@@ -744,7 +749,7 @@ class RedisCache {
 
 	/**
 	 * Return a global instance of Redis cache
-	 * @param {object} redis redis redisConf
+	 * @param {object} [redis] redis redisConf
 	 * @return {RedisCache}
 	 */
 	static globalCache(redis) {
