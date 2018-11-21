@@ -1,7 +1,6 @@
 import Redis from 'ioredis';
 import timestring from 'timestring';
 import {Observer} from 'micro-observer';
-import _ from 'lodash';
 
 const DELETE = Symbol('DELETE');
 const DEL_CONTAINS = Symbol('DEL_CONTAINS');
@@ -33,7 +32,7 @@ class RedisCache {
 	static _bypass = false;
 	// this causes performace issues, use only when debugging
 	static logOnLocalWrite = false;
-	static globalRedisConf = {
+	static defaultRedisConf = {
 		host: '127.0.0.1',
 		port: 6379,
 		password: undefined,
@@ -67,7 +66,7 @@ class RedisCache {
 			return;
 		}
 
-		const redis = _.merge({}, this.constructor.globalRedisConf, {
+		const redis = Object.assign({}, this.constructor.defaultRedisConf, {
 			host: redisConf.host,
 			port: redisConf.port,
 			password: redisConf.password || redisConf.auth,

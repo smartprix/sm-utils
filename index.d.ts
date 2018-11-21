@@ -1588,7 +1588,7 @@ declare module 'sm-utils' {
 		static globalPrefix: string;
 		static useLocalCache: boolean;
 		static logger: Partial<Console>;
-		static globalRedisConf: {
+		static defaultRedisConf: {
 			host: string;
 			port: number;
 			password?: string;
