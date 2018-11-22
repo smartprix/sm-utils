@@ -9,7 +9,7 @@ async function processorWrapper(job, processor, resolve, reject) {
 		reject(new Error('Job already processing'));
 		return;
 	}
-	else if (job.state() === 'inactive') {
+	if (job.state() === 'inactive') {
 		job.active();
 		job.attempt(() => {});
 		try {
@@ -294,7 +294,7 @@ class Queue {
 				done(null, true);
 				return;
 			}
-			else if (job.data.options._timeout !== undefined &&
+			if (job.data.options._timeout !== undefined &&
 				(Date.now() - job.created_at) > job.data.options._timeout) {
 				job.log(`Time passed: ${(Date.now() - job.created_at)}, Timeout: ${job.data.options._timeout}`);
 				done(new Error('Timed out'));
@@ -382,6 +382,7 @@ class Queue {
 			});
 		});
 	}
+
 	/**
 	 * Return count of inactive jobs in Queue
 	 * @return {number} inactiveCount

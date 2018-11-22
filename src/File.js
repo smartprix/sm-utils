@@ -1,8 +1,8 @@
 const _ = require('lodash');
 const {promisify} = require('util');
 const _path = require('path');
-const System = require('./System');
 const _fs = require('fs');
+const System = require('./System');
 
 // TODO: replace this with fs.promises when it becomes stable
 const fs = {

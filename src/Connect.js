@@ -663,7 +663,7 @@ class Connect {
 				reject(error);
 				return;
 			}
-			else if (response.statusCode === 407) {
+			if (response.statusCode === 407) {
 				const e = new Error('407 Proxy Authentication Required');
 				e.code = 'EPROXYAUTH';
 				e.timeTaken = Date.now() - startTime;

@@ -203,7 +203,7 @@ class Cache {
 				this.fetching.delete(key);
 				return true;
 			}
-			else if (typeof value === 'function') {
+			if (typeof value === 'function') {
 				// value is a function
 				// call it and set the result
 				return this.set(key, value(key), ttl);
