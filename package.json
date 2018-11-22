@@ -66,10 +66,10 @@
     "docdash": "^1.0.0",
     "eslint": "^5.9.0",
     "eslint-config-smartprix": "^3.5.4",
-    "ghooks": "^2.0.4",
     "isparta": "^4.1.0",
     "jsdoc": "^3.5.5",
-    "mocha": "^5.2.0"
+    "mocha": "^5.2.0",
+    "np": "^3.0.4"
   },
   "eslintConfig": {
     "extends": "smartprix",
@@ -103,10 +103,5 @@
       ]
     ],
     "sourceMaps": true
-  },
-  "config": {
-    "ghooks": {
-      "pre-commit": "npm run build && npm test && npm run check-coverage"
-    }
   }
 }
