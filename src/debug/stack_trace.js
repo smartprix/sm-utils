@@ -2,7 +2,9 @@
 const stackTrace = require('stack-trace');
 const path = require('path');
 const fs = require('fs');
-const cache = require('lru-cache')({max: 500});
+const LRU = require('lru-cache');
+
+const cache = new LRU({max: 500});
 
 const PATH_SEP = path.sep === '/' ? '\/' : '\\\\';
 const MODULE_FOLDER_REGEX = new RegExp('.*node_modules' + PATH_SEP + '([^' + PATH_SEP + ']*)');
