@@ -14,3 +14,13 @@ yarn add sm-utils 	# or npm install sm-utils --save
 ## Docs:
 
 https://smartprix.github.io/sm-utils/
+
+## CLI
+
+### cfg
+Get a value from cfg.js
+
+```sh
+cfg get redis.port
+cfg get logsDir
+```
