@@ -188,10 +188,11 @@ describe('cache library', () => {
 		expect(cache.hasSync('d1')).to.be.false;
 	});
 
-	it('should correctly return the size', async () => {
+	it('should correctly return the size and sizeSync', async () => {
 		const cache1 = new Cache();
 		expect(await cache1.size()).to.equal(0);
 		expect(await cache.size()).to.equal(10);
+		expect(await cache.size()).to.equal(cache.sizeSync());
 	});
 
 	it('should correctly memoize a function', async () => {
@@ -232,5 +233,14 @@ describe('cache library', () => {
 		expect(await cache.get('a')).to.be.undefined;
 		expect(await cache.get('b')).to.be.undefined;
 		expect(await cache.size()).to.equal(0);
+	});
+
+	it('should correctly clear cache on clearSync', () => {
+		cache.setSync('a', 'b');
+		expect(cache.sizeSync()).to.equal(1);
+		expect(cache.getSync('a')).to.equal('b');
+		cache.clearSync();
+		expect(cache.sizeSync()).to.equal(0);
+		expect(cache.getSync('a')).to.be.undefined;
 	});
 });

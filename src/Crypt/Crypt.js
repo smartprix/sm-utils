@@ -96,7 +96,8 @@ function countBits(number) {
  * By default, length is 20 and charset is ALPHA_NUMERIC
  *
  * @memberof Crypt
- * @param  {number|randomOpts} options length of the id or options object
+ * @param  {number | (randomOpts & {randomBytesFunc?: (size: number) => Buffer})} options
+ * length of the id or options object
  * @return {string} id
  */
 function randomString(options = {}) {
@@ -163,11 +164,12 @@ function randomString(options = {}) {
  * Shuffle an array or a string.
  *
  * @memberof Crypt
- * @param {Array|string} itemToShuffle item which you want to shuffle
+ * @template T
+ * @param {Array<T> | string} itemToShuffle item which you want to shuffle
  * @param {object} [options = {}] object of {seed: number}
- * @param {function} options.randomFunc Use this random function instead of default
+ * @param {() => number} options.randomFunc Use this random function instead of default
  * @param {number} options.seed optionally give a seed to do a constant shuffle
- * @return {Array|string} shuffled item
+ * @return {Array<T> | string} shuffled item
  */
 function shuffle(itemToShuffle, options = {}) {
 	let array;
@@ -215,11 +217,11 @@ function shuffle(itemToShuffle, options = {}) {
  * @typedef {object} randomFunctions
  * @property {number} seed
  * @property {number} index
- * @property {function} random
- * @property {function} int
- * @property {function} bytes
- * @property {function} string
- * @property {function} shuffle
+ * @property {() => number)} random number b/w 0 and 1
+ * @property {(num: number, max?: number) => } int integer less than num or b/w num and max
+ * @property {(size: number) => Buffer} bytes
+ * @property {(options: number|randomOpts) => string} string
+ * @property {(items: any[] | string) => any[] | string} shuffle
  */
 
 /**
@@ -295,7 +297,7 @@ function nanoSecondsAlpha(base36 = false) {
  * NOTE: Multiple call within the same millisecond will return 1, 2, 3 so on..
  * The counter will reset on next millisecond
  *
- * @param  {number} currentTime self-descriptive
+ * @param  {number} currentTime
  * @return {number} sequential number
  * @ignore
  */
@@ -409,7 +411,7 @@ function randomUUID() {
  *   'hex', 'binary' ('latin1'), 'ascii', 'base64', 'base64url',
  *   'utf8', 'buffer', 'utf16le' ('ucs2')
  * @typedef {object} encodingConversion
- * @property {string} [toEncodin='base64url'] default 'base64url'
+ * @property {string} [toEncoding='base64url'] default 'base64url'
  * @property {string} [fromEncoding='binary'] default 'binary'
  */
 
@@ -646,7 +648,7 @@ function sha256Hmac(string, key, {encoding = 'hex'} = {}) {
  *
  * @memberof Crypt
  * @param  {string} message           the message to be signed
- * @param  {string|object} privateKey self-descriptive
+ * @param  {string|object} privateKey
  * @param  {encodingOpts} opts        opts can have {encoding (default 'hex')
  * @return {string}                   signature
  *
@@ -678,8 +680,8 @@ function sign(message, privateKey, opts = {}) {
  *
  * @memberof Crypt
  * @param  {string} message          message to be verified
- * @param  {string} signature        self-descriptive
- * @param  {string|object} publicKey self-descriptive
+ * @param  {string} signature
+ * @param  {string|object} publicKey
  * @param  {encodingOpts} [opts={}]  opts can have {encoding (default 'hex')}
  * @return {boolean}                 true or false, depending on the validity of
  * the signature for the data and public key
@@ -956,7 +958,7 @@ function unpackNumbers(str) {
  * @memberof Crypt
  * @param {number|object} options length of the id or object of {length: int}
  * @param {number} options.length
- * @param {number} options.time epoch time / 1000
+ * @param {number} [options.time] epoch time / 1000
  * @return {string} id
  */
 function encryptedTimestampedId(options, key) {

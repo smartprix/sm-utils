@@ -145,8 +145,12 @@ class Cache {
 	}
 
 	/**
-	 * @typedef {object} setOpts
+	 * @typedef {object} setOptsObject
 	 * @property {number|string} ttl in ms / timestring ('1d 3h') default: 0
+	 */
+
+	/**
+	 * @typedef {setOptsObject | string | number} setOpts
 	 */
 
 	/**
@@ -154,8 +158,8 @@ class Cache {
 	 * this is sync version, so value should not be a promise or async function
 	 * @param {string} key
 	 * @param {any} value
-	 * @param {number|string|setOpts} [options={}] ttl in ms/timestring('1d 3h') or opts (default: 0)
-	 * @return {boolean}
+	 * @param {setOpts} [options={}] ttl in ms/timestring('1d 3h') or opts (default: 0)
+	 * @return {Promise<boolean>}
 	 */
 	setSync(key, value, options = {}) {
 		const ttl = ttlMs(options);
@@ -242,7 +246,7 @@ class Cache {
 	 * this takes care of dogpiling (make sure value is a function to avoid dogpiling)
 	 * @param {string} key key to get
 	 * @param {any} value value to set if the key does not exist
-	 * @param {number|string|setOpts} [options={}] ttl in ms/timestring('1d 3h') or opts (default: 0)
+	 * @param {setOpts} [options={}] ttl in ms/timestring('1d 3h') or opts (default: 0)
 	 * @return {any}
 	 */
 	async getOrSet(key, value, options = {}) {
@@ -269,7 +273,7 @@ class Cache {
 	 * alias for getOrSet
 	 * @param {string} key key to get
 	 * @param {any} value value to set if the key does not exist
-	 * @param {number|string|setOpts} [options={}] ttl in ms/timestring('1d 3h') or opts (default: 0)
+	 * @param {setOpts} [options={}] ttl in ms/timestring('1d 3h') or opts (default: 0)
 	 * @return {any}
 	 */
 	async $(key, value, options = {}) {
@@ -303,10 +307,26 @@ class Cache {
 	}
 
 	/**
+	 * returns the size of the cache (no. of keys)
+	 * @return {number}
+	 */
+	sizeSync() {
+		return this.data.size;
+	}
+
+	/**
 	 * clears the cache (deletes all keys)
 	 * @return {void}
 	 */
 	async clear() {
+		return this._clear();
+	}
+
+	/**
+	 * clears the cache (deletes all keys)
+	 * @return {void}
+	 */
+	clearSync() {
 		return this._clear();
 	}
 
@@ -319,7 +339,7 @@ class Cache {
 	 * This is sync version, so fn should not be async
 	 * @param {string} key cache key with which to memoize the results
 	 * @param {function} fn function to memoize
-	 * @param {number|string|setOpts} [options={}] ttl in ms/timestring('1d 3h') or opts (default: 0)
+	 * @param {setOpts} [options={}] ttl in ms/timestring('1d 3h') or opts (default: 0)
 	 * @return {function} memoized function
 	 */
 	memoizeSync(key, fn, options = {}) {
@@ -379,7 +399,7 @@ class Cache {
 	 * @param {any} defaultValue
 	 * @return {any}
 	 */
-	static get(key, defaultValue) {
+	static async get(key, defaultValue) {
 		return this.globalCache().get(key, defaultValue);
 	}
 
@@ -399,7 +419,7 @@ class Cache {
 	 * @param {any} defaultValue
 	 * @return {any}
 	 */
-	static getStale(key, defaultValue) {
+	static async getStale(key, defaultValue) {
 		return this.globalCache().getStale(key, defaultValue);
 	}
 
@@ -417,7 +437,7 @@ class Cache {
 	 * @param {string} key
 	 * @return {boolean}
 	 */
-	static has(key) {
+	static async has(key) {
 		return this.globalCache().has(key);
 	}
 
@@ -437,10 +457,10 @@ class Cache {
 	 * sets a value in the global cache
 	 * @param {string} key
 	 * @param {any} value
-	 * @param {number|string|setOpts} [options={}] ttl in ms/timestring('1d 3h') or opts (default: 0)
-	 * @return {boolean}
+	 * @param {setOpts} [options={}] ttl in ms/timestring('1d 3h') or opts (default: 0)
+	 * @return {Promise<boolean>}
 	 */
-	static set(key, value, options = {}) {
+	static async set(key, value, options = {}) {
 		return this.globalCache().set(key, value, options);
 	}
 
@@ -460,10 +480,10 @@ class Cache {
 	 * get or set a value in the global cache
 	 * @param {string} key
 	 * @param {any} value
-	 * @param {number|string|setOpts} [options={}] ttl in ms/timestring('1d 3h') or opts (default: 0)
+	 * @param {setOpts} [options={}] ttl in ms/timestring('1d 3h') or opts (default: 0)
 	 * @return {any}
 	 */
-	static getOrSet(key, value, options = {}) {
+	static async getOrSet(key, value, options = {}) {
 		return this.globalCache().getOrSet(key, value, options);
 	}
 
@@ -471,10 +491,10 @@ class Cache {
 	 * alias for getOrSet
 	 * @param {string} key
 	 * @param {any} value
-	 * @param {number|string|setOpts} [options={}] ttl in ms/timestring('1d 3h') or opts (default: 0)
+	 * @param {setOpts} [options={}] ttl in ms/timestring('1d 3h') or opts (default: 0)
 	 * @return {any}
 	 */
-	static $(key, value, options = {}) {
+	static async $(key, value, options = {}) {
 		return this.globalCache().getOrSet(key, value, options);
 	}
 
@@ -492,23 +512,38 @@ class Cache {
 	 * @param {string} key
 	 * @return {void}
 	 */
-	static del(key) {
+	static async del(key) {
 		return this.globalCache().del(key);
 	}
 
 	/**
 	 * @return {number} the size of the global cache
 	 */
-	static size() {
+	static async size() {
 		return this.globalCache().size();
+	}
+
+	/**
+	 * @return {number} the size of the global cache
+	 */
+	static sizeSync() {
+		return this.globalCache().sizeSync();
 	}
 
 	/**
 	 * clear the global cache
 	 * @return {void}
 	 */
-	static clear() {
+	static async clear() {
 		return this.globalCache().clear();
+	}
+
+	/**
+	 * clear the global cache
+	 * @return {void}
+	 */
+	static clearSync() {
+		return this.globalCache().clearSync();
 	}
 
 	/**
@@ -527,7 +562,7 @@ class Cache {
 	 * memoizes a function (caches the return value of the function)
 	 * @param {string} key
 	 * @param {function} fn
-	 * @param {number|string|setOpts} [options={}] ttl in ms/timestring('1d 3h') or opts (default: 0)
+	 * @param {setOpts} [options={}] ttl in ms/timestring('1d 3h') or opts (default: 0)
 	 * @return {function} memoized function
 	 */
 	static memoize(key, fn, options = {}) {

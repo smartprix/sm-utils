@@ -23,8 +23,8 @@
     "check-coverage": "true",
     "build": "rm -rf dist && babel src --out-dir dist",
     "docs": "rm -rf docs && jsdoc -c jsdoc.json",
-    "types": "jsdoc -t node_modules/@otris/jsdoc-tsd -r ./src/",
     "lint": "eslint src test",
+    "compile": "tsc",
     "test-only": "NODE_ENV=test mocha --slow 0 --exit --require @babel/register test/*.test.js",
     "-precommit": "npm run build && npm test && npm run check-coverage",
     "prepublishOnly": "npm run build"
@@ -61,7 +61,6 @@
     "@babel/plugin-proposal-class-properties": "^7.1.0",
     "@babel/preset-env": "^7.1.6",
     "@babel/register": "^7.0.0",
-    "@otris/jsdoc-tsd": "^1.0.4",
     "chai": "^4.2.0",
     "docdash": "^1.0.0",
     "eslint": "^5.9.0",
