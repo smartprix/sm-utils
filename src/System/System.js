@@ -422,6 +422,7 @@ function setMaxMemory(memory) {
 
 /**
  * get the current git branch name (in cwd)
+ * @memberof System
  * @returns {string} the current branch name, empty string if not found
  */
 async function getGitBranch() {
