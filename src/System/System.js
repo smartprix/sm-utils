@@ -420,6 +420,20 @@ function setMaxMemory(memory) {
 	v8.setFlagsFromString(`--max_old_space_size=${memoryInt}`);
 }
 
+/**
+ * get the current git branch name (in cwd)
+ * @returns {string} the current branch name, empty string if not found
+ */
+async function getGitBranch() {
+	try {
+		const branch = (await execOut('git symbolic-ref --short HEAD')).trim();
+		return branch || '';
+	}
+	catch (e) {
+		return '';
+	}
+}
+
 module.exports = {
 	_globalData: globalData,
 	exec,
@@ -442,4 +456,5 @@ module.exports = {
 	onExit,
 	gracefulServerExit,
 	setMaxMemory,
+	getGitBranch,
 };

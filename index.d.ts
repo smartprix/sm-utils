@@ -1999,19 +1999,26 @@ declare module 'sm-utils' {
          */
         function onExit(callback: Function, options?: number | timeoutOpts): Promise<void>;
 
-        /**
-         *
-         * @param server
-         * @param options
-         */
+		/**
+		 * install graceful server exit handler on a tcp server
+		 * this will make sure that the process exits only
+		 * after all the current requests are served
+		 * @param server
+		 * @param options
+		 */
 		function gracefulServerExit(server: any, options?: number | timeoutOpts): void;
-		
+
 		/**
 		 * set the max memory that the current node process can use
 		 * @param memory max memory in megabytes
 		 */
 		function setMaxMemory(memory: number): void;
 
+		/**
+		 * get the current git branch name (in cwd)
+		 * @returns the current branch name, empty string if not found
+		 */
+		function getGitBranch(): Promise<string>;
     }
 
     interface processObject {
@@ -2203,7 +2210,7 @@ declare module 'sm-utils' {
         function read(key: string): any;
 
 		function getEnv(): string;
-		
+
 		function env(): string;
 
 		function isProduction(): boolean;
