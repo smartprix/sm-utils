@@ -1,4 +1,5 @@
 import {CookieJar} from 'request';
+import {Stats} from 'fs';
 import {ChildProcess} from 'child_process';
 import {Redis} from 'ioredis';
 
@@ -14,23 +15,53 @@ declare module 'sm-utils' {
 
 		/**
 		 * gets a value from the cache
+		 * this is sync version, so it'll not help with dogpiling issues
 		 * @param key
 		 * @param defaultValue
 		 */
-		get(key: string, defaultValue: any): void;
+		getSync(key: string, defaultValue: any):  any;
+
+		/**
+		 * gets a value from the cache
+		 * @param key
+		 * @param defaultValue
+		 */
+		get(key: string, defaultValue: any): Promise<any>;
 
 		/**
 		 * gets a value from the cache immediately without waiting
 		 * @param key
 		 * @param defaultValue
 		 */
-		getStale(key: string, defaultValue: any): void;
+		getStaleSync(key: string, defaultValue: any): any;
+
+		/**
+		 * gets a value from the cache immediately without waiting
+		 * @param key
+		 * @param defaultValue
+		 */
+		getStale(key: string, defaultValue: any): any;
 
 		/**
 		 * checks if a key exists in the cache
 		 * @param key
 		 */
-		has(key: string): void;
+		hasSync(key: string): boolean;
+
+		/**
+		 * checks if a key exists in the cache
+		 * @param key
+		 */
+		has(key: string): boolean;
+
+		/**
+		 * sets a value in the cache
+		 * this is sync version, so value should not be a promise or async function
+		 * @param key
+		 * @param value
+		 * @param options ttl in ms/timestring('1d 3h') or opts (default: 0)
+		 */
+		setSync(key: string, value: any, options?: setOpts): boolean;
 
 		/**
 		 * sets a value in the cache
@@ -39,7 +70,16 @@ declare module 'sm-utils' {
 		 * @param value
 		 * @param options ttl in ms/timestring('1d 3h') or opts (default: 0)
 		 */
-		set(key: string, value: any, options?: number | string | setOpts): boolean;
+		set(key: string, value: any, options?: setOpts): Promise<boolean>;
+
+		/**
+		 * gets a value from the cache, or sets it if it doesn't exist
+		 * this is sync version, so value should not be a promise or async function
+		 * @param key key to get
+		 * @param value value to set if the key does not exist
+		 * @param options ttl in ms/timestring('1d 3h') or opts (default: 0)
+		 */
+		getOrSetSync<T>(key: string, value: T | ((...ags: any[]) => T), options?: setOpts): T;
 
 		/**
 		 * gets a value from the cache, or sets it if it doesn't exist
@@ -48,7 +88,7 @@ declare module 'sm-utils' {
 		 * @param value value to set if the key does not exist
 		 * @param options ttl in ms/timestring('1d 3h') or opts (default: 0)
 		 */
-		getOrSet(key: string, value: any, options?: number | string | setOpts): any;
+		getOrSet<T>(key: string, value: T | Promise<T> | ((...ags: any[]) => T | Promise<T>), options?: setOpts): Promise<T>;
 
 		/**
 		 * alias for getOrSet
@@ -56,7 +96,13 @@ declare module 'sm-utils' {
 		 * @param value value to set if the key does not exist
 		 * @param options ttl in ms/timestring('1d 3h') or opts (default: 0)
 		 */
-		$(key: string, value: any, options?: number | string | setOpts): any;
+		$<T>(key: string, value: T | Promise<T> | ((...ags: any[]) => T | Promise<T>), options?: setOpts): Promise<T>;
+
+		/**
+		 * deletes a value from the cache
+		 * @param key
+		 */
+		delSync(key: string): void;
 
 		/**
 		 * deletes a value from the cache
@@ -67,12 +113,35 @@ declare module 'sm-utils' {
 		/**
 		 * returns the size of the cache (no. of keys)
 		 */
-		size(): number;
+		sizeSync(): number;
 
 		/**
 		 * clears the cache (deletes all keys)
 		 */
-		clear(): void;
+		clearSync(): void;
+
+		/**
+		 * returns the size of the cache (no. of keys)
+		 */
+		size(): Promise<number>;
+
+		/**
+		 * clears the cache (deletes all keys)
+		 */
+		clear(): Promise<void>;
+
+		/**
+		 * memoizes a function (caches the return value of the function)
+		 * ```js
+		 * const cachedFn = cache.memoize('expensiveFn', expensiveFn);
+		 * const result = cachedFn('a', 'b');
+		 * ```
+		 * This is sync version, so fn should not be async
+		 * @param key cache key with which to memoize the results
+		 * @param fn function to memoize
+		 * @param options ttl in ms/timestring('1d 3h') or opts (default: 0)
+		 */
+		memoizeSync<T, U extends any[]>(key: string, fn: ((...args: U) => T), options?: setOpts): (...args: U) => T;
 
 		/**
 		 * memoizes a function (caches the return value of the function)
@@ -84,7 +153,7 @@ declare module 'sm-utils' {
 		 * @param fn function to memoize
 		 * @param options ttl in ms/timestring('1d 3h') or opts (default: 0)
 		 */
-		memoize(key: string, fn: Function, options?: number | string | setOpts): Function;
+		memoize<T, U extends any[]>(key: string, fn: ((...args: U) => T | Promise<T>), options?: setOpts): (...args: U) => Promise<T>;
 
 		/**
 		 * returns a global cache instance
@@ -92,24 +161,54 @@ declare module 'sm-utils' {
 		static globalCache(): Cache;
 
 		/**
-		 * get value from global cache
+		 * gets a value from the global cache
+		 * this is sync version, so it'll not help with dogpiling issues
 		 * @param key
 		 * @param defaultValue
 		 */
-		static get(key: string, defaultValue: any): any;
+		static getSync(key: string, defaultValue: any): any;
 
 		/**
-		 * gets a value from the cache immediately without waiting
+		 * get a value from the global cache
+		 * @param key
+		 * @param defaultValue
+		 */
+		static get(key: string, defaultValue: any): Promise<any>;
+
+		/**
+		 * gets a value from the global cache immediately without waiting
+		 * @param key
+		 * @param defaultValue
+		 */
+		static getStaleSync(key: string, defaultValue: any): any;
+
+		/**
+		 * gets a value from the global cache immediately without waiting
 		 * @param key
 		 * @param defaultValue
 		 */
 		static getStale(key: string, defaultValue: any): any;
 
 		/**
-		 * checks if value exists in global cache
+		 * checks if a key exists in the global cache
+		 * @param key
+		 */
+		static hasSync(key: string): boolean;
+
+		/**
+		 * checks if value exists in the global cache
 		 * @param key
 		 */
 		static has(key: string): boolean;
+
+		/**
+		 * sets a value in the global cache
+		 * this is sync version, so value should not be a promise or async function
+		 * @param key
+		 * @param value
+		 * @param options ttl in ms/timestring('1d 3h') or opts (default: 0)
+		 */
+		static setSync(key: string, value: any, options?: setOpts): boolean;
 
 		/**
 		 * sets a value in the global cache
@@ -117,15 +216,24 @@ declare module 'sm-utils' {
 		 * @param value
 		 * @param options ttl in ms/timestring('1d 3h') or opts (default: 0)
 		 */
-		static set(key: string, value: any, options?: number | string | setOpts): boolean;
+		static set(key: string, value: any, options?: setOpts): Promise<boolean>;
 
 		/**
-		 * get or set a value in the global cache
+		 * gets a value from the global cache, or sets it if it doesn't exist
+		 * this is sync version, so value should not be a promise or async function
+		 * @param key key to get
+		 * @param value value to set if the key does not exist
+		 * @param options ttl in ms/timestring('1d 3h') or opts (default: 0)
+		 */
+		static getOrSetSync<T>(key: string, value: T | ((...ags: any[]) => T), options?: setOpts): T;
+
+		/**
+		 * gets a value from the global cache, or sets it if it doesn't exist
 		 * @param key
 		 * @param value
 		 * @param options ttl in ms/timestring('1d 3h') or opts (default: 0)
 		 */
-		static getOrSet(key: string, value: any, options?: number | string | setOpts): any;
+		static getOrSet<T>(key: string, value: T | Promise<T> | ((...ags: any[]) => T | Promise<T>), options?: setOpts): Promise<T>;
 
 		/**
 		 * alias for getOrSet
@@ -133,7 +241,13 @@ declare module 'sm-utils' {
 		 * @param value
 		 * @param options ttl in ms/timestring('1d 3h') or opts (default: 0)
 		 */
-		static $(key: string, value: any, options?: number | string | setOpts): any;
+		static $<T>(key: string, value: T | Promise<T> | ((...ags: any[]) => T | Promise<T>), options?: setOpts): Promise<T>;
+
+		/**
+		 * deletes a value from the global cache
+		 * @param key
+		 */
+		static delSync(key: string): void;
 
 		/**
 		 * deletes a value from the global cache
@@ -141,30 +255,55 @@ declare module 'sm-utils' {
 		 */
 		static del(key: string): void;
 
-		static size(): number;
+		static sizeSync(): number;
 
 		/**
 		 * clear the global cache
 		 */
-		static clear(): void;
+		static clearSync(): void;
+
+		static size(): Promise<number>;
 
 		/**
-		 *
+		 * clear the global cache
+		 */
+		static clear(): Promise<void>;
+
+		/**
+		 * memoizes a function (caches the return value of the function)
+		 * ```js
+		 * const cachedFn = cache.memoize('expensiveFn', expensiveFn);
+		 * const result = cachedFn('a', 'b');
+		 * ```
+		 * This is sync version, so fn should not be async
+		 * @param key cache key with which to memoize the results
+		 * @param fn function to memoize
+		 * @param options ttl in ms/timestring('1d 3h') or opts (default: 0)
+		 */
+		static memoize<T, U extends any[]>(key: string, fn: ((...args: U) => T), options?: setOpts): (...args: U) => T;
+
+		/**
+		 * memoizes a function (caches the return value of the function)
 		 * @param key
 		 * @param fn
 		 * @param options ttl in ms/timestring('1d 3h') or opts (default: 0)
 		 */
-		static memoize(key: string, fn: Function, options?: number | string | setOpts): Function;
+		static memoize<T, U extends any[]>(key: string, fn: ((...args: U) => T | Promise<T>), options?: setOpts): (...args: U) => Promise<T>;
 
 	}
 
-	interface setOpts {
+	interface setOptsObject {
 		/**
 		 * in ms / timestring ('1d 3h') default: 0
 		 */
 		ttl: number | string;
 	}
 
+	type setOpts = string | number | setOptsObject;
+
+	interface Constructor<M> {
+		new (...args: any[]): M
+	}
 	/**
 	 * Simple & Powerful HTTP request client.
 	 */
@@ -176,15 +315,15 @@ declare module 'sm-utils' {
 
 		/**
 		 * Set the url for the connection.
-		 * @param url self-descriptive
+		 * @param url
 		 */
-		url(url: string): Connect;
+		url(url: string): this;
 
 		/**
 		 *
-		 * @param url self-descriptive
+		 * @param url
 		 */
-		static url(url: string): Connect;
+		static url<U extends Connect>(this: Constructor<U>, url: string): U;
 
 		/**
 		 *
@@ -196,45 +335,45 @@ declare module 'sm-utils' {
 		 * Set or unset the followRedirect option for the connection.
 		 * @param shouldFollowRedirect boolean representing whether to follow redirect or not
 		 */
-		followRedirect(shouldFollowRedirect: boolean): Connect;
+		followRedirect(shouldFollowRedirect: boolean): this;
 
 		/**
 		 * Set value of a header parameter for the connection.
 		 * @param headerName name of the header parameter whose value is to be set
 		 * @param headerValue value to be set
 		 */
-		header(headerName: string, headerValue: any): Connect;
+		header(headerName: string, headerValue: any): this;
 
 		/**
 		 * Set value of the headers for the connection.
 		 * @param headers object representing the headers for the connection
 		 */
-		headers(headers: object): Connect;
+		headers(headers: object): this;
 
 		/**
 		 * Set the body of the connection object.
 		 * @param body value for body
 		 * @param contentType string representing the content type of the body
 		 */
-		body(body: any, contentType?: string): Connect;
+		body(body: any, contentType?: string): this;
 
 		/**
 		 * Set the 'Referer' field in the headers.
 		 * @param referer referer value
 		 */
-		referer(referer: string): Connect;
+		referer(referer: string): this;
 
 		/**
 		 * Set the 'User-Agent' field in the headers.
 		 * @param userAgent name of the user-agent or its value
 		 */
-		userAgent(userAgent: string): Connect;
+		userAgent(userAgent: string): this;
 
 		/**
 		 * Set the 'Content-Type' field in the headers.
 		 * @param contentType value for content-type
 		 */
-		contentType(contentType: string): Connect;
+		contentType(contentType: string): this;
 
 		/**
 		 * Returns whether the content-type is JSON or not
@@ -243,59 +382,71 @@ declare module 'sm-utils' {
 
 		/**
 		 * Sets the value of a cookie.
-		 * Can be used to enable global cookies, if cookieName is set to true
-		 * and cookieValue is undefined (or is not passed as an argument).
-		 * Can also be used to set multiple cookies by passing in an object
+		 * Set multiple cookies by passing in an object
 		 * representing the cookies and their values as key:value pairs.
-		 * @param cookieName represents the name of the
-		 *        cookie to be set, or the cookies object
-		 * @param cookieValue cookie value to be set
+		 * @param cookies cookie object
 		 */
-		cookie(cookieName: string | boolean | object, cookieValue: object): Connect;
+		cookie(cookies: object): this;
+		/**
+ 		 * @param cookieName represents the name of the
+		 * cookie to be set
+		 * @param cookieValue cookie value to be set
+
+		 */
+		cookie(cookieName: string, cookieValue: any): this;
+		/**
+		 * Can be used to enable global cookies, if cookieName is set to true
+		 * @param cookieName
+		 */
+		cookie(cookieName: true): this;
 
 		/**
 		 * Sets multiple cookies.
-		 * Can be used to enable global cookies, if cookies is set to true.
 		 * @param cookies object representing the cookies
-		 *        and their values as key:value pairs.
+		 *	and their values as key:value pairs.
 		 */
-		cookies(cookies: object | boolean): Connect;
+		cookies(cookies: object): this;
+		/**
+		 * Enable global cookies, if cookies is set to true.
+		 * @param cookies
+		 */
+		cookies(cookies: true): this;
 
 		/**
 		 * Enable global cookies.
-		 * @param enableGlobalCookies self-descriptive
+		 * @param enableGlobalCookies
 		 */
-		globalCookies(enableGlobalCookies?: boolean): Connect;
+		globalCookies(enableGlobalCookies?: boolean): this;
 
 		/**
 		 * Set the value of cookie jar based on a file (cookie store).
 		 * @param fileName name of (or path to) the file
 		 */
-		cookieFile(fileName: string): Connect;
+		cookieFile(fileName: string): this;
 
 		/**
 		 * Set the value of cookie jar.
 		 * @param cookieJar value to be set
 		 */
-		cookieJar(cookieJar: CookieJar): Connect;
+		cookieJar(cookieJar: CookieJar): this;
 
 		/**
 		 * Set request timeout.
 		 * @param timeout timeout value in seconds
 		 */
-		timeout(timeout: number): Connect;
+		timeout(timeout: number): this;
 
 		/**
 		 * Set request timeout.
 		 * @param timeoutInMs timeout value in milliseconds
 		 */
-		timeoutMs(timeoutInMs: number): Connect;
+		timeoutMs(timeoutInMs: number): this;
 
 		/**
 		 * alias for timeoutMs
 		 * @param timeoutInMs
 		 */
-		timeoutMilli(timeoutInMs: number): Connect;
+		timeoutMilli(timeoutInMs: number): this;
 
 		/**
 		 * Set value of a field in the options.
@@ -304,87 +455,88 @@ declare module 'sm-utils' {
 		 * @param fieldName name of the field to be set, or the fields object
 		 * @param fieldValue value to be set
 		 */
-		field(fieldName: string | object, fieldValue: any): Connect;
+		field(fieldName: string, fieldValue: any): this;
+		field(fieldName: object): this;
 
 		/**
 		 * Set multiple fields.
 		 * @param fields object representing the field-names and their
-		 *        values as key:value pairs
+		 *	values as key:value pairs
 		 */
-		fields(fields: object): Connect;
+		fields(fields: object): this;
 
 		/**
 		 * Set the request method for the connection.
 		 * @param method one of the HTTP request methods ('GET', 'PUT', 'POST', etc.)
 		 */
-		method(method: string): Connect;
+		method(method: string): this;
 
 		/**
 		 * Set username and password for authentication.
-		 * @param username self-descriptive
-		 * @param password self-descriptive
+		 * @param username
+		 * @param password
 		 */
-		httpAuth(username: string, password: string): Connect;
+		httpAuth(username: string, password: string): this;
 
 		/**
 		 * Set proxy address (or options).
 		 * @param proxy proxy address, or object representing proxy options
 		 */
-		proxy(proxy: string | object): Connect;
+		proxy(proxy: string): this;
+		proxy(proxy: {address: string, port?: number, type?: 'http' | 'https' | 'socks' | 'socks5', auth?: auth}): this;
 
 		/**
 		 * Set address and port for an http proxy.
-		 * @param proxyAddress self-descriptive
-		 * @param proxyPort self-descriptive
+		 * @param proxyAddress
+		 * @param proxyPort
 		 */
-		httpProxy(proxyAddress: string, proxyPort: number): Connect;
+		httpProxy(proxyAddress: string, proxyPort: number): this;
 
 		/**
 		 * Set address and port for a socks proxy.
-		 * @param proxyAddress self-descriptive
-		 * @param proxyPort self-descriptive
+		 * @param proxyAddress
+		 * @param proxyPort
 		 */
-		socksProxy(proxyAddress: string, proxyPort: number): Connect;
+		socksProxy(proxyAddress: string, proxyPort: number): this;
 
 		/**
 		 * Set username and password for proxy.
-		 * @param username self-descriptive
-		 * @param password self-descriptive
 		 */
-		proxyAuth(username: string, password: string): Connect;
+		proxyAuth(auth: auth): this;
+		proxyAuth(username: string, password: string): this;
 
 		/**
 		 * Set request method to 'GET'.
 		 */
-		get(): Connect;
+		get(): this;
 
 		/**
 		 * Set request method to 'POST'.
 		 */
-		post(): Connect;
+		post(): this;
 
 		/**
 		 * Set request method to 'PUT'.
 		 */
-		put(): Connect;
+		put(): this;
 
 		/**
 		 * Set cache directory for the connection.
 		 * @param dir name or path to the directory
 		 */
-		cacheDir(dir: string): Connect;
+		cacheDir(dir: string): this;
 
 		/**
 		 * Set if the body is to be returned as a buffer
-		 * @param returnAsBuffer self-descriptive
+		 * @param returnAsBuffer
 		 */
-		asBuffer(returnAsBuffer?: boolean): Connect;
+		asBuffer(returnAsBuffer?: boolean): this;
 
 		/**
 		 * Set the path for file for saving the response.
-		 * @param filePath self-descriptive
+		 * @param filePath
 		 */
-		save(filePath: string): Connect;
+		save(filePath: string): this;
 
 		/**
 		 * It creates and returns a promise based on the information
@@ -395,17 +547,24 @@ declare module 'sm-utils' {
 		/**
 		 * It is used for method chaining.
 		 * @param successCallback function to be called if the Promise is fulfilled
+		 */
+		then<T>(successCallback: (res: response) => T): Promise<T>;
+		/**
+		 * It is used for method chaining.
+		 * @param successCallback function to be called if the Promise is fulfilled
 		 * @param errorCallback function to be called if the Promise is rejected
 		 */
-		then(successCallback: Function, errorCallback: Function): Promise<any>;
+		then<T, U>(successCallback: (res: response) => T, errorCallback: (err: Error) => U): Promise<T | U>;
 
 		/**
 		 * It is also used for method chaining, but handles rejected cases only.
 		 * @param errorCallback function to be called if the Promise is rejected
 		 */
-		catch(errorCallback: Function): Promise<any>;
+		catch<T>(errorCallback: (err: Error) => T): Promise<any>;
 
 	}
+
+	interface auth {username: string, password: string}
 
 	interface response {
 		/**
@@ -457,7 +616,7 @@ declare module 'sm-utils' {
 		 * By default, length is 20 and charset is ALPHA_NUMERIC
 		 * @param options length of the id or options object
 		 */
-		function randomString(options: number | randomOpts): string;
+		function randomString(options: number | randomStringOpts): string;
 
 		/**
 		 * Shuffle an array or a string.
@@ -466,7 +625,8 @@ declare module 'sm-utils' {
 		 * @param options.randomFunc Use this random function instead of default
 		 * @param options.seed optionally give a seed to do a constant shuffle
 		 */
-		function shuffle(itemToShuffle: any[] | string, options: shuffle_options): any[] | string;
+		function shuffle<T>(itemToShuffle: T[], options: shuffle_options): T[];
+		function shuffle(itemToShuffle: string, options: shuffle_options): string;
 
 		/**
 		 *
@@ -598,7 +758,7 @@ declare module 'sm-utils' {
 		 * openssl ec -in private.pem -pubout -out public.pem
 		 * ```
 		 * @param message the message to be signed
-		 * @param privateKey self-descriptive
+		 * @param privateKey
 		 * @param opts opts can have {encoding (default 'hex')
 		 */
 		function sign(message: string, privateKey: string | object, opts: encodingOpts): string;
@@ -613,8 +773,8 @@ declare module 'sm-utils' {
 		 * openssl ec -in private.pem -pubout -out public.pem
 		 * ```
 		 * @param message message to be verified
-		 * @param signature self-descriptive
-		 * @param publicKey self-descriptive
+		 * @param signature
+		 * @param publicKey
 		 * @param opts opts can have {encoding (default 'hex')}
 		 */
 		function verify(message: string, signature: string, publicKey: string | object, opts?: encodingOpts): boolean;
@@ -736,6 +896,18 @@ declare module 'sm-utils' {
 		 */
 		function encryptedTimestampedId(options: encryptedTimestampedId_options): string;
 
+		/**
+		 * Legacy obfuscation method
+		 * @param str the string to be obfuscted
+		 */
+		function javaObfuscate(str: string): Promise<string>;
+
+		/**
+		 * Legacy unobfuscation method (obfuscated by javaObfuscate)
+		 * @param str the obfuscted string
+		 */
+		function javaUnobfuscate(str: string): Promise<string>;
+
 		const rot13: typeof Str.rot13;
 
 		const rot47: typeof Str.rot47;
@@ -755,36 +927,49 @@ declare module 'sm-utils' {
 		/**
 		 * integer
 		 */
-		length: number;
+		length?: number;
 		/**
 		 * if true will use BASE_36 charset
 		 */
-		base36: boolean;
+		base36?: boolean;
 		/**
 		 * provide a charset string
 		 */
-		charset: string;
+		charset?: string;
 	}
 
 	interface shuffle_options {
 		/**
 		 * Use this random function instead of default
 		 */
-		randomFunc: Function;
+		randomFunc?: () => number;
 		/**
 		 * optionally give a seed to do a constant shuffle
 		 */
-		seed: number;
+		seed?: number;
+	}
+
+	interface randomStringOpts extends randomOpts {
+		randomBytesFunc?: (size: number) => Buffer;
 	}
 
 	interface randomFunctions {
 		seed: number;
 		index: number;
-		random: Function;
-		int: Function;
-		bytes: Function;
-		string: Function;
-		shuffle: Function;
+		/**
+		 * number b/w 0 and 1
+		 */
+		random(): number;
+		/**
+		 * Return a random integer between min and max (both inclusive)
+		 * @param num If max is not passed, num is max and min is 0
+		 * @param max max value of int, num will be min
+		 */
+		int(num: number, max?: number): number;
+		bytes(size: number): Buffer;
+		string(opts: number | randomOpts): string;
+		shuffle<T>(items: T[]): T[];
+		shuffle(items: string): string;
 	}
 
 	/**
@@ -796,7 +981,7 @@ declare module 'sm-utils' {
 		/**
 		 * default 'base64url'
 		 */
-		toEncodin?: string;
+		toEncoding?: string;
 		/**
 		 * default 'binary'
 		 */
@@ -823,7 +1008,7 @@ declare module 'sm-utils' {
 		/**
 		 * epoch time / 1000
 		 */
-		time: number;
+		time?: number;
 	}
 
 	/**
@@ -833,7 +1018,7 @@ declare module 'sm-utils' {
 		/**
 		 * Custom implementation of a double ended queue.
 		 */
-		constructor();
+		constructor(array: any[]);
 
 		/**
 		 * Returns the item at the specified index from the list.
@@ -983,7 +1168,7 @@ declare module 'sm-utils' {
 		/**
 		 * Checks whether a file exists already.
 		 */
-		exists(): boolean;
+		exists(): Promise<boolean>;
 
 		/**
 		 * Checks whether a file exists already.
@@ -993,88 +1178,88 @@ declare module 'sm-utils' {
 		/**
 		 * Returns whether this File object represents a file.
 		 */
-		isFile(): boolean;
+		isFile(): Promise<boolean>;
 
 		/**
 		 * Returns whether this File object represents a directory.
 		 */
-		isDir(): boolean;
+		isDir(): Promise<boolean>;
 
 		/**
 		 * Returns a Date object representing the time when file was last modified.
 		 */
-		mtime(): Date;
+		mtime(): Promise<Date | 0>;
 
 		/**
 		 * Returns a Date object representing the time when file was last changed.
 		 */
-		ctime(): Date;
+		ctime(): Promise<Date | 0>;
 
 		/**
 		 * Returns a Date object representing the time when file was last accessed.
 		 */
-		atime(): Date;
+		atime(): Promise<Date | 0>;
 
 		/**
 		 * Returns a Date object representing the time when file was created.
 		 */
-		crtime(): Date;
+		crtime(): Promise<Date | 0>;
 
 		/**
 		 * Returns an object with the stats of the file. If the path for the file
 		 * is a symlink, then stats of the symlink are returned.
 		 */
-		lstat(): object;
+		lstat(): Promise<Stats>;
 
 		/**
 		 * Returns an object with the stats of the file. If the path for the file
 		 * is a symlink, then stats of the target of the symlink are returned.
 		 */
-		stat(): object;
+		stat(): Promise<Stats>;
 
 		/**
 		 * Returns the size of the file in bytes. If the file is not found
 		 * or can't be read successfully, 0 is returned.
 		 */
-		size(): number;
+		size(): Promise<number>;
 
 		/**
-		 * Change the mode of the file.
+		 * Change the mode of the file. Return 0 on success, -1 on error
 		 * @param mode An octal number or a string representing the file mode
 		 */
-		chmod(mode: number | string): number;
+		chmod(mode: number | string): Promise<0 | -1>;
 
 		/**
 		 * Change the mode of the file or directory recursively.
 		 * @param mode An octal number or a string representing the file mode
 		 */
-		chmodr(mode: number | string): number;
+		chmodr(mode: number | string): Promise<0 | -1>;
 
 		/**
 		 * Change the owner and group of the file.
 		 * @param user user id, or user name
 		 * @param group group id, or group name
 		 */
-		chown(user: number | string, group: number | string): number;
+		chown(user: number | string, group: number | string): Promise<0 | -1>;
 
 		/**
 		 * Change the owner and group of the file recursively.
 		 * @param user user id, or user name
 		 * @param group group id, or group name
 		 */
-		chownr(user: number | string, group: number | string): number;
+		chownr(user: number | string, group: number | string): Promise<0 | -1>;
 
 		/**
 		 * Change the name or location of the file.
 		 * @param newName new path/location (not just name) for the file
 		 */
-		rename(newName: string): number;
+		rename(newName: string): Promise<0 | -1>;
 
 		/**
 		 * Move file to a new location
 		 * @param newName new location (or path) for the file
 		 */
-		mv(newName: string): number;
+		mv(newName: string): Promise<0 | -1>;
 
 		/**
 		 * Unlink the path from the file.
@@ -1083,7 +1268,7 @@ declare module 'sm-utils' {
 		 * symbolic link, the link is removed. If the path is the only link
 		 * to the file then the file will be deleted.
 		 */
-		unlink(): void;
+		unlink(): Promise<void>;
 
 		/**
 		 * Remove the file.
@@ -1092,87 +1277,93 @@ declare module 'sm-utils' {
 		 * is deleted only if the path was the only link to the file and
 		 * the file was not opened in any other process.
 		 */
-		rm(): void;
+		rm(): Promise<void>;
 
 		/**
 		 * Remove the directory.
 		 *
 		 * NOTE: The directory will be deleted only if it is empty.
 		 */
-		rmdir(): void;
+		rmdir(): Promise<void>;
 
 		/**
 		 * Recursively delete the directory and all its contents.
 		 */
-		rmrf(): void;
+		rmrf(): Promise<void>;
 
 		/**
 		 * Create a directory.
 		 * @param mode  file mode for the directory
 		 */
-		mkdir(mode?: number): void;
+		mkdir(mode?: number): Promise<void>;
 
 		/**
 		 * Create a new directory and any necessary subdirectories.
 		 * @param mode  file mode for the directory
 		 */
-		mkdirp(mode?: number): void;
+		mkdirp(mode?: number): Promise<void>;
 
 		/**
 		 * Perform a glob search with the path of the file as the pattern.
 		 */
-		glob(): any[];
+		glob(): Promise<string[]>;
 
 		/**
 		 * Read contents of the file.
 		 */
-		read(): string | Buffer;
+		read(): Promise<string | Buffer>;
 
 		/**
 		 * Create (all necessary directories for) the path of the file/directory.
 		 * @param mode  file mode for the directory
 		 */
-		mkdirpPath(mode?: number): void;
+		mkdirpPath(mode?: number): Promise<void>;
 
 		/**
 		 * Write contents to the file.
 		 * @param contents contents to be written to the file
 		 * @param options  contains options for writing to the file
 		 *
-		 *        The options can include parameters such as fileMode, dirMode, retries and encoding.
+		 * The options can include parameters such as fileMode, dirMode, retries and encoding.
 		 */
-		write(contents: string | Buffer, options?: object): void;
+		write(contents: string | Buffer, options?: writeOpts): Promise<void>;
 
 		/**
 		 * Append contents to the file.
 		 * @param contents contents to be written to the file
 		 * @param options  contains options for appending to the file
 		 *
-		 *        The options can include parameters such as fileMode, dirMode, retries and encoding.
+		 * The options can include parameters such as fileMode, dirMode, retries and encoding.
 		 */
-		append(contents: string | Buffer, options?: object): void;
+		append(contents: string | Buffer, options?: writeOpts): Promise<void>;
 
 		/**
 		 * Copy the file to some destination.
 		 * @param destination path of the destination
 		 * @param options  options for copying the file
 		 *
-		 *        If the overwrite option is explicitly set to false, only then
-		 *        will the function not attempt to overwrite the file if it (already)
-		 *        exists at the destination.
+		 * If the overwrite option is explicitly set to false, only then
+		 * will the function not attempt to overwrite the file if it (already)
+		 * exists at the destination.
 		 */
-		copy(destination: string, options?: object): void;
+		copy(destination: string, options?: {overwrite?: boolean}): Promise<void>;
 
 		/**
 		 * Return the canonicalized absolute pathname
 		 */
-		realpath(): string;
+		realpath(): Promise<string>;
 
 		/**
 		 * Return the canonicalized absolute pathname
 		 */
 		realpathSync(): string;
 
+	}
+
+	interface writeOpts {
+		fileMode?: number;
+		dirMode?: number;
+		retries?: number;
 	}
 
 	/**
@@ -1188,19 +1379,19 @@ declare module 'sm-utils' {
 		 *
 		 * @param key
 		 */
-		tryAcquire(key: string): boolean;
+		tryAcquire(key: string): Promise<boolean>;
 
 		/**
 		 *
 		 * @param key
 		 */
-		acquire(key: string): boolean | void;
+		acquire(key: string): Promise<boolean | void>;
 
 		/**
 		 * release a lock
 		 * @param key
 		 */
-		release(key: string): void;
+		release(key: string): Promise<void>;
 
 	}
 
@@ -1226,7 +1417,7 @@ declare module 'sm-utils' {
 		 * @param input Job data
 		 * @param opts
 		 */
-		addJob(input: any, opts: addOpts): number;
+		addJob(input: any, opts: addOpts): Promise<number>;
 
 		/**
 		 * Add a job to the Queue, wait for it to process and return result
@@ -1236,7 +1427,7 @@ declare module 'sm-utils' {
 		 * @param opts
 		 * @param timeout wait for this time else throw err
 		 */
-		addAndProcess(input: any, opts: addOpts, timeout?: number): any;
+		addAndProcess(input: any, opts: addOpts, timeout?: number): Promise<any>;
 
 		/**
 		 * Set default number of retry attempts for any job added later
@@ -1275,14 +1466,14 @@ declare module 'sm-utils' {
 		 * @param processor Function to be called to process the job data
 		 * @param concurrency The number of jobs this processor can handle parallely
 		 */
-		addProcessor(processor: processorCallback, concurrency?: number): void;
+		addProcessor(processor: processorCallback, concurrency?: number): Promise<void>;
 
 		/**
 		 * Pause Queue processing
 		 * Gives timeout time to all workers to complete their current jobs then stops them
 		 * @param timeout Time to complete current jobs in ms
 		 */
-		pauseProcessor(timeout?: number): void;
+		pauseProcessor(timeout?: number): Promise<void>;
 
 		/**
 		 * Resume Queue processing
@@ -1294,79 +1485,79 @@ declare module 'sm-utils' {
 		 * @param queue Queue name
 		 * @param jobType One of {'inactive', 'delayed' ,'active', 'complete', 'failed'}
 		 */
-		static getCount(queue: string, jobType: string): number;
+		static getCount(queue: string, jobType: string): Promise<number>;
 
 		/**
 		 * Return count of inactive jobs in Queue
 		 */
-		inactiveJobs(): number;
+		inactiveJobs(): Promise<number>;
 
 		/**
 		 * Alias for inactiveJobs
 		 */
-		pendingJobs(): number;
+		pendingJobs(): Promise<number>;
 
 		/**
 		 * Return count of completed jobs in Queue
 		 * Might return 0 if removeOnComplete was true
 		 */
-		completedJobs(): number;
+		completedJobs(): Promise<number>;
 
 		/**
 		 * Return count of failed jobs in Queue
 		 */
-		failedJobs(): number;
+		failedJobs(): Promise<number>;
 
 		/**
 		 * Return count of delayed jobs in Queue
 		 */
-		delayedJobs(): number;
+		delayedJobs(): Promise<number>;
 
 		/**
 		 * Return count of active jobs in Queue
 		 */
-		activeJobs(): number;
+		activeJobs(): Promise<number>;
 
 		/**
 		 * Process a single job in the Queue and mark it complete or failed,
 		 * for when you want to manually process jobs
 		 * @param processor Function to be called to process the job data, without ctx
 		 */
-		processJob(processor: processorCallback): jobDetails;
+		processJob(processor: processorCallback): Promise<jobDetails>;
 
 		/**
 		 * Cleanup function to be called during startup,
 		 * resets active jobs older than specified time
 		 * @param olderThan Time in milliseconds, default = 5000
 		 */
-		cleanup(olderThan?: number): void;
+		cleanup(olderThan?: number): Promise<void>;
 
 		/**
 		 * Removes any old jobs from queue
 		 * older than specified time
 		 * @param olderThan Time in milliseconds, default = 3600000 (1 hr)
 		 */
-		delete(olderThan?: number): void;
+		delete(olderThan?: number): Promise<void>;
 
 		/**
 		 * Function to query the status of a job
 		 * @param jobId Job id for which status info is required
 		 */
-		static status(jobId: number): jobDetails;
+		static status(jobId: number): Promise<jobDetails>;
 
 		/**
 		 * Manualy process a specific Job. Returns existing result if job already processed
 		 * @param jobId Id of the job to be processed
 		 * @param processor Function to be called to process the job data, without ctx
 		 */
-		static processJobById(jobId: number, processor: processorCallback): jobDetails;
+		static processJobById(jobId: number, processor: processorCallback): Promise<jobDetails>;
 
 		/**
 		 * Function shuts down the Queue gracefully.
 		 * Waits for active jobs to complete until timeout, then marks them failed.
 		 * @param timeout Time in milliseconds, default = 10000
 		 */
-		static exit(timeout?: number): boolean;
+		static exit(timeout?: number): Promise<boolean>;
 
 	}
 
@@ -1472,6 +1663,11 @@ declare module 'sm-utils' {
 		static globalPrefix: string;
 		static useLocalCache: boolean;
 		static logger: Partial<Console>;
+		static defaultRedisConf: {
+			host: string;
+			port: number;
+			password?: string;
+		};
 		/**
 		 * this causes performace issues, use only when debugging
 		 */
@@ -1513,27 +1709,23 @@ declare module 'sm-utils' {
 		 * gets a value from the cache immediately without waiting
 		 * @param key
 		 * @param defaultValue
-		 * @param options object of {
-		 *        parse => function to parse when value is fetched from redis
-		 *        }
+		 * @param options
 		 */
-		getStale(key: string, defaultValue: any, options: object): void;
+		getStale(key: string, defaultValue?: any, options?: getRedisOpts): Promise<any>;
 
 		/**
 		 * gets a value from the cache
 		 * @param key
 		 * @param defaultValue
-		 * @param options object of {
-		 *        parse => function to parse when value is fetched from redis
-		 *        }
+		 * @param options
 		 */
-		get(key: string, defaultValue: any, options: object): void;
+		get(key: string, defaultValue?: any, options?: getRedisOpts): Promise<any>;
 
 		/**
 		 * checks if a key exists in the cache
 		 * @param key
 		 */
-		has(key: string): void;
+		has(key: string): Promise<boolean>;
 
 		/**
 		 * sets a value in the cache
@@ -1542,7 +1734,7 @@ declare module 'sm-utils' {
 		 * @param value
 		 * @param options ttl in ms/timestring('1d 3h') or opts (default: 0)
 		 */
-		set(key: string, value: any, options?: number | string | setOpts): boolean;
+		set(key: string, value: any, options?: number | string | setRedisOpts): Promise<boolean>;
 
 		/**
 		 * gets a value from the cache, or sets it if it doesn't exist
@@ -1550,126 +1742,126 @@ declare module 'sm-utils' {
 		 * @param key key to get
 		 * @param value value to set if the key does not exist
 		 * @param options ttl in ms/timestring('1d 3h') (default: 0)
-		 *        or opts with parse and ttl
+		 *	or opts with parse and ttl
 		 */
-		getOrSet(key: string, value: any, options?: number | string | setRedisOpts): any;
+		getOrSet<T>(key: string, value: T | Promise<T> | ((...args: any[]) => T | Promise<T>), options?: number | string | setRedisOpts): Promise<T>;
 
 		/**
 		 * alias for getOrSet
 		 * @param key key to get
 		 * @param value value to set if the key does not exist
 		 * @param options ttl in ms/timestring('1d 3h') (default: 0)
-		 *        or opts with parse and ttl
+		 *	or opts with parse and ttl
 		 */
-		$(key: string, value: any, options?: number | string | setRedisOpts): any;
+		$<T>(key: string, value: T | Promise<T> | ((...args: any[]) => T | Promise<T>), options?: number | string | setRedisOpts): Promise<T>;
 
 		/**
 		 * deletes a value from the cache
 		 * @param key
 		 */
-		del(key: string): void;
+		del(key: string): Promise<void>;
 
 		/**
 		 * NOTE: this method is expensive, so don't use it unless absolutely necessary
 		 */
-		size(): number;
+		size(): Promise<number>;
 
 		/**
 		 * clears the cache (deletes all keys)
 		 * NOTE: this method is expensive, so don't use it unless absolutely necessary
 		 */
-		clear(): void;
+		clear(): Promise<void>;
 
 		/**
 		 * memoizes a function (caches the return value of the function)
 		 * @param key cache key with which to memoize the results
 		 * @param fn function to memoize
 		 * @param options ttl in ms/timestring('1d 3h') (default: 0)
-		 *        or opts with parse and ttl
+		 *	or opts with parse and ttl
 		 */
-		memoize(key: string, fn: Function, options?: number | string | setRedisOpts): Function;
+		memoize<T, U extends any[]>(key: string, fn: ((...args: U) => T | Promise<T>), options?: number | string | setRedisOpts): (...args: U) => Promise<T>;
 
 		/**
 		 * delete everything from cache if the key includes a particular string
 		 * to delete everything from cache, use `_all_` as string
 		 * @param str
 		 */
-		delContains(str: string): number;
+		delContains(str: string): Promise<number>;
 
 		/**
 		 * Return a global instance of Redis cache
 		 * @param redis redis redisConf
 		 */
-		static globalCache(redis: object): RedisCache;
+		static globalCache<T extends RedisCache>(this: Constructor<T>, redis: object): T;
 
 		/**
 		 * gets a value from the cache immediately without waiting
 		 * @param key
 		 * @param defaultValue
 		 */
-		static getStale(key: string, defaultValue: any): void;
+		static getStale(key: string, defaultValue: any): Promise<any>;
 
 		/**
 		 * gets a value from the global cache
 		 * @param key
 		 * @param defaultValue
 		 */
-		static get(key: string, defaultValue: any): void;
+		static get(key: string, defaultValue: any): Promise<any>;
 
 		/**
 		 * checks if a key exists in the global cache
 		 * @param key
 		 */
-		static has(key: string): void;
+		static has(key: string): Promise<boolean>;
 
 		/**
 		 * sets a value in the global cache
 		 * @param key
 		 * @param value
 		 * @param options ttl in ms/timestring('1d 3h') (default: 0)
-		 *        or opts with parse and ttl
+		 *	or opts with parse and ttl
 		 */
-		static set(key: string, value: any, options?: number | string | setRedisOpts): boolean;
+		static set(key: string, value: any, options?: number | string | setRedisOpts): Promise<boolean>;
 
 		/**
 		 * gets a value from the global cache, or sets it if it doesn't exist
 		 * @param key key to get
 		 * @param value value to set if the key does not exist
 		 * @param options ttl in ms/timestring('1d 3h') (default: 0)
-		 *        or opts with parse and ttl
+		 *	or opts with parse and ttl
 		 */
-		static getOrSet(key: string, value: any, options?: number | string | setRedisOpts): void;
+		static getOrSet<T>(key: string, value: T | Promise<T> | ((...args: any[]) => T | Promise<T>), options?: number | string | setRedisOpts): Promise<T>;
 
 		/**
 		 * alias for getOrSet
 		 * @param key key to get
 		 * @param value value to set if the key does not exist
 		 * @param options ttl in ms/timestring('1d 3h') (default: 0)
-		 *        or opts with parse and ttl
+		 *	or opts with parse and ttl
 		 */
-		static $(key: string, value: any, options?: number | string | setRedisOpts): void;
+		static $<T>(key: string, value: T | Promise<T> | ((...args: any[]) => T | Promise<T>), options?: number | string | setRedisOpts): Promise<T>;
 
 		/**
 		 * deletes a value from the global cache
 		 * @param key
 		 */
-		static del(key: string): void;
+		static del(key: string): Promise<void>;
 
-		static size(): number;
+		static size(): Promise<number>;
 
 		/**
 		 * clears the global cache (deletes all keys)
 		 */
-		static clear(): void;
+		static clear(): Promise<void>;
 
 		/**
 		 * memoizes a function (caches the return value of the function)
 		 * @param key
 		 * @param fn
 		 * @param options ttl in ms/timestring('1d 3h') (default: 0)
-		 *        or opts with parse and ttl
+		 *	or opts with parse and ttl
 		 */
-		static memoize(key: string, fn: Function, options?: number | string | setRedisOpts): Function;
+		static memoize<T, U extends any[]>(key: string, fn: ((...args: U) => T | Promise<T>), options?: number | string | setRedisOpts): (...args: U) => Promise<T>;
 
 	}
 
@@ -1686,15 +1878,18 @@ declare module 'sm-utils' {
 		logger?: Partial<Console>;
 	}
 
-	interface setRedisOpts {
-		/**
-		 * in ms / timestring ('1d 3h') default: 0
-		 */
-		ttl: number | string;
+	interface getRedisOpts {
 		/**
 		 * function to parse when value is fetched from redis
 		 */
-		parse: Function;
+		parse?: (val: any) => Promise<any> | any;
+	}
+
+	interface setRedisOpts extends getRedisOpts{
+		/**
+		 * in ms / timestring ('1d 3h') default: 0
+		 */
+		ttl?: number | string;
 	}
 
 	/**
@@ -1721,7 +1916,7 @@ declare module 'sm-utils' {
 		 * @param options
 		 * @param options.useNative Use local module if available
 		 */
-		function requireModule(moduleName: string, options?: requireModule_options): any;
+		function requireModule(moduleName: string, options?: resolve_options): any;
 
 		/**
 		 * Require a global module
@@ -1739,14 +1934,7 @@ declare module 'sm-utils' {
 		/**
 		 * Use local module if available
 		 */
-		useNative: boolean;
-	}
-
-	interface requireModule_options {
-		/**
-		 * Use local module if available
-		 */
-		useNative: boolean;
+		useNative?: boolean;
 	}
 
 	/**
@@ -1838,166 +2026,165 @@ declare module 'sm-utils' {
 		 * Stringifies an object only if it is not already a string
 		 * If it is already a string returns the string itself
 		 * If it is undefined, returns 'null'
-         * @param obj
-         */
-        function tryStringifyJson(obj: any): string;
+		 * @param obj
+		 */
+		function tryStringifyJson(obj: any): string;
 
-        /**
-         * Strip html tags from a string
-         * @param str the string to remove tags from
-         * @param options object containing:
-         *        allowed: array of allowed tags eg. ['p', 'b', 'span'], default: []
-         *        blocked: array of blocked tags eg. ['p'], default: []
-         *        replaceWith: replace the removed tags with this string, default: ''
-         *
-         *        if allowed is not given and blocked is given
-         *        then by default all tags not mentioned in blocked are allowed
-         */
-        function stripTags(str: string, options: object): string;
+		/**
+		 * Strip html tags from a string
+		 * @param str the string to remove tags from
+		 * @param options object containing:
+		 *	allowed: array of allowed tags eg. ['p', 'b', 'span'], default: []
+		 *	blocked: array of blocked tags eg. ['p'], default: []
+		 *	replaceWith: replace the removed tags with this string, default: ''
+		 *
+		 *	if allowed is not given and blocked is given
+		 *	then by default all tags not mentioned in blocked are allowed
+		 */
+		function stripTags(str: string, options: object): string;
 
-        /**
-         * Escape a string for including in regular expressions
-         * @param str string to escape
-         */
-        function escapeRegex(str: string): string;
+		/**
+		 * Escape a string for including in regular expressions
+		 * @param str string to escape
+		 */
+		function escapeRegex(str: string): string;
 
-        /**
-         * Convert a number into words
-         * @param number
-         */
-        function numberToWords(number: number): string;
+		/**
+		 * Convert a number into words
+		 * @param number
+		 */
+		function numberToWords(number: number): string;
+	}
 
-    }
+	interface numberFormatOpts {
+		/**
+		 * like 'en-IN'
+		 */
+		locale?: string;
+		/**
+		 * like 'INR'
+		 */
+		currency?: string;
+		/**
+		 * number of decimal places to return
+		 */
+		decimals?: number;
+	}
 
-    interface numberFormatOpts {
-        /**
-         * like 'en-IN'
-         */
-        locale: string;
-        /**
-         * like 'INR'
-         */
-        currency: string;
-        /**
-         * number of decimal places to return
-         */
-        decimals: number;
-    }
+	/**
+	 * System and process utilities
+	 */
+	namespace System {
+		/**
+		 * Execute the given command in a shell.
+		 * @param command
+		 * @param options options object
+		 *	options: {timeout (in ms), cwd, uid, gid, env (object), shell (eg. /bin/sh), encoding}
+		*/
+		function exec(command: string, options: object): Promise<processObject>;
 
-    /**
-     * System and process utilities
-     */
-    namespace System {
-        /**
-         * Execute the given command in a shell.
-         * @param command
-         * @param options options object
-         *        options: {timeout (in ms), cwd, uid, gid, env (object), shell (eg. /bin/sh), encoding}
-         */
-        function exec(command: string, options: object): Promise<processObject>;
+		/**
+		 * Similar to exec but instead executes a given file
+		 * @param args
+		 */
+		function execFile(...args: any[]): Promise<processObject>;
 
-        /**
-         * Similar to exec but instead executes a given file
-         * @param args
-         */
-        function execFile(...args: any[]): Promise<processObject>;
+		/**
+		 * execute a command and return its output
+		 * @param args
+		 */
+		function execOut(...args: any[]): Promise<string>;
 
-        /**
-         * execute a command and return its output
-         * @param args
-         */
-        function execOut(...args: any[]): string;
+		/**
+		 * execute a file and return its output
+		 * @param args
+		 */
+		function execFileOut(...args: any[]): Promise<string>;
 
-        /**
-         * execute a file and return its output
-         * @param args
-         */
-        function execFileOut(...args: any[]): string;
+		/**
+		 * turn off umask for the current process
+		 */
+		function noUmask(): number;
 
-        /**
-         * turn off umask for the current process
-         */
-        function noUmask(): number;
+		/**
+		 * restores (turns on) the previous umask
+		 */
+		function yesUmask(): number;
 
-        /**
-         * restores (turns on) the previous umask
-         */
-        function yesUmask(): number;
+		/**
+		 * get the uid of the user running current process
+		 */
+		function getuid(): number;
 
-        /**
-         * get the uid of the user running current process
-         */
-        function getuid(): number;
+		/**
+		 * get user info from username or uid
+		 * currently gets user info from /etc/passwd
+		 * @param user username or uid
+		 */
+		function getUserInfo(user: string | number): Promise<object>;
 
-        /**
-         * get user info from username or uid
-         * currently gets user info from /etc/passwd
-         * @param user username or uid
-         */
-        function getUserInfo(user: string | number): object;
+		/**
+		 * get all users in the system
+		 * currently gets user info from /etc/passwd
+		 */
+		function getAllUsers(): Promise<{[username: string]: object}>;
 
-        /**
-         * get all users in the system
-         * currently gets user info from /etc/passwd
-         */
-        function getAllUsers(): object;
+		/**
+		 * get current time in seconds
+		 */
+		function time(): number;
 
-        /**
-         * get current time in seconds
-         */
-        function time(): number;
+		/**
+		 * get current time in milliseconds (as double)
+		 */
+		function millitime(): number;
 
-        /**
-         * get current time in milliseconds (as double)
-         */
-        function millitime(): number;
+		/**
+		 * get current time in nanoseconds (as double)
+		 */
+		function nanotime(): number;
 
-        /**
-         * get current time in nanoseconds (as double)
-         */
-        function nanotime(): number;
+		/**
+		 * get current time in microseconds (as double)
+		 */
+		function microtime(): number;
 
-        /**
-         * get current time in microseconds (as double)
-         */
-        function microtime(): number;
+		/**
+		 * Sleep for a specified time (in milliseconds)
+		 * Example: await System.sleep(2000);
+		 */
+		function sleep(): Promise<void>;
 
-        /**
-         * Sleep for a specified time (in milliseconds)
-         * Example: await System.sleep(2000);
-         */
-        function sleep(): Promise<void>;
+		/**
+		 * wait till the next event loop cycle
+		 * this function is useful if we are running a long blocking task
+		 * and need to make sure that other callbacks can complete.
+		 */
+		function tick(): Promise<void>;
 
-        /**
-         * wait till the next event loop cycle
-         * this function is useful if we are running a long blocking task
-         * and need to make sure that other callbacks can complete.
-         */
-        function tick(): Promise<void>;
+		/**
+		 * exit and kill the process gracefully (after completing all onExit handlers)
+		 * code can be an exit code or a message (string)
+		 * if a message is given then it will be logged to console before exiting
+		 * @param code exit code or the message to be logged
+		 */
+		function exit(code: number | string): never;
 
-        /**
-         * exit and kill the process gracefully (after completing all onExit handlers)
-         * code can be an exit code or a message (string)
-         * if a message is given then it will be logged to console before exiting
-         * @param code exit code or the message to be logged
-         */
-        function exit(code: number | string): void;
+		/**
+		 * force exit the process
+		 * no onExit handler will run when force exiting a process
+		 * same as original process.exit (which we override)
+		 * @param code exit code or the message to be logged
+		 */
+		function forceExit(code: number | string): never;
 
-        /**
-         * force exit the process
-         * no onExit handler will run when force exiting a process
-         * same as original process.exit (which we override)
-         * @param code exit code or the message to be logged
-         */
-        function forceExit(code: number | string): void;
-
-        /**
-         * Add an exit handler that runs when process receives an exit signal
-         * callback can be an async function, process will exit when all handlers have completed
-         * @param callback function to call on exit
-         * @param options can be {timeout} or a number
-         */
-        function onExit(callback: Function, options?: number | timeoutOpts): Promise<void>;
+		/**
+		 * Add an exit handler that runs when process receives an exit signal
+		 * callback can be an async function, process will exit when all handlers have completed
+		 * @param callback function to call on exit
+		 * @param options can be {timeout} or a number
+		 */
+		function onExit(callback: Function, options?: number | timeoutOpts): Promise<void>;
 
 		/**
 		 * install graceful server exit handler on a tcp server
@@ -2019,195 +2206,196 @@ declare module 'sm-utils' {
 		 * @returns the current branch name, empty string if not found
 		 */
 		function getGitBranch(): Promise<string>;
-    }
+	}
 
-    interface processObject {
-        childProcess: ChildProcess;
-        stdout: Buffer;
-        stderr: Buffer;
-    }
+	interface processObject {
+		childProcess: ChildProcess;
+		stdout: Buffer;
+		stderr: Buffer;
+	}
 
-    interface timeoutOpts {
-        /**
-         * Milliseconds before timing out (default 10000)
-         */
-        timeout?: number;
-    }
+	interface timeoutOpts {
+		/**
+		 * Milliseconds before timing out (default 10000)
+		 */
+		timeout?: number;
+	}
 
-    /**
-     * Promise utility functions
-     */
-    class Vachan {
-        /**
-         * Promise utility functions
-         */
-        constructor();
+	/**
+	 * Promise utility functions
+	 */
+	class Vachan {
+		/**
+		 * Promise utility functions
+		 */
+		constructor();
 
-        /**
-         * identity function is to make sure returned value is a promise.
-         * returns the following if the input is a:
-         * - promise: returns the promise itself
-         * - function: executes the function and returns the result wrapped in a promise
-         * - any: returns the input wrapped in a promise
-         * @param promise
-         */
-        static identity(promise: Function | Promise<any> | any): Promise<any>;
+		/**
+		 * identity function is to make sure returned value is a promise.
+		 * returns the following if the input is a:
+		 * - promise: returns the promise itself
+		 * - function: executes the function and returns the result wrapped in a promise
+		 * - any: returns the input wrapped in a promise
+		 * @param promise
+		 */
+		static identity<T>(promise: T | Promise<T> | (() => T | Promise<T>)): Promise<T>;
 
-        /**
-         * Execute a promise / function, and exit when it completes
-         * @param promise
-         * @param options
-         */
-        static exit(promise: Promise<any> | Function, options: object): void;
+		/**
+		 * Execute a promise / function, and exit when it completes
+		 * @param promise
+		 * @param options
+		 */
+		static exit(promise: Promise<any> | Function, options: object): never;
 
-        /**
-         * Execute a promise / function, without caring about its results
-         * @param promise
-         * @param options
-         */
-        static exec(promise: Promise<any> | Function, options: object): void;
+		/**
+		 * Execute a promise / function, without caring about its results
+		 * @param promise
+		 * @param options
+		 */
+		static exec(promise: Promise<any> | Function, options: object): void;
 
-        /**
-         * create a lazy promise from an executor function ((resolve, reject) => {})
-         * a lazy promise defers execution till .then() or .catch() is called
-         * @param executor function(resolve, reject) {}, same as promise constructor
-         */
-        static lazy(executor: Function): Promise<any>;
+		/**
+		 * create a lazy promise from an executor function ((resolve, reject) => {})
+		 * a lazy promise defers execution till .then() or .catch() is called
+		 * @param executor function(resolve, reject) {}, same as promise constructor
+		 */
+		static lazy<T>(executor: (resolve: (val: T) => void, reject: (reason: Error) => void) => void): Promise<T>;
 
-        /**
-         * create a lazy promise from an async function
-         * a lazy promise defers execution till .then() or .catch() is called
-         */
-        static lazyFrom(): void;
+		/**
+		 * create a lazy promise from an async function
+		 * a lazy promise defers execution till .then() or .catch() is called
+		 */
+		static lazyFrom<T>(asyncFunction: () => T | Promise<T>): Promise<T>;
 
-        /**
-         * Returns a promise that resolves after the specified duration
-         * Can be used to delay / sleep
-         * Example: await Vachan.sleep(2000);
-         * @param duration milliseconds to delay for
-         */
-        static sleep(duration: number): void;
+		/**
+		 * Returns a promise that resolves after the specified duration
+		 * Can be used to delay / sleep
+		 * Example: await Vachan.sleep(2000);
+		 * @param duration milliseconds to delay for
+		 */
+		static sleep(duration: number): Promise<void>;
 
-        /**
-         * Promise.finally polyfill
-         * Invoked when the promise is settled regardless of outcome
-         * @see https://github.com/sindresorhus/p-finally
-         * @param promise
-         * @param onFinally
-         */
-        static finally(promise: Promise<any>, onFinally: Function): Promise<any>;
+		/**
+		 * Promise.finally polyfill
+		 * Invoked when the promise is settled regardless of outcome
+		 * @see https://github.com/sindresorhus/p-finally
+		 * @param promise
+		 * @param onFinally
+		 */
+		static finally<T>(promise: Promise<T>, onFinally: () => void): Promise<T>;
 
-        /**
-         * Returns a promise the rejects on specified timeout
-         * @param promise A Promise or an async function
-         * @param options can be {timeout} or a number
-         *        timeout: Milliseconds before timing out
-         */
-        static timeout(promise: Promise<any> | Function, options: object | number): void;
+		/**
+		 * Returns a promise the rejects on specified timeout
+		 * @param promise A Promise or an async function
+		 * @param options can be {timeout} or a number
+		 *	timeout: Milliseconds before timing out
+		*/
+		static timeout<T>(promise: T | Promise<T> | (() => T | Promise<T>), options?: {timeout?: number} | number): Promise<T>;
 
-        /**
-         * Returns a Promise that resolves when condition returns true.
-         * Rejects if condition throws or returns a Promise that rejects.
-         * @see https://github.com/sindresorhus/p-wait-for
-         * @param conditionFn function that returns a boolean
-         * @param options can be {interval, timeout} or a number
-         *        interval: Number of milliseconds to wait before retrying condition (default 50)
-         *        timeout: will reject the promise on timeout (in ms)
-         */
-        static waitFor(conditionFn: Function, options: object | number): void;
+		/**
+		 * Returns a Promise that resolves when condition returns true.
+		 * Rejects if condition throws or returns a Promise that rejects.
+		 * @see https://github.com/sindresorhus/p-wait-for
+		 * @param conditionFn function that returns a boolean
+		 * @param options can be {interval, timeout} or a number
+		 * @param options.interval: Number of milliseconds to wait before retrying condition (default 50)
+		 * @param options.timeout: will reject the promise on timeout (in ms)
+		 */
+		static waitFor(conditionFn: () => boolean | Promise<boolean>, options?: {interval?: number, timeout?: number} | number): Promise<void>;
 
-        /**
-         * Returns an async function that delays calling fn
-         * until after wait milliseconds have elapsed since the last time it was called
-         * @see https://github.com/sindresorhus/p-debounce
-         * @param fn function to debounce
-         * @param delay ms to wait before calling fn.
-         * @param options object of {leading, fixed}
-         *        leading: (default false)
-         *        Call the fn on the leading edge of the timeout.
-         *        Meaning immediately, instead of waiting for wait milliseconds.
-         *        fixed: fixed delay, each call won't reset the timer to 0
-         */
-        static debounce(fn: Function, delay: number, options: object): void;
+		/**
+		 * Returns an async function that delays calling fn
+		 * until after wait milliseconds have elapsed since the last time it was called
+		 * @see https://github.com/sindresorhus/p-debounce
+		 * @param fn function to debounce
+		 * @param delay ms to wait before calling fn.
+		 * @param options object of {leading, fixed}
+		 * @param options.leading: (default false)
+		 *	Call the fn on the leading edge of the timeout.
+		*	Meaning immediately, instead of waiting for wait milliseconds.
+		* @param options.fixed: fixed delay, each call won't reset the timer to 0
+		*/
+		static debounce<T, U extends any[]>(fn: (...args: U) => T, delay: number, options?: {leading?: boolean, fixed?: boolean}): (...args: U) => Promise<T>;
 
-        /**
-         * Returns a Promise that is fulfilled when all promises in input
-         * and ones returned from mapper are fulfilled, or rejects if any
-         * of the promises reject. The fulfilled value is an Array of the
-         * fulfilled values returned from mapper in input order.
-         * @param iterable collection to iterate over
-         * @param mapper The function invoked per iteration, should return a promise
-         *        mapper is invoked with (value, index|key, iterable)
-         * @param options object of {concurrency}
-         *        concurrency: Number of maximum concurrently running promises, default is Infinity
-         */
-        static promiseMap(iterable: any[] | object | Map<any, any> | Set<any>, mapper: Function, options: object): Promise<Array<any>>;
+		/**
+		 * Returns a Promise that is fulfilled when all promises in input
+		 * and ones returned from mapper are fulfilled, or rejects if any
+		 * of the promises reject. The fulfilled value is an Array of the
+		 * fulfilled values returned from mapper in input order.
+		 * @param iterable collection to iterate over
+		 * @param mapper The function invoked per iteration, should return a promise
+		 *	mapper is invoked with (value, index|key, iterable)
+		* @param options object of {concurrency}
+		*	concurrency: Number of maximum concurrently running promises, default is Infinity
+		*/
+		static map<T, U>(iterable: Iterable<T>, mapper: (value?: T, index?: number | string, iterable?: Iterable<T>) => U, options?: {concurrency: number}): Promise<U[]>;
+		static map<T, U>(iterable: {[key: string]: T}, mapper: (value?: T, index?: string, iterable?: {[key: string]: T}) => U, options?: {concurrency: number}): Promise<U[]>;
+		/**
+		 * Like promiseMap but for keys
+		 * @param iterable
+		 * @param mapper
+		 * @param options
+		 */
+		static mapKeys<T>(iterable: Iterable<T>, mapper: (value?: T, key?: number | string, iterable?: Iterable<T>) => string, options?: {concurrency: number}): Promise<{[key: string]: T}>;
+		static mapKeys<T>(iterable: {[key: string]: T}, mapper: (value?: T, key?: number | string, iterable?: {[key: string]: T}) => string, options?: {concurrency: number}): Promise<{[key: string]: T}>;
 
-        /**
-         * Like promiseMap but for keys
-         * @param iterable
-         * @param mapper
-         * @param options
-         */
-        static promiseMapKeys(iterable: any[] | object | Map<any, any> | Set<any>, mapper: Function, options: object): Promise<Array<any>>;
+		/**
+		 * Like promiseMap but for values
+		 * @param iterable
+		 * @param mapper
+		 * @param options
+		 */
+		static mapValues<T, U>(iterable: Iterable<T>, mapper: (value?: T, key?: number | string, iterable?: Iterable<T>) => U, options?: {concurrency: number}): Promise<{[key: string]: U}>;
+		static mapValues<T, U>(iterable: {[key: string]: T}, mapper: (value?: T, key?: string, iterable?: {[key: string]: T}) => U, options?: {concurrency: number}): Promise<{[key: string]: U}>;
+	}
 
-        /**
-         * Like promiseMap but for values
-         * @param iterable
-         * @param mapper
-         * @param options
-         */
-        static promiseMapValues(iterable: any[] | object | Map<any, any> | Set<any>, mapper: Function, options: object): Promise<Array<any>>;
+	namespace cfg {
+		/**
+		 *
+		 * @param key
+		 * @param defaultValue
+		 */
+		function get(key: string, defaultValue: any): any;
 
-    }
+		/**
+		 * set values in global config
+		 * you can also give key as an object to assign all key values from it
+		 */
+		function set(): null;
 
-    namespace cfg {
-        /**
-         *
-         * @param key
-         * @param defaultValue
-         */
-        function get(key: string, defaultValue: any): any;
+		/**
+		 * set values in global config with an object to assign all key values from it
+		 * if a key already exists then it is merged with new value
+		 * if obj is not an Object then nothing happens
+		 */
+		function merge(): null;
 
-        /**
-         * set values in global config
-         * you can also give key as an object to assign all key values from it
-         */
-        function set(): null;
+		/**
+		 * set values in global config with an object to assign all key values from it
+		 * if a key already exists then it is assigned with new value
+		 * if obj is not an Object then nothing happens
+		 */
+		function assign(): null;
 
-        /**
-         * set values in global config with an object to assign all key values from it
-         * if a key already exists then it is merged with new value
-         * if obj is not an Object then nothing happens
-         */
-        function merge(): null;
+		/* Illegal function name 'delete' can't be used here
+		delete: (key: string) => void;
+		*/
 
-        /**
-         * set values in global config with an object to assign all key values from it
-         * if a key already exists then it is assigned with new value
-         * if obj is not an Object then nothing happens
-         */
-        function assign(): null;
+		/**
+		 * read config from a file, and merge with existing config
+		 * @param file path of the file to read (only absolute paths)
+		 * @param options
+		 * @param options.ignoreErrors ignore all errors
+		 * @param options.ignoreNotFound ignore if file not found
+		 * @param options.overwrite Overwrite config not merge
+		 */
+		function file(file: string, options: {ignoreErrors: boolean, ignoreNotFound: boolean, overwrite: boolean}): void;
 
-        /* Illegal function name 'delete' can't be used here
-        function delete(): void;
-        */
-
-        /**
-         * read config from a file, and merge with existing config
-         * @param file path of the file to read (only absolute paths)
-         * @param options
-         * @param options.ignoreErrors ignore all errors
-         * @param options.ignoreNotFound ignore if file not found
-         * @param options.overwrite Overwrite config not merge
-         */
-        function file(file: string, options: {ignoreErrors: boolean, ignoreNotFound: boolean, overwrite: boolean}): void;
-
-        /**
-         * read the file specified by the key, and then cache it
-         * @param key
-         */
-        function read(key: string): any;
+		/**
+		 * read the file specified by the key, and then cache it
+		 * @param key
+		 */
+		function read(key: string): any;
 
 		function getEnv(): string;
 
@@ -2221,9 +2409,9 @@ declare module 'sm-utils' {
 		function isStaging(): boolean;
 		function is_staging(): boolean;
 
-        /**
-         * Returns true if env is production or staging
-         */
+		/**
+		 * Returns true if env is production or staging
+		 */
 		function isProductionLike(): boolean;
 		function isProdLike(): boolean;
 
@@ -2237,18 +2425,18 @@ declare module 'sm-utils' {
 		function isDevelopment(): boolean;
 		function is_dev(): boolean;
 
-    }
+	}
 
-    /**
-     * Reads a config value
-     * @param key key to read, can be nested like `a.b.c`
-     * @param defaultValue value to return if key is not found
-     */
-    function cfg(key: string, defaultValue?: any): any
+	/**
+	 * Reads a config value
+	 * @param key key to read, can be nested like `a.b.c`
+	 * @param defaultValue value to return if key is not found
+	 */
+	function cfg(key: string, defaultValue?: any): any
 
-    const crypt: typeof Crypt;
+	const crypt: typeof Crypt;
 
-    const system: typeof System;
+	const system: typeof System;
 
-    const baseConvert: typeof Crypt.baseConvert;
+	const baseConvert: typeof Crypt.baseConvert;
 }

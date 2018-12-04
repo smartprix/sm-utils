@@ -1,29 +1,25 @@
 const _ = require('lodash');
 const {promisify} = require('util');
 const _path = require('path');
-const System = require('./System');
 const _fs = require('fs');
+const System = require('./System');
 
 // TODO: replace this with fs.promises when it becomes stable
-const fs = {};
-const methods = [
-	'lstat',
-	'stat',
-	'chmod',
-	'realpath',
-	'copyFile',
-	'appendFile',
-	'writeFile',
-	'readFile',
-	'mkdir',
-	'chown',
-	'rename',
-	'unlink',
-	'rmdir',
-];
-methods.forEach((method) => {
-	fs[method] = promisify(_fs[method]);
-});
+const fs = {
+	lstat: promisify(_fs.lstat),
+	stat: promisify(_fs.stat),
+	chmod: promisify(_fs.chmod),
+	realpath: promisify(_fs.realpath),
+	copyFile: promisify(_fs.copyFile),
+	appendFile: promisify(_fs.appendFile),
+	writeFile: promisify(_fs.writeFile),
+	readFile: promisify(_fs.readFile),
+	mkdir: promisify(_fs.mkdir),
+	chown: promisify(_fs.chown),
+	rename: promisify(_fs.rename),
+	unlink: promisify(_fs.unlink),
+	rmdir: promisify(_fs.rmdir),
+};
 
 const moduleCache = {};
 function getModule(name) {
@@ -340,7 +336,7 @@ class File {
 	/**
 	 * Perform a glob search with the path of the file as the pattern.
 	 *
-	 * @return {Array} Array containing the matches
+	 * @return {string[]} Array containing the matches
 	 */
 	async glob() {
 		return getModule('glob')(this.path);
@@ -369,7 +365,6 @@ class File {
 	 *
 	 * @param  {string|Buffer} contents contents to be written to the file
 	 * @param  {object} [options = {}]  contains options for writing to the file
-	 *
 	 * The options can include parameters such as fileMode, dirMode, retries and encoding.
 	 */
 	async write(contents, options = {}) {

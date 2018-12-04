@@ -3,6 +3,7 @@
 		"lib": ["es2016"]
 	},
 	"include": [
-		"index.d.ts"
+		"index.d.ts",
+		"d/index.d.ts"
 	],
 }

@@ -16,10 +16,14 @@ declare module 'sm-utils/d' {
      */
     function d(...args: any[]): void;
 
-    function trace(error?: string | Error) : void;
-    function getTrace(error?: Error) : any;
-    function dump(...args: any[]): void;
-    function enableUncaughtHandler(options?: uncaughtHandlerOpts): void;
-    function disableUncaughtHandler(options?: uncaughtHandlerOpts): void;
+    namespace d {
+        function trace(error?: string | Error) : void;
+        function getTrace(error?: Error) : any;
+        function dump(...args: any[]): void;
+        function enableUncaughtHandler(options?: uncaughtHandlerOpts): void;
+        function disableUncaughtHandler(options?: uncaughtHandlerOpts): void;
+    }
+
+    export = d;
 
 }

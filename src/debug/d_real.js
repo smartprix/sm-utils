@@ -4,10 +4,10 @@ import System from '../System';
 // increase error stack trace limit
 Error.stackTraceLimit = 30;
 
-const stackTrace = require('./stack_trace');
-const nodeUtil = require('./node_util_copy');
 const chalk = require('chalk');
 const _ = require('lodash');
+const stackTrace = require('./stack_trace');
+const nodeUtil = require('./node_util_copy');
 
 function errorFrameToString(frame, background = 'magenta', foreground = 'white') {
 	const fileName = frame.getRelativeFileName();

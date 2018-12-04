@@ -86,7 +86,7 @@ class Connect {
 	/**
 	 * Set the url for the connection.
 	 *
-	 * @param {string} url self-descriptive
+	 * @param {string} url
 	 * @return {Connect} self
 	 */
 	url(url) {
@@ -98,7 +98,7 @@ class Connect {
 	 * @static
 	 * Creates and returns a new Connect object with the given url.
 	 *
-	 * @param  {string} url self-descriptive
+	 * @param  {string} url
 	 * @return {Connect}    A new Connect object with url set to the given url
 	 */
 	static url(url) {
@@ -232,8 +232,8 @@ class Connect {
 	 *
 	 * @param  {string|boolean|object} cookieName  represents the name of the
 	 * cookie to be set, or the cookies object
-	 * @param  {object} cookieValue                cookie value to be set
-	 * @return {Connect}                           self
+	 * @param  {any} [cookieValue] cookie value to be set
+	 * @return {Connect} self
 	 */
 	cookie(cookieName, cookieValue) {
 		if (cookieName === true && cookieValue === undefined) {
@@ -271,7 +271,7 @@ class Connect {
 	/**
 	 * Enable global cookies.
 	 *
-	 * @param  {boolean} [enableGlobalCookies=true] self-descriptive
+	 * @param  {boolean} [enableGlobalCookies=true]
 	 * @return {Connect}                            self
 	 */
 	globalCookies(enableGlobalCookies = true) {
@@ -339,7 +339,7 @@ class Connect {
 	 * representing the field-names and their values as key:value pairs.
 	 *
 	 * @param  {string|object} fieldName name of the field to be set, or the fields object
-	 * @param  {*} fieldValue            value to be set
+	 * @param  {*} [fieldValue]          value to be set
 	 * @return {Connect}                 self
 	 */
 	field(fieldName, fieldValue) {
@@ -377,10 +377,16 @@ class Connect {
 	}
 
 	/**
+	 * @typedef {object} auth
+	 * @property {string} username
+	 * @property {string} password
+	 */
+
+	/**
 	 * Set username and password for authentication.
 	 *
-	 * @param  {string} username self-descriptive
-	 * @param  {string} password self-descriptive
+	 * @param  {string | auth} username
+	 * @param  {string} password
 	 * @return {Connect}         self
 	 */
 	httpAuth(username, password) {
@@ -426,8 +432,8 @@ class Connect {
 	/**
 	 * Set address and port for an http proxy.
 	 *
-	 * @param  {string} proxyAddress self-descriptive
-	 * @param  {number} proxyPort    self-descriptive
+	 * @param  {string} proxyAddress
+	 * @param  {number} proxyPort
 	 * @return {Connect}             self
 	 */
 	httpProxy(proxyAddress, proxyPort) {
@@ -443,8 +449,8 @@ class Connect {
 	/**
 	 * Set address and port for a socks proxy.
 	 *
-	 * @param  {string} proxyAddress self-descriptive
-	 * @param  {number} proxyPort    self-descriptive
+	 * @param  {string} proxyAddress
+	 * @param  {number} proxyPort
 	 * @return {Connect}             self
 	 */
 	socksProxy(proxyAddress, proxyPort) {
@@ -460,8 +466,8 @@ class Connect {
 	/**
 	 * Set username and password for proxy.
 	 *
-	 * @param  {string} username self-descriptive
-	 * @param  {string} password self-descriptive
+	 * @param  {string} username
+	 * @param  {string} password
 	 * @return {Connect}         self
 	 */
 	proxyAuth(username, password) {
@@ -524,7 +530,7 @@ class Connect {
 	/**
 	 * Set if the body is to be returned as a buffer
 	 *
-	 * @param  {boolean} [returnAsBuffer=true] self-descriptive
+	 * @param  {boolean} [returnAsBuffer=true]
 	 * @return {Connect}                       self
 	 */
 	asBuffer(returnAsBuffer = true) {
@@ -535,7 +541,7 @@ class Connect {
 	/**
 	 * Set the path for file for saving the response.
 	 *
-	 * @param  {string} filePath self-descriptive
+	 * @param  {string} filePath
 	 * @return {Connect}         self
 	 */
 	save(filePath) {
@@ -657,7 +663,7 @@ class Connect {
 				reject(error);
 				return;
 			}
-			else if (response.statusCode === 407) {
+			if (response.statusCode === 407) {
 				const e = new Error('407 Proxy Authentication Required');
 				e.code = 'EPROXYAUTH';
 				e.timeTaken = Date.now() - startTime;
@@ -723,7 +729,7 @@ class Connect {
 	 *
 	 * @return {Promise<response>} a promise that resolves to response
 	 */
-	fetch() {
+	async fetch() {
 		if (this.promise) return this.promise;
 
 		if (this.timeoutTimer) {
@@ -767,21 +773,23 @@ class Connect {
 	/**
 	 * It is used for method chaining.
 	 *
-	 * @param  {function} successCallback function to be called if the Promise is fulfilled
-	 * @param  {function} errorCallback   function to be called if the Promise is rejected
-	 * @return {Promise<any>}                  a Promise in pending state
+	 * @template T
+	 * @param  {(res: response) => T} successCallback To be called if the Promise is fulfilled
+	 * @param  {(err: Error) => T} [errorCallback] function to be called if the Promise is rejected
+	 * @return {Promise<T>} a Promise in pending state
 	 */
-	then(successCallback, errorCallback) {
+	async then(successCallback, errorCallback) {
 		return this.fetch().then(successCallback, errorCallback);
 	}
 
 	/**
 	 * It is also used for method chaining, but handles rejected cases only.
 	 *
-	 * @param  {function} errorCallback   function to be called if the Promise is rejected
-	 * @return {Promise<any>}                  a Promise in pending state
+	 * @template T
+	 * @param  {(err: Error) => T} errorCallback function to be called if the Promise is rejected
+	 * @return {Promise<T>} a Promise in pending state
 	 */
-	catch(errorCallback) {
+	async catch(errorCallback) {
 		return this.fetch().catch(errorCallback);
 	}
 }
