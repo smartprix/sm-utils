@@ -20,7 +20,7 @@ declare module 'sm-utils' {
 		 * @param defaultValue
 		 */
 		getSync(key: string, defaultValue: any):  any;
-		
+
 		/**
 		 * gets a value from the cache
 		 * @param key
@@ -336,6 +336,12 @@ declare module 'sm-utils' {
 		 * @param shouldFollowRedirect boolean representing whether to follow redirect or not
 		 */
 		followRedirect(shouldFollowRedirect: boolean): this;
+
+		/**
+		 * Set the number of maximum redirects to follow
+		 * @param numRedirects max number of redirects
+		 */
+		maxRedirects(numRedirects: number): this;
 
 		/**
 		 * Set value of a header parameter for the connection.
@@ -2214,7 +2220,7 @@ declare module 'sm-utils' {
 	 */
 	timeout?: number;
 	}
-	
+
 	/**
 	 * Promise utility functions
 	 */
