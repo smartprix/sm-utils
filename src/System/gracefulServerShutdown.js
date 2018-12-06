@@ -2,7 +2,6 @@
  * gracefully shuts downs a http server
  * Partially based on: https://github.com/sebhildebrandt/http-graceful-shutdown
  * LICENSE: MIT
- * @namespace System
  */
 
 const connections = new Map();
