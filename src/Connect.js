@@ -1,4 +1,5 @@
 import path from 'path';
+import {URLSearchParams} from 'url';
 import _ from 'lodash';
 import got from 'got';
 import {CookieJar} from 'tough-cookie';
@@ -63,11 +64,6 @@ class Connect {
 	 * @constructor
 	 */
 	constructor() {
-		/**
-		 * Timeout period for the request in milliseconds
-		 * @private
-		 */
-		this.requestTimeout = 120 * 1000;
 		/**
 		 * Various options (or parameters) defining the Connection
 		 * @private
@@ -696,6 +692,11 @@ class Connect {
 					this.options.body = JSON.stringify(this.options.fields);
 				}
 			}
+			else if (this.isForm()) {
+				if (typeof this.options.body === 'object') {
+					this.options.body = (new URLSearchParams(this.options.body)).toString();
+				}
+			}
 		}
 		else {
 			this.options.query = this.options.query || {};
@@ -710,15 +711,20 @@ class Connect {
 	 * @private
 	 */
 	_addCookies() {
-		if (!this.options.cookies) return;
+		const cookieMap = this.options.cookies || {};
 
 		const cookies = [];
-		_.forEach(this.options.cookies, (value, key) => {
+		_.forEach(cookieMap, (value, key) => {
 			cookies.push(`${key}=${value}`);
 		});
 
 		if (cookies.length) {
-			this.header('Cookie', cookies.join('; '));
+			this.header('cookie', cookies.join('; '));
+		}
+		else if (!this.options.cookieJar) {
+			// set empty cookie header if no cookies exist
+			// this is because some sites expect cookie header to be there
+			this.header('cookie', '');
 		}
 	}
 
@@ -733,7 +739,6 @@ class Connect {
 			decompress: this.options.gzip,
 			followRedirect: this.options.followRedirect,
 			timeout: this.options.timeout,
-			form: this.isForm(),
 			encoding: this.options.encoding,
 			body: this.options.body,
 			headers: this.options.headers,
