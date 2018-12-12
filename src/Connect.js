@@ -786,8 +786,8 @@ class Connect {
 			headers: this.options.headers,
 			method: this.options.method,
 			cookieJar: this.options.cookieJar,
+			rejectUnauthorized: this.options.strictSSL,
 			// max redirects not supported
-			// strictSSL not supported
 		};
 
 		return options;
