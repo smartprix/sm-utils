@@ -87,8 +87,8 @@ class Connect {
 			followRedirect: true,
 			// maximum number of redirects to follow
 			maxRedirects: 6,
-			// whether to ask for gzip response
-			gzip: true,
+			// whether to ask for compressed response (automatically handles accept-encoding)
+			compress: true,
 			// whether to return the result as a stream
 			stream: false,
 			// timeout of the request
@@ -96,6 +96,7 @@ class Connect {
 			// whether to verify ssl certificate
 			strictSSL: false,
 			// proxy details (should be {address, port, type, auth: {username, password}})
+			// type can be http, https, socks
 			proxy: {},
 			// post fields (or query params in case of GET)
 			fields: {},
@@ -406,8 +407,8 @@ class Connect {
 	 * Can also be used to set multiple fields by passing in an object
 	 * representing the field-names and their values as key:value pairs.
 	 *
-	 * @param  {string|object} fieldName name of the field to be set, or the fields object
-	 * @param  {*} [fieldValue] value to be set
+	 * @param {string|object} fieldName name of the field to be set, or the fields object
+	 * @param {string|undefined} [fieldValue] value to be set
 	 * @return {Connect} self
 	 */
 	field(fieldName, fieldValue) {
@@ -430,6 +431,26 @@ class Connect {
 	 */
 	fields(fields) {
 		Object.assign(this.options.fields, fields);
+		return this;
+	}
+
+	/**
+	 * Set value of a query parameter
+	 * Can also be used to set multiple query params by passing in an object
+	 * representing the param-names and their values as key:value pairs.
+	 *
+	 * @param {string|object} fieldName name of the field to be set, or the fields object
+	 * @param {string|undefined} [fieldValue] value to be set
+	 * @return {Connect} self
+	 */
+	query(name, value) {
+		if (typeof name === 'string') {
+			this.options.query[name] = value;
+		}
+		else {
+			Object.assign(this.options.query, name);
+		}
+
 		return this;
 	}
 
@@ -702,6 +723,12 @@ class Connect {
 			this.options.query = this.options.query || {};
 			Object.assign(this.options.query, this.options.body);
 		}
+
+		if (_.isEmpty(this.options.query)) {
+			const qs = (new URLSearchParams(this.options.query)).toString();
+			const joiner = this.options.url.includes('?') ? '&' : '?';
+			this.options.url += (joiner + qs);
+		}
 	}
 
 	/**
@@ -736,7 +763,7 @@ class Connect {
 		const options = {
 			throwHttpErrors: false,
 			agent: this.options.agent,
-			decompress: this.options.gzip,
+			decompress: this.options.compress,
 			followRedirect: this.options.followRedirect,
 			timeout: this.options.timeout,
 			encoding: this.options.encoding,
@@ -745,6 +772,7 @@ class Connect {
 			method: this.options.method,
 			cookieJar: this.options.cookieJar,
 			// max redirects not supported
+			// strictSSL not supported
 		};
 
 		return options;
