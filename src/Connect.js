@@ -4,8 +4,7 @@ import _ from 'lodash';
 import got from 'got';
 import {CookieJar} from 'tough-cookie';
 import FileCookieStore from 'tough-cookie-file-store';
-import SocksHTTPAgent from 'sm-socks5-http-client/lib/Agent';
-import SocksHTTPSAgent from 'socks5-https-client/lib/Agent';
+import ProxyAgent from 'proxy-agent';
 import File from './File';
 import Crypt from './Crypt';
 
@@ -29,13 +28,6 @@ userAgents.desktop = userAgents.chrome;
 userAgents.mobile = userAgents.android;
 userAgents.tablet = userAgents.ipad;
 
-function socksAgent(options) {
-	return {
-		http: new SocksHTTPAgent(options),
-		https: new SocksHTTPSAgent(options),
-	};
-}
-
 /**
  * Returns proxy url based on the proxy options.
  *
@@ -44,15 +36,26 @@ function socksAgent(options) {
  * @private
  */
 function makeProxyUrl(proxy) {
-	let url = proxy.address.replace('http://', '');
-	if (proxy.port) {
-		url = url.split(':')[0] + ':' + proxy.port;
-	}
+	let url = `${proxy.host}:${proxy.port}`;
 	if (proxy.auth && proxy.auth.username) {
 		url = `${encodeURIComponent(proxy.auth.username)}:${encodeURIComponent(proxy.auth.password)}@${url}`;
 	}
 
+	if (proxy.type === 'socks' || proxy.type === 'socks5') {
+		return `socks5h://${url}`;
+	}
+
 	return `http://${url}`;
+}
+
+function httpsProxyAgent(options) {
+	options.type = 'http';
+	return new ProxyAgent(makeProxyUrl(options));
+}
+
+function socksProxyAgent(options) {
+	options.type = 'socks';
+	return new ProxyAgent(makeProxyUrl(options));
 }
 
 /**
@@ -134,6 +137,48 @@ class Connect {
 	static url(url) {
 		const connect = new this();
 		connect.url(url);
+		return connect;
+	}
+
+	/**
+	 * @static
+	 * Creates and returns a new Connect object (with get method) with the given url.
+	 *
+	 * @param {string} url
+	 * @return {Connect} A new Connect object with url set to the given url
+	 */
+	static get(url) {
+		const connect = new this();
+		connect.url(url);
+		connect.get();
+		return connect;
+	}
+
+	/**
+	 * @static
+	 * Creates and returns a new Connect object (with post method) with the given url.
+	 *
+	 * @param {string} url
+	 * @return {Connect} A new Connect object with url set to the given url
+	 */
+	static post(url) {
+		const connect = new this();
+		connect.url(url);
+		connect.post();
+		return connect;
+	}
+
+	/**
+	 * @static
+	 * Creates and returns a new Connect object (with put method) with the given url.
+	 *
+	 * @param {string} url
+	 * @return {Connect} A new Connect object with url set to the given url
+	 */
+	static put(url) {
+		const connect = new this();
+		connect.url(url);
+		connect.put();
 		return connect;
 	}
 
@@ -494,18 +539,17 @@ class Connect {
 	 * @return {Connect} self
 	 */
 	httpAuth(username, password) {
+		let auth = '';
 		if (typeof username === 'string') {
 			// username & password are strings
-			this.options.auth = {
-				username,
-				password,
-			};
+			auth = `Basic ${username}:${password}`;
 		}
 		else if (username.username) {
 			// username argument is an object of {username, password}
-			this.options.auth = username;
+			auth = `Basic ${username.username}:${username.password}`;
 		}
 
+		this.header('authorization', Buffer.from(auth).toString('base64'));
 		return this;
 	}
 
@@ -525,6 +569,14 @@ class Connect {
 				port: null,
 				type: 'http',
 			});
+		}
+		else if (proxy.host) {
+			const proxyCopy = {...proxy};
+			if (proxyCopy.host) {
+				proxyCopy.address = proxyCopy.host;
+				delete proxyCopy.host;
+			}
+			this.options.proxy = proxyCopy;
 		}
 		else {
 			this.options.proxy = proxy;
@@ -679,19 +731,19 @@ class Connect {
 
 		const proxyType = proxy.type || 'http';
 
+		const proxyOpts = {};
+		const address = proxy.address.replace('http://', '');
+		proxyOpts.host = address.split(':')[0];
+		proxyOpts.port = proxy.port || address.split(':')[1] || 1080;
+		if (proxy.auth && proxy.auth.username) {
+			proxyOpts.auth = {...proxy.auth};
+		}
+
 		if (proxyType === 'http' || proxyType === 'https') {
-			this.options.proxy = makeProxyUrl(proxy);
+			this.options.agent = httpsProxyAgent(proxyOpts);
 		}
 		else if (proxyType === 'socks' || proxyType === 'socks5') {
-			const agentOptions = {};
-			agentOptions.socksHost = proxy.address.split(':')[0];
-			agentOptions.socksPort = proxy.port || proxy.address.split(':')[1] || 1080;
-			if (proxy.auth && proxy.auth.username) {
-				agentOptions.socksUsername = proxy.auth.username;
-				agentOptions.socksPassword = proxy.auth.password;
-			}
-
-			this.options.agent = socksAgent(agentOptions);
+			this.options.agent = socksProxyAgent(proxyOpts);
 		}
 	}
 
@@ -725,7 +777,7 @@ class Connect {
 		if (hasBody) {
 			if (this.isJSON()) {
 				if (typeof this.options.body === 'object') {
-					this.options.body = JSON.stringify(this.options.fields);
+					this.options.body = JSON.stringify(this.options.body);
 				}
 			}
 			else if (this.isForm()) {
@@ -736,10 +788,14 @@ class Connect {
 		}
 		else {
 			this.options.query = this.options.query || {};
-			Object.assign(this.options.query, this.options.body);
+			if (this.options.body && (typeof this.options.body === 'object')) {
+				Object.assign(this.options.body, this.options.query);
+				this.options.query = this.options.body;
+				this.options.body = '';
+			}
 		}
 
-		if (_.isEmpty(this.options.query)) {
+		if (!_.isEmpty(this.options.query)) {
 			const qs = (new URLSearchParams(this.options.query)).toString();
 			const joiner = this.options.url.includes('?') ? '&' : '?';
 			this.options.url += (joiner + qs);
@@ -787,6 +843,7 @@ class Connect {
 			method: this.options.method,
 			cookieJar: this.options.cookieJar,
 			rejectUnauthorized: this.options.strictSSL,
+			retry: 0,
 			// max redirects not supported
 		};
 
@@ -858,7 +915,7 @@ class Connect {
 
 			const status = response.statusCode;
 			if (status === 407) {
-				const e = new Error('407 Proxy Authentication Required');
+				const e = new Error('407 Proxy Authentication Failed');
 				e.code = 'EPROXYAUTH';
 				e.timeTaken = Date.now() - startTime;
 				throw e;
@@ -930,6 +987,15 @@ class Connect {
 	 */
 	async catch(errorCallback) {
 		return this.fetch().catch(errorCallback);
+	}
+
+	/**
+	 * finally method of promise returned
+	 * @param {() => T} callback function to be called if the promise is fullfilled or rejected
+	 * @return {Promise<T>} a Promise in pending state
+	 */
+	async finally(callback) {
+		return this.fetch().finally(callback);
 	}
 }
 
