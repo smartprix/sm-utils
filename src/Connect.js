@@ -756,7 +756,7 @@ class Connect {
 
 		const cacheFilePath = path.join(this.resposeCacheDir, cacheKey);
 		try {
-			const contents = File(cacheFilePath).read();
+			const contents = await File(cacheFilePath).read();
 			const response = {
 				body: contents,
 				statusCode: 200,
