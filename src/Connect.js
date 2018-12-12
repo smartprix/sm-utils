@@ -1,6 +1,7 @@
 import path from 'path';
 import _ from 'lodash';
-import request from 'request';
+import got from 'got';
+import {CookieJar} from 'tough-cookie';
 import FileCookieStore from 'tough-cookie-file-store';
 import SocksHTTPAgent from 'sm-socks5-http-client/lib/Agent';
 import SocksHTTPSAgent from 'socks5-https-client/lib/Agent';
@@ -23,8 +24,16 @@ const userAgents = {
 userAgents.windows = userAgents.chrome;
 userAgents.safariMobile = userAgents.iphone;
 userAgents.chromeMobile = userAgents.android;
+userAgents.desktop = userAgents.chrome;
 userAgents.mobile = userAgents.android;
 userAgents.tablet = userAgents.ipad;
+
+function socksAgent(options) {
+	return {
+		http: new SocksHTTPAgent(options),
+		https: new SocksHTTPSAgent(options),
+	};
+}
 
 /**
  * Returns proxy url based on the proxy options.
@@ -64,23 +73,46 @@ class Connect {
 		 * @private
 		 */
 		this.options = {
+			// url to send request at
 			url: null,
+			// method of the request (GET / POST / OPTIONS / DELETE / PATCH / PUT)
 			method: 'GET',
+			// headers to set
 			headers: {
 				'User-Agent': userAgents.chrome,
 				Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
 				'Accept-Language': 'en-US,en;q=0.8',
 			},
+			// object of cookie values to set
 			cookies: {},
-			jar: null,
+			// cookie jar
+			cookieJar: null,
+			// whether to follow redirects
 			followRedirect: true,
+			// maximum number of redirects to follow
 			maxRedirects: 6,
+			// whether to ask for gzip response
 			gzip: true,
-			// timeout: 120 * 1000,
+			// whether to return the result as a stream
+			stream: false,
+			// timeout of the request
+			timeout: 120 * 1000,
+			// whether to verify ssl certificate
 			strictSSL: false,
+			// proxy details (should be {address, port, type, auth: {username, password}})
 			proxy: {},
-			// tunnel: true,
+			// post fields (or query params in case of GET)
 			fields: {},
+			// query params
+			query: {},
+			// encoding of the response, if null body is returned as buffer
+			encoding: 'utf8',
+			// body of the request (valid in case of POST / PUT / PATCH)
+			body: '',
+			// custom http & https agent (should be {http: agent, https: agent})
+			agent: null,
+			// http authentication (should be {username, password})
+			auth: null,
 		};
 	}
 
@@ -99,8 +131,8 @@ class Connect {
 	 * @static
 	 * Creates and returns a new Connect object with the given url.
 	 *
-	 * @param  {string} url
-	 * @return {Connect}    A new Connect object with url set to the given url
+	 * @param {string} url
+	 * @return {Connect} A new Connect object with url set to the given url
 	 */
 	static url(url) {
 		const connect = new this();
@@ -109,22 +141,29 @@ class Connect {
 	}
 
 	/**
-	* @static
+	 * @static
 	 * Returns a new cookie jar.
 	 * @param {Array<any>} args
 	 * @return {CookieJar} A cookie jar
 	 */
 	static newCookieJar(...args) {
-		return request.jar(...args);
+		return new CookieJar(...args);
+	}
+
+	static _getGlobalCookieJar() {
+		if (!this._globalCookieJar) {
+			this._globalCookieJar = this.newCookieJar();
+		}
+		return this._globalCookieJar;
 	}
 
 	/**
 	 * Set or unset the followRedirect option for the connection.
 	 *
-	 * @param  {boolean} shouldFollowRedirect boolean representing whether to follow redirect or not
-	 * @return {Connect}                      self
+	 * @param {boolean} shouldFollowRedirect boolean representing whether to follow redirect or not
+	 * @return {Connect} self
 	 */
-	followRedirect(shouldFollowRedirect) {
+	followRedirect(shouldFollowRedirect = true) {
 		this.options.followRedirect = shouldFollowRedirect;
 		return this;
 	}
@@ -141,16 +180,16 @@ class Connect {
 	/**
 	 * Set value of a header parameter for the connection.
 	 *
-	 * @param  {string} headerName name of the header parameter whose value is to be set
-	 * @param  {*} headerValue     value to be set
-	 * @return {Connect}           self
+	 * @param {string|object} headerName name of the header parameter whose value is to be set
+	 * @param {string|undefined} headerValue value to be set
+	 * @return {Connect} self
 	 */
 	header(headerName, headerValue) {
 		if (typeof headerName === 'string') {
 			this.options.headers[headerName] = headerValue;
 		}
 		else {
-			_.assign(this.options.headers, headerName);
+			Object.assign(this.options.headers, headerName);
 		}
 
 		return this;
@@ -159,32 +198,26 @@ class Connect {
 	/**
 	 * Set value of the headers for the connection.
 	 *
-	 * @param  {object} headers object representing the headers for the connection
-	 * @return {Connect}        self
+	 * @param {object} headers object representing the headers for the connection
+	 * @return {Connect} self
 	 */
 	headers(headers) {
-		_.assign(this.options.headers, headers);
+		Object.assign(this.options.headers, headers);
 		return this;
 	}
 
 	/**
 	 * Set the body of the connection object.
 	 *
-	 * @param  {*} body                    value for body
-	 * @param  {string} [contentType=null] string representing the content type of the body
-	 * @return {Connect}                   self
+	 * @param {any} body value for body
+	 *  if body is an object, contentType will be set to application/json and body will be stringified
+	 * @param {string} [contentType=null] string representing the content type of the body
+	 *  contentType can be null or json
+	 * @return {Connect} self
 	 */
 	body(body, contentType = null) {
-		if (_.isPlainObject(body)) {
-			body = JSON.stringify(body);
-			contentType = 'json';
-		}
-
-		if (contentType === 'json' || this.isJSON()) {
-			this.header('Content-Type', 'application/json');
-			if (typeof body !== 'string') {
-				body = JSON.stringify(body);
-			}
+		if (contentType === 'json') {
+			this.contentType('json');
 		}
 
 		this.options.body = body;
@@ -194,7 +227,7 @@ class Connect {
 	/**
 	 * Set the 'Referer' field in the headers.
 	 *
-	 * @param  {string} referer referer value
+	 * @param {string} referer referer value
 	 * @return {Connect}
 	 */
 	referer(referer) {
@@ -204,9 +237,14 @@ class Connect {
 
 	/**
 	 * Set the 'User-Agent' field in the headers.
+	 * can be either name of the browser / platform or full user agent
+	 * name can be:
+	 *  chrome, firefox, ie, edge, safari, googlebot
+	 *  chromeMobile, safariMobile, googlebotMobile, operaMini
+	 *  windows, android, iphone, ipad, desktop, mobile, tablet
 	 *
-	 * @param  {string} userAgent name of the user-agent or its value
-	 * @return {Connect}          self
+	 * @param {string} userAgent name of the user-agent or its value
+	 * @return {Connect} self
 	 */
 	userAgent(userAgent) {
 		this.header('User-Agent', userAgents[userAgent] || userAgent);
@@ -220,7 +258,16 @@ class Connect {
 	 * @return {Connect}
 	 */
 	contentType(contentType) {
-		this.header('Content-Type', contentType);
+		if (contentType === 'json') {
+			this.header('Content-Type', 'application/json');
+		}
+		else if (contentType === 'form') {
+			this.header('Content-Type', 'application/x-www-form-urlencoded');
+		}
+		else {
+			this.header('Content-Type', contentType);
+		}
+
 		return this;
 	}
 
@@ -234,15 +281,24 @@ class Connect {
 	}
 
 	/**
+	 * Returns whether the content-type is Form or not
+	 *
+	 * @return {boolean} true, if content-type is JSON; false, otherwise
+	 */
+	isForm() {
+		return this.options.headers['Content-Type'] === 'application/x-www-form-urlencoded';
+	}
+
+	/**
 	 * Sets the value of a cookie.
 	 * Can be used to enable global cookies, if cookieName is set to true
 	 * and cookieValue is undefined (or is not passed as an argument).
 	 * Can also be used to set multiple cookies by passing in an object
 	 * representing the cookies and their values as key:value pairs.
 	 *
-	 * @param  {string|boolean|object} cookieName  represents the name of the
+	 * @param {string|boolean|object} cookieName  represents the name of the
 	 * cookie to be set, or the cookies object
-	 * @param  {any} [cookieValue] cookie value to be set
+	 * @param {string|undefined} [cookieValue] cookie value to be set
 	 * @return {Connect} self
 	 */
 	cookie(cookieName, cookieValue) {
@@ -253,7 +309,7 @@ class Connect {
 			this.options.cookies[cookieName] = cookieValue;
 		}
 		else {
-			_.assign(this.options.cookies, cookieName);
+			Object.assign(this.options.cookies, cookieName);
 		}
 
 		return this;
@@ -263,16 +319,16 @@ class Connect {
 	 * Sets multiple cookies.
 	 * Can be used to enable global cookies, if cookies is set to true.
 	 *
-	 * @param  {object|boolean} cookies object representing the cookies
+	 * @param {object|boolean} cookies object representing the cookies
 	 * and their values as key:value pairs.
-	 * @return {Connect}                self
+	 * @return {Connect} self
 	 */
 	cookies(cookies) {
 		if (cookies === true) {
 			this.globalCookies();
 		}
 		else {
-			_.assign(this.options.cookies, cookies);
+			Object.assign(this.options.cookies, cookies);
 		}
 
 		return this;
@@ -281,11 +337,14 @@ class Connect {
 	/**
 	 * Enable global cookies.
 	 *
-	 * @param  {boolean} [enableGlobalCookies=true]
-	 * @return {Connect}                            self
+	 * @param {boolean} [enableGlobalCookies=true]
+	 * @return {Connect} self
 	 */
 	globalCookies(enableGlobalCookies = true) {
-		this.options.jar = enableGlobalCookies;
+		if (enableGlobalCookies) {
+			this.options.cookieJar = this.constructor._getGlobalCookieJar();
+		}
+
 		return this;
 	}
 
@@ -296,8 +355,8 @@ class Connect {
 	 * @return {Connect}         self
 	 */
 	cookieFile(fileName) {
-		const cookieJar = request.jar(new FileCookieStore(fileName));
-		this.options.jar = cookieJar;
+		const cookieJar = this.constructor.newCookieJar(new FileCookieStore(fileName));
+		this.options.cookieJar = cookieJar;
 		return this;
 	}
 
@@ -308,7 +367,7 @@ class Connect {
 	 * @return {Connect}             self
 	 */
 	cookieJar(cookieJar) {
-		this.options.jar = cookieJar;
+		this.options.cookieJar = cookieJar;
 		return this;
 	}
 
@@ -316,10 +375,10 @@ class Connect {
 	 * Set request timeout.
 	 *
 	 * @param  {number} timeout timeout value in seconds
-	 * @return {Connect}        self
+	 * @return {Connect} self
 	 */
 	timeout(timeout) {
-		this.requestTimeout = timeout * 1000;
+		this.options.timeout = timeout * 1000;
 		return this;
 	}
 
@@ -330,7 +389,7 @@ class Connect {
 	 * @return {Connect}            self
 	 */
 	timeoutMs(timeoutInMs) {
-		this.requestTimeout = timeoutInMs;
+		this.options.timeout = timeoutInMs;
 		return this;
 	}
 
@@ -349,15 +408,15 @@ class Connect {
 	 * representing the field-names and their values as key:value pairs.
 	 *
 	 * @param  {string|object} fieldName name of the field to be set, or the fields object
-	 * @param  {*} [fieldValue]          value to be set
-	 * @return {Connect}                 self
+	 * @param  {*} [fieldValue] value to be set
+	 * @return {Connect} self
 	 */
 	field(fieldName, fieldValue) {
 		if (typeof fieldName === 'string') {
 			this.options.fields[fieldName] = fieldValue;
 		}
 		else {
-			_.assign(this.options.fields, fieldName);
+			Object.assign(this.options.fields, fieldName);
 		}
 
 		return this;
@@ -366,20 +425,20 @@ class Connect {
 	/**
 	 * Set multiple fields.
 	 *
-	 * @param  {object} fields object representing the field-names and their
-	 * values as key:value pairs
-	 * @return {Connect}       self
+	 * @param {object} fields object representing the field-names and their
+	 *  values as key:value pairs
+	 * @return {Connect} self
 	 */
 	fields(fields) {
-		_.assign(this.options.fields, fields);
+		Object.assign(this.options.fields, fields);
 		return this;
 	}
 
 	/**
 	 * Set the request method for the connection.
 	 *
-	 * @param  {string} method one of the HTTP request methods ('GET', 'PUT', 'POST', etc.)
-	 * @return {Connect}       self
+	 * @param {string} method one of the HTTP request methods ('GET', 'PUT', 'POST', etc.)
+	 * @return {Connect} self
 	 */
 	method(method) {
 		this.options.method = (method || 'GET').toUpperCase();
@@ -395,9 +454,9 @@ class Connect {
 	/**
 	 * Set username and password for authentication.
 	 *
-	 * @param  {string | auth} username
-	 * @param  {string} password
-	 * @return {Connect}         self
+	 * @param {string | auth} username
+	 * @param {string} password
+	 * @return {Connect} self
 	 */
 	httpAuth(username, password) {
 		if (typeof username === 'string') {
@@ -418,15 +477,15 @@ class Connect {
 	/**
 	 * Set proxy address (or options).
 	 *
-	 * @param  {string|object} proxy proxy address, or object representing proxy options
-	 * @return {Connect}             self
+	 * @param {string|object} proxy proxy address, or object representing proxy options
+	 * @return {Connect} self
 	 */
 	proxy(proxy) {
 		// actual proxy is added at the end using _addProxy
 		// this is because we need the url (http or https) to add the proxy
 		// and url might be added after this method
 		if (typeof proxy === 'string') {
-			_.assign(this.options.proxy, {
+			Object.assign(this.options.proxy, {
 				address: proxy,
 				port: null,
 				type: 'http',
@@ -442,12 +501,12 @@ class Connect {
 	/**
 	 * Set address and port for an http proxy.
 	 *
-	 * @param  {string} proxyAddress
-	 * @param  {number} proxyPort
-	 * @return {Connect}             self
+	 * @param {string} proxyAddress
+	 * @param {number} proxyPort
+	 * @return {Connect} self
 	 */
 	httpProxy(proxyAddress, proxyPort) {
-		_.assign(this.options.proxy, {
+		Object.assign(this.options.proxy, {
 			address: proxyAddress,
 			port: proxyPort,
 			type: 'http',
@@ -459,12 +518,12 @@ class Connect {
 	/**
 	 * Set address and port for a socks proxy.
 	 *
-	 * @param  {string} proxyAddress
-	 * @param  {number} proxyPort
-	 * @return {Connect}             self
+	 * @param {string} proxyAddress
+	 * @param {number} proxyPort
+	 * @return {Connect} self
 	 */
 	socksProxy(proxyAddress, proxyPort) {
-		_.assign(this.options.proxy, {
+		Object.assign(this.options.proxy, {
 			address: proxyAddress,
 			port: proxyPort,
 			type: 'socks',
@@ -476,9 +535,9 @@ class Connect {
 	/**
 	 * Set username and password for proxy.
 	 *
-	 * @param  {string} username
-	 * @param  {string} password
-	 * @return {Connect}         self
+	 * @param {string} username
+	 * @param {string} password
+	 * @return {Connect} self
 	 */
 	proxyAuth(username, password) {
 		if (typeof username === 'string') {
@@ -529,8 +588,8 @@ class Connect {
 	/**
 	 * Set cache directory for the connection.
 	 *
-	 * @param  {string} dir name or path to the directory
-	 * @return {Connect}    self
+	 * @param {string} dir name or path to the directory
+	 * @return {Connect} self
 	 */
 	cacheDir(dir) {
 		this.resposeCacheDir = dir;
@@ -540,11 +599,16 @@ class Connect {
 	/**
 	 * Set if the body is to be returned as a buffer
 	 *
-	 * @param  {boolean} [returnAsBuffer=true]
-	 * @return {Connect}                       self
+	 * @param {boolean} [returnAsBuffer=true]
+	 * @return {Connect} self
 	 */
 	asBuffer(returnAsBuffer = true) {
-		this.options.encoding = returnAsBuffer ? null : undefined;
+		if (returnAsBuffer) {
+			this.options.encoding = null;
+		}
+		else if (this.options.encoding === null) {
+			this.options.encoding = 'utf8';
+		}
 		return this;
 	}
 
@@ -584,13 +648,6 @@ class Connect {
 			this.options.proxy = makeProxyUrl(proxy);
 		}
 		else if (proxyType === 'socks' || proxyType === 'socks5') {
-			if (_.startsWith(this.options.url, 'https://')) {
-				this.options.agentClass = SocksHTTPSAgent;
-			}
-			else {
-				this.options.agentClass = SocksHTTPAgent;
-			}
-
 			const agentOptions = {};
 			agentOptions.socksHost = proxy.address.split(':')[0];
 			agentOptions.socksPort = proxy.port || proxy.address.split(':')[1] || 1080;
@@ -599,7 +656,7 @@ class Connect {
 				agentOptions.socksPassword = proxy.auth.password;
 			}
 
-			this.options.agentOptions = agentOptions;
+			this.options.agent = socksAgent(agentOptions);
 		}
 	}
 
@@ -611,21 +668,35 @@ class Connect {
 	 * @private
 	 */
 	_addFields() {
-		if (!this.options.fields) return;
-		if (_.isEmpty(this.options.fields)) return;
+		const hasBody = ['POST', 'PUT', 'PATCH'].includes(this.options.method);
 
-		const method = this.options.method;
-		if (method === 'POST' || method === 'PUT') {
-			if (this.isJSON()) {
-				this.options.body = JSON.stringify(this.options.fields);
+		if (!this.options.body) {
+			if (_.isEmpty(this.options.fields)) {
+				return;
 			}
-			else {
-				this.options.form = this.options.fields;
+
+			this.options.body = this.options.fields;
+			if (hasBody && !this.options.headers['Content-Type']) {
+				this.contentType('form');
+			}
+		}
+		else if (_.isPlainObject(this.options.body)) {
+			Object.assign(this.options.body, this.options.fields);
+			if (hasBody && !this.options.headers['Content-Type']) {
+				this.contentType('json');
+			}
+		}
+
+		if (hasBody) {
+			if (this.isJSON()) {
+				if (typeof this.options.body === 'object') {
+					this.options.body = JSON.stringify(this.options.fields);
+				}
 			}
 		}
 		else {
-			this.options.qs = this.options.qs || {};
-			_.assign(this.options.qs, this.options.fields);
+			this.options.query = this.options.query || {};
+			Object.assign(this.options.query, this.options.body);
 		}
 	}
 
@@ -648,6 +719,73 @@ class Connect {
 		}
 	}
 
+	/**
+	 * get options for underlying library (got)
+	 * @private
+	 */
+	_getOptions() {
+		const options = {
+			throwHttpErrors: false,
+			agent: this.options.agent,
+			decompress: this.options.gzip,
+			followRedirect: this.options.followRedirect,
+			timeout: this.options.timeout,
+			form: this.isForm(),
+			encoding: this.options.encoding,
+			body: this.options.body,
+			headers: this.options.headers,
+			method: this.options.method,
+			cookieJar: this.options.cookieJar,
+			// max redirects not supported
+		};
+
+		return options;
+	}
+
+	async _readCache() {
+		if (!this.resposeCacheDir) {
+			return this._makeFetchPromise(null);
+		}
+
+		const cacheKey = Crypt.md5(
+			JSON.stringify(_.pick(this.options, ['url', 'method', 'fields', 'body']))
+		);
+
+		const cacheFilePath = path.join(this.resposeCacheDir, cacheKey);
+		try {
+			const contents = File(cacheFilePath).read();
+			const response = {
+				body: contents,
+				statusCode: 200,
+				status: 200,
+				url: this.options.url,
+				timeTaken: 0,
+				cached: true,
+			};
+
+			return response;
+		}
+		catch (e) {
+			// Ignore Errors
+			return this._makeFetchPromise(cacheFilePath);
+		}
+	}
+
+	async _writeCache(response, cacheFilePath) {
+		const promises = [];
+
+		if (this.saveFilePath) {
+			promises.push(File(this.saveFilePath).write(response.body));
+		}
+		if (cacheFilePath && response.statusCode === 200) {
+			promises.push(File(cacheFilePath).write(response.body));
+		}
+
+		if (promises.length) {
+			await Promise.all(promises);
+		}
+	}
+
 
 	/**
 	 * It resolves or rejects the promise object. It is
@@ -656,71 +794,45 @@ class Connect {
 	 * NOTE: This function is for internal use
 	 * @private
 	 */
-	_makeFetchPromise(resolve, reject, cacheFilePath) {
+	async _makeFetchPromise(cacheFilePath) {
 		this._addProxy();
 		this._addFields();
 		this._addCookies();
 
-		const startTime = Date.now();
-		const req = request(this.options, (error, response, body) => {
-			if (this.timeoutTimer) {
-				clearTimeout(this.timeoutTimer);
-				this.timeoutTimer = null;
-			}
+		const options = this._getOptions();
 
-			if (error) {
-				error.timeTaken = Date.now() - startTime;
-				reject(error);
-				return;
-			}
-			if (response.statusCode === 407) {
+		const startTime = Date.now();
+		try {
+			const response = await got(this.options.url, options);
+
+			const status = response.statusCode;
+			if (status === 407) {
 				const e = new Error('407 Proxy Authentication Required');
 				e.code = 'EPROXYAUTH';
 				e.timeTaken = Date.now() - startTime;
-				reject(e);
-				return;
+				throw e;
 			}
 
-			response.body = body;
-			response.url = response.request.uri.href || this.options.url;
+			// already supported by got
+			// response.url = response.request.uri.href || this.options.url;
+			// already supported by got
+			// response.requestUrl = this.options.url;
 			response.timeTaken = Date.now() - startTime;
 			response.cached = false;
-			response.status = response.statusCode;
+			response.status = status;
 
-			const promises = [];
+			await this._writeCache(response, cacheFilePath);
+			return response;
+		}
+		catch (e) {
+			if (e instanceof got.TimeoutError) {
+				const err = new Error('Request Timed Out');
+				err.code = 'ETIMEDOUT';
+				err.timeTaken = Date.now() - startTime;
+				throw e;
+			}
 
-			if (this.saveFilePath) {
-				promises.push(File(this.saveFilePath).write(response.body));
-			}
-			if (cacheFilePath && response.statusCode === 200) {
-				promises.push(File(cacheFilePath).write(response.body));
-			}
-
-			if (promises.length) {
-				Promise.all(promises)
-					.then(() => { resolve(response) })
-					.catch(() => { resolve(response) });
-			}
-			else {
-				resolve(response);
-			}
-		});
-
-		if (this.requestTimeout) {
-			this.timeoutTimer = setTimeout(() => {
-				try {
-					req.abort();
-				}
-				catch (err) {
-					// ignore errors
-				}
-				finally {
-					const e = new Error('Request Timed Out');
-					e.code = 'ETIMEDOUT';
-					e.timeTaken = Date.now() - startTime;
-					reject(e);
-				}
-			}, this.requestTimeout);
+			throw e;
 		}
 	}
 
@@ -740,43 +852,9 @@ class Connect {
 	 * @return {Promise<response>} a promise that resolves to response
 	 */
 	async fetch() {
-		if (this.promise) return this.promise;
-
-		if (this.timeoutTimer) {
-			clearTimeout(this.timeoutTimer);
-			this.timeoutTimer = null;
+		if (!this.promise) {
+			this.promise = this._readCache();
 		}
-
-		this.promise = new Promise((resolve, reject) => {
-			let cacheFilePath = null;
-
-			if (this.resposeCacheDir) {
-				const cacheKey = Crypt.md5(
-					JSON.stringify(_.pick(this.options, ['url', 'method', 'fields']))
-				);
-
-				cacheFilePath = path.join(this.resposeCacheDir, cacheKey);
-				File(cacheFilePath).read().then((cachedContents) => {
-					const response = {
-						body: cachedContents,
-						statusCode: 200,
-						status: 200,
-						url: this.options.url,
-						timeTaken: 0,
-						cached: true,
-					};
-
-					resolve(response);
-				}).catch(() => {
-					// Ignore Errors
-					this._makeFetchPromise(resolve, reject, cacheFilePath);
-				});
-			}
-			else {
-				this._makeFetchPromise(resolve, reject, cacheFilePath);
-			}
-		});
-
 		return this.promise;
 	}
 

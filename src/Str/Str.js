@@ -353,6 +353,21 @@ function escapeRegex(str) {
 	return String(str).replace(/[-[\]{}()*+!<=:?./\\^$|#,]/g, '\\$&');
 }
 
+/**
+ * replace special characters within a string
+ * NOTE: it replaces multiple special characters with single replaceWith character
+ * @param {string} str
+ * @param {string} replaceWith
+ * @returns {string}
+ */
+function replaceSpecialChars(str, replaceWith = '') {
+	const result = str.replace(/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/\s]+/g, replaceWith);
+	if (replaceWith) {
+		return _.trim(result, replaceWith);
+	}
+	return result;
+}
+
 export default {
 	invertCase,
 	isVowel,
@@ -370,4 +385,5 @@ export default {
 	tryStringifyJson,
 	stripTags,
 	escapeRegex,
+	replaceSpecialChars,
 };

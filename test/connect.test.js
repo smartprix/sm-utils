@@ -3,11 +3,14 @@ import {expect} from 'chai';
 import {Connect, File} from '../src/index';
 
 describe('@connect class', () => {
-	before(async function () {
+	beforeEach(async function () {
 		this.timeout(10000);
 	});
 
-	it('should correctly fetch the response', async () => {
+	it('should correctly fetch the response', async function () {
+		this.timeout(100000);
+		const res1 = await Connect.url('https://www.gearbest.com/cell-phones-c_11293').userAgent('safari');
+		console.log(res1.body);
 		const response = await Connect.url('https://www.smartprix.com/ip');
 
 		expect(response.statusCode).to.equal(200);
