@@ -79,9 +79,9 @@ class Connect {
 			method: 'GET',
 			// headers to set
 			headers: {
-				'User-Agent': userAgents.chrome,
-				Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-				'Accept-Language': 'en-US,en;q=0.8',
+				'user-agent': userAgents.chrome,
+				accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+				'accept-language': 'en-US,en;q=0.8',
 			},
 			// object of cookie values to set
 			cookies: {},
@@ -186,10 +186,13 @@ class Connect {
 	 */
 	header(headerName, headerValue) {
 		if (typeof headerName === 'string') {
-			this.options.headers[headerName] = headerValue;
+			this.options.headers[headerName.toLowerCase()] = headerValue;
 		}
 		else {
-			Object.assign(this.options.headers, headerName);
+			Object.assign(
+				this.options.headers,
+				_.mapKeys(headerName, (val, key) => key.toLowerCase()),
+			);
 		}
 
 		return this;
@@ -231,7 +234,7 @@ class Connect {
 	 * @return {Connect}
 	 */
 	referer(referer) {
-		this.header('Referer', referer);
+		this.header('referer', referer);
 		return this;
 	}
 
@@ -247,7 +250,7 @@ class Connect {
 	 * @return {Connect} self
 	 */
 	userAgent(userAgent) {
-		this.header('User-Agent', userAgents[userAgent] || userAgent);
+		this.header('user-agent', userAgents[userAgent] || userAgent);
 		return this;
 	}
 
@@ -259,13 +262,13 @@ class Connect {
 	 */
 	contentType(contentType) {
 		if (contentType === 'json') {
-			this.header('Content-Type', 'application/json');
+			this.header('content-type', 'application/json');
 		}
 		else if (contentType === 'form') {
-			this.header('Content-Type', 'application/x-www-form-urlencoded');
+			this.header('content-type', 'application/x-www-form-urlencoded');
 		}
 		else {
-			this.header('Content-Type', contentType);
+			this.header('content-type', contentType);
 		}
 
 		return this;
@@ -277,7 +280,7 @@ class Connect {
 	 * @return {boolean} true, if content-type is JSON; false, otherwise
 	 */
 	isJSON() {
-		return this.options.headers['Content-Type'] === 'application/json';
+		return this.options.headers['content-type'] === 'application/json';
 	}
 
 	/**
@@ -286,7 +289,7 @@ class Connect {
 	 * @return {boolean} true, if content-type is JSON; false, otherwise
 	 */
 	isForm() {
-		return this.options.headers['Content-Type'] === 'application/x-www-form-urlencoded';
+		return this.options.headers['content-type'] === 'application/x-www-form-urlencoded';
 	}
 
 	/**
@@ -676,13 +679,13 @@ class Connect {
 			}
 
 			this.options.body = this.options.fields;
-			if (hasBody && !this.options.headers['Content-Type']) {
+			if (hasBody && !this.options.headers['content-type']) {
 				this.contentType('form');
 			}
 		}
 		else if (_.isPlainObject(this.options.body)) {
 			Object.assign(this.options.body, this.options.fields);
-			if (hasBody && !this.options.headers['Content-Type']) {
+			if (hasBody && !this.options.headers['content-type']) {
 				this.contentType('json');
 			}
 		}
