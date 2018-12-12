@@ -455,6 +455,21 @@ class Connect {
 	}
 
 	/**
+	 * set whether to ask for compressed response (handles decompression automatically)
+	 * @param {boolean} [askForCompression=true] whether to ask for compressed response
+	 * @return {Connect} self
+	 */
+	compress(askForCompression = true) {
+		this.options.compress = askForCompression;
+		if (askForCompression === false) {
+			// if turning off compression, set accept-encoding to empty
+			// some sites expect an accept-encoding header
+			this.header('accept-encoding', '');
+		}
+		return this;
+	}
+
+	/**
 	 * Set the request method for the connection.
 	 *
 	 * @param {string} method one of the HTTP request methods ('GET', 'PUT', 'POST', etc.)
