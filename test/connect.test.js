@@ -238,8 +238,9 @@ describe('@connect class', () => {
 		const response = await connect('all')
 			.cookieJar(jar);
 		expect(response.statusCode).to.equal(200);
-		expect(jar.getCookiesSync(server.url)[0]).to.deep.contain({key: 'hello', value: 'world'});
-		expect(jar.getCookiesSync(server.url)[1]).to.deep.contain({key: 'foo', value: 'bar'});
+		const cookies = jar.getCookiesSync(server.url);
+		expect(cookies[0]).to.deep.contain({key: 'hello', value: 'world'});
+		expect(cookies[1]).to.deep.contain({key: 'foo', value: 'bar'});
 	});
 
 	it('should correctly use globalCookies', async () => {
@@ -266,6 +267,29 @@ describe('@connect class', () => {
 		expect(body2.cookies).to.equal('hello=world; foo=bar');
 
 		await File('cookies').rm();
+	});
+
+	// TODO: merging should not require read only
+	it('should merge local and global cookies', async () => {
+		const jar = Connect.newCookieJar();
+		await connect('all')
+			.cookieJar(jar);
+
+		const cookies1 = jar.getCookiesSync(server.url);
+		expect(cookies1.length).to.equal(2);
+
+		const response = await connect('all')
+			.cookieJar(jar, {readOnly: true})
+			.cookie('a', 'b')
+			.cookie('hello', 'yo');
+
+		const cookies2 = jar.getCookiesSync(server.url);
+		expect(cookies2.length).to.equal(2);
+		expect(cookies2[0]).to.deep.contain({key: 'hello', value: 'world'});
+		expect(cookies2[1]).to.deep.contain({key: 'foo', value: 'bar'});
+
+		const body = JSON.parse(response.body);
+		expect(body.cookies).to.equal('a=b; hello=yo; foo=bar');
 	});
 
 	it('should correctly return body as buffer', async () => {

@@ -1,4 +1,5 @@
 import path from 'path';
+import util from 'util';
 import {URLSearchParams} from 'url';
 import _ from 'lodash';
 import got from 'got';
@@ -14,6 +15,8 @@ import {
 } from './httpProxyAgent';
 import File from '../File';
 import Crypt from '../Crypt';
+
+CookieJar.prototype.getCookiesAsync = util.promisify(CookieJar.prototype.getCookies);
 
 const userAgents = {
 	chrome: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3163.100 Safari/537.36',
@@ -392,12 +395,18 @@ class Connect {
 	/**
 	 * Enable global cookies.
 	 *
-	 * @param {boolean} [enableGlobalCookies=true]
+	 * @param {boolean|object} [options=true]
 	 * @return {Connect} self
 	 */
-	globalCookies(enableGlobalCookies = true) {
-		if (enableGlobalCookies) {
-			this.options.cookieJar = this.constructor._getGlobalCookieJar();
+	globalCookies(options = true) {
+		if (options === false || options === null) return this;
+		const jar = this.constructor._getGlobalCookieJar();
+		if (options === true) {
+			this.options.cookieJar = jar;
+			return this;
+		}
+		if (options.readOnly) {
+			this.options.readCookieJar = jar;
 		}
 
 		return this;
@@ -409,9 +418,9 @@ class Connect {
 	 * @param  {string} fileName name of (or path to) the file
 	 * @return {Connect}         self
 	 */
-	cookieFile(fileName) {
+	cookieFile(fileName, options = {}) {
 		const cookieJar = this.constructor.newCookieJar(new FileCookieStore(fileName));
-		this.options.cookieJar = cookieJar;
+		this.cookieJar(cookieJar, options);
 		return this;
 	}
 
@@ -421,8 +430,14 @@ class Connect {
 	 * @param  {CookieJar} cookieJar value to be set
 	 * @return {Connect}             self
 	 */
-	cookieJar(cookieJar) {
-		this.options.cookieJar = cookieJar;
+	cookieJar(cookieJar, options = {}) {
+		if (options.readOnly) {
+			this.options.readCookieJar = cookieJar;
+		}
+		else {
+			this.options.cookieJar = cookieJar;
+		}
+
 		return this;
 	}
 
@@ -797,8 +812,10 @@ class Connect {
 				this.contentType('form');
 			}
 		}
-		else if (_.isPlainObject(this.options.body)) {
-			Object.assign(this.options.body, this.options.fields);
+		else if (typeof this.options.body === 'object') {
+			if (!_.isEmpty(this.options.fields)) {
+				Object.assign(this.options.body, this.options.fields);
+			}
 			if (hasBody && !this.options.headers['content-type']) {
 				this.contentType('json');
 			}
@@ -838,13 +855,25 @@ class Connect {
 	 * NOTE: This function is for internal use
 	 * @private
 	 */
-	_addCookies() {
+	async _addCookies() {
 		const cookieMap = this.options.cookies || {};
 
 		const cookies = [];
 		_.forEach(cookieMap, (value, key) => {
 			cookies.push(`${key}=${value}`);
 		});
+
+		const readJar = this.options.readCookieJar;
+		if (readJar) {
+			const jarCookies = await readJar.getCookiesAsync(this.options.url, {});
+			if (jarCookies) {
+				jarCookies.forEach((cookie) => {
+					if (!cookieMap[cookie.key]) {
+						cookies.push(`${cookie.key}=${cookie.value}`);
+					}
+				});
+			}
+		}
 
 		if (cookies.length) {
 			this.header('cookie', cookies.join('; '));
@@ -935,7 +964,7 @@ class Connect {
 	async _makeFetchPromise(cacheFilePath) {
 		this._addProxy();
 		this._addFields();
-		this._addCookies();
+		await this._addCookies();
 
 		const options = this._getOptions();
 
