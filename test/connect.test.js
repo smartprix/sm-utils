@@ -311,6 +311,8 @@ describe('@connect class', () => {
 		};
 
 		const response = await Connect.url('http://www.smartprix.com/ip').proxy(proxy);
+		expect(response.statusCode).to.equal(200);
+		expect(response.url).to.equal('https://www.smartprix.com/ip');
 		expect(response.body).to.equal(proxy.host);
 	});
 
@@ -326,7 +328,9 @@ describe('@connect class', () => {
 			},
 		};
 
-		const response = await Connect.url('https://www.smartprix.com/ip').proxy(proxy);
+		const response = await Connect.url('http://www.smartprix.com/ip').proxy(proxy);
+		expect(response.statusCode).to.equal(200);
+		expect(response.url).to.equal('https://www.smartprix.com/ip');
 		expect(response.body).to.equal(proxy.host);
 	});
 	*/

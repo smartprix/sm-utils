@@ -4,9 +4,16 @@ import _ from 'lodash';
 import got from 'got';
 import {CookieJar} from 'tough-cookie';
 import FileCookieStore from 'tough-cookie-file-store';
-import ProxyAgent from 'proxy-agent';
-import File from './File';
-import Crypt from './Crypt';
+import {
+	httpAgent as socksHttpAgent,
+	httpsAgent as socksHttpsAgent,
+} from './socksProxyAgent';
+import {
+	httpAgent as proxyHttpAgent,
+	httpsAgent as proxyHttpsAgent,
+} from './httpProxyAgent';
+import File from '../File';
+import Crypt from '../Crypt';
 
 const userAgents = {
 	chrome: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3163.100 Safari/537.36',
@@ -35,6 +42,7 @@ userAgents.tablet = userAgents.ipad;
  * @return {string} proxy url based on the options
  * @private
  */
+// eslint-disable-next-line no-unused-vars
 function makeProxyUrl(proxy) {
 	let url = `${proxy.host}:${proxy.port}`;
 	if (proxy.auth && proxy.auth.username) {
@@ -42,20 +50,24 @@ function makeProxyUrl(proxy) {
 	}
 
 	if (proxy.type === 'socks' || proxy.type === 'socks5') {
-		return `socks5h://${url}`;
+		return `socks5://${url}`;
 	}
 
 	return `http://${url}`;
 }
 
-function httpsProxyAgent(options) {
-	options.type = 'http';
-	return new ProxyAgent(makeProxyUrl(options));
+function httpProxyAgent(options) {
+	return {
+		http: proxyHttpAgent(options),
+		https: proxyHttpsAgent(options),
+	};
 }
 
 function socksProxyAgent(options) {
-	options.type = 'socks';
-	return new ProxyAgent(makeProxyUrl(options));
+	return {
+		http: socksHttpAgent(options),
+		https: socksHttpsAgent(options),
+	};
 }
 
 /**
@@ -111,8 +123,6 @@ class Connect {
 			body: '',
 			// custom http & https agent (should be {http: agent, https: agent})
 			agent: null,
-			// http authentication (should be {username, password})
-			auth: null,
 		};
 	}
 
@@ -554,6 +564,16 @@ class Connect {
 	}
 
 	/**
+	 * Set bearer token for authorization
+	 * @param {string} token
+	 * @return {Connect} self
+	 */
+	bearerToken(token) {
+		this.header('authorization', `Bearer ${token}`);
+		return this;
+	}
+
+	/**
 	 * Set proxy address (or options).
 	 *
 	 * @param {string|object} proxy proxy address, or object representing proxy options
@@ -740,10 +760,10 @@ class Connect {
 		}
 
 		if (proxyType === 'http' || proxyType === 'https') {
-			this.options.agent = httpsProxyAgent(proxyOpts);
+			this.options.agent = httpProxyAgent({proxy: proxyOpts});
 		}
 		else if (proxyType === 'socks' || proxyType === 'socks5') {
-			this.options.agent = socksProxyAgent(proxyOpts);
+			this.options.agent = socksProxyAgent({proxy: proxyOpts});
 		}
 	}
 
@@ -937,9 +957,18 @@ class Connect {
 				const err = new Error('Request Timed Out');
 				err.code = 'ETIMEDOUT';
 				err.timeTaken = Date.now() - startTime;
-				throw e;
+				throw err;
 			}
 
+			const message = e.message.toLowerCase();
+			if (message.includes('authentication') && message.includes('socks')) {
+				const err = new Error('407 Proxy Authentication Failed');
+				err.code = 'EPROXYAUTH';
+				err.timeTaken = Date.now() - startTime;
+				throw err;
+			}
+
+			e.timeTaken = Date.now() - startTime;
 			throw e;
 		}
 	}
