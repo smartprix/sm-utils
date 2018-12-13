@@ -269,8 +269,17 @@ describe('@connect class', () => {
 		await File('cookies').rm();
 	});
 
+	it('should correctly merge local and globalCookies', async () => {
+		const response = await connect('all')
+			.globalCookies({readOnly: true})
+			.cookie('a', 'b')
+			.cookie('hello', 'yo');
+		const body = JSON.parse(response.body);
+		expect(body.cookies).to.equal('a=b; hello=yo; foo=bar');
+	});
+
 	// TODO: merging should not require read only
-	it('should merge local and global cookies', async () => {
+	it('should merge local and global cookies in a jar', async () => {
 		const jar = Connect.newCookieJar();
 		await connect('all')
 			.cookieJar(jar);
