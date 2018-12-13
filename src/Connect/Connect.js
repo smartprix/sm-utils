@@ -574,6 +574,16 @@ class Connect {
 	}
 
 	/**
+	 * Set api token using x-api-token header
+	 * @param {string} token
+	 * @return {Connect} self
+	 */
+	apiToken(token) {
+		this.header('x-api-token', token);
+		return this;
+	}
+
+	/**
 	 * Set proxy address (or options).
 	 *
 	 * @param {string|object} proxy proxy address, or object representing proxy options
