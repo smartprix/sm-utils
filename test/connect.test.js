@@ -311,6 +311,40 @@ describe('@connect class', () => {
 		expect(body.body).to.equal('<html></html>');
 	});
 
+	it('should correctly do http auth', async () => {
+		const response = await connect('all').httpAuth('admin', 'password');
+		const body = JSON.parse(response.body);
+		expect(body.headers.authorization).to.equal('Basic YWRtaW46cGFzc3dvcmQ=');
+
+		const response1 = await connect('all').httpAuth('admin:password');
+		const body1 = JSON.parse(response1.body);
+		expect(body1.headers.authorization).to.equal('Basic YWRtaW46cGFzc3dvcmQ=');
+
+		const response2 = await connect('all').httpAuth({username: 'admin', password: 'password'});
+		const body2 = JSON.parse(response2.body);
+		expect(body2.headers.authorization).to.equal('Basic YWRtaW46cGFzc3dvcmQ=');
+	});
+
+	it('should correctly do bearer auth', async () => {
+		const response = await connect('all').bearerToken('YWRtaW46c');
+		const body = JSON.parse(response.body);
+		expect(body.headers.authorization).to.equal('Bearer YWRtaW46c');
+	});
+
+	it('should correctly do api auth', async () => {
+		const response = await connect('all').apiToken('YWRtaW46c');
+		const body = JSON.parse(response.body);
+		expect(body.headers.authorization).to.equal(undefined);
+		expect(body.headers['x-api-token']).to.equal('YWRtaW46c');
+	});
+
+	it('should correctly parse auth from url', async () => {
+		const url = serverUrl('all').replace('http://', 'http://admin:password@');
+		const response = await Connect.url(url);
+		const body = JSON.parse(response.body);
+		expect(body.headers.authorization).to.equal('Basic YWRtaW46cGFzc3dvcmQ=');
+	});
+
 	it('should correctly respect timeout', async () => {
 		const response1 = await connect('timeout').timeout(0.6);
 		expect(response1.body).to.equal('hello');
