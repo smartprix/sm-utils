@@ -560,14 +560,20 @@ class Connect {
 	 * Set username and password for authentication.
 	 *
 	 * @param {string | auth} username
-	 * @param {string} password
+	 * @param {string|undefined} password
 	 * @return {Connect} self
 	 */
 	httpAuth(username, password) {
 		let auth = '';
 		if (typeof username === 'string') {
-			// username & password are strings
-			auth = `${username}:${password}`;
+			if (password === undefined) {
+				// username is of the format username:password
+				auth = username;
+			}
+			else {
+				// username & password are strings
+				auth = `${username}:${password}`;
+			}
 		}
 		else if (username.username) {
 			// username argument is an object of {username, password}
