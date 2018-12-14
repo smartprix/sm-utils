@@ -567,14 +567,14 @@ class Connect {
 		let auth = '';
 		if (typeof username === 'string') {
 			// username & password are strings
-			auth = `Basic ${username}:${password}`;
+			auth = `${username}:${password}`;
 		}
 		else if (username.username) {
 			// username argument is an object of {username, password}
-			auth = `Basic ${username.username}:${username.password}`;
+			auth = `${username.username}:${username.password}`;
 		}
 
-		this.header('authorization', Buffer.from(auth).toString('base64'));
+		this.header('authorization', 'Basic ' + Buffer.from(auth).toString('base64'));
 		return this;
 	}
 
@@ -984,6 +984,8 @@ class Connect {
 			// response.url = response.request.uri.href || this.options.url;
 			// already supported by got
 			// response.requestUrl = this.options.url;
+			// already supported by got
+			// response.headers
 			response.timeTaken = Date.now() - startTime;
 			response.cached = false;
 			response.status = status;
