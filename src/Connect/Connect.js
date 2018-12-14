@@ -1,6 +1,6 @@
 import path from 'path';
 import util from 'util';
-import {URLSearchParams} from 'url';
+import urlLib from 'url';
 import _ from 'lodash';
 import got from 'got';
 import {CookieJar} from 'tough-cookie';
@@ -16,6 +16,7 @@ import {
 import File from '../File';
 import Crypt from '../Crypt';
 
+const {URLSearchParams} = urlLib;
 CookieJar.prototype.getCookiesAsync = util.promisify(CookieJar.prototype.getCookies);
 
 const userAgents = {
@@ -763,6 +764,17 @@ class Connect {
 		return this;
 	}
 
+	_parseUrl() {
+		if (this.options.url.includes('@')) {
+			// parse url and extract http auth
+			const parsed = urlLib.parse(this.options.url);
+			if (parsed.auth) {
+				this.httpAuth(parsed.auth);
+				this.options.url = `${parsed.protocol}//${parsed.host}${parsed.path || ''}${parsed.hash || ''}`;
+			}
+		}
+	}
+
 	/**
 	 * Add proxy based on the proxy options. Proxy is added,
 	 * if and only if proxy address has been previously set.
@@ -968,6 +980,7 @@ class Connect {
 	 * @private
 	 */
 	async _makeFetchPromise(cacheFilePath) {
+		this._parseUrl();
 		this._addProxy();
 		this._addFields();
 		await this._addCookies();
