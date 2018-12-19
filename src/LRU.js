@@ -10,6 +10,10 @@
  * lru.delete('hello');
  */
 class LRU {
+	/**
+	 * @param {object} [options={}]
+	 * @param {number} [options.maxSize] max size of the lru map
+	 */
 	constructor(options = {}) {
 		if (!(options.maxSize && options.maxSize > 0)) {
 			throw new TypeError('`maxSize` must be a number greater than 0');
