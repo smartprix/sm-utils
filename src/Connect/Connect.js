@@ -17,6 +17,7 @@ import File from '../File';
 import Crypt from '../Crypt';
 
 CookieJar.prototype.getCookiesAsync = util.promisify(CookieJar.prototype.getCookies);
+CookieJar.prototype.setCookieAsync = util.promisify(CookieJar.prototype.setCookie);
 
 const userAgents = {
 	chrome: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3163.100 Safari/537.36',
@@ -37,6 +38,9 @@ userAgents.chromeMobile = userAgents.android;
 userAgents.desktop = userAgents.chrome;
 userAgents.mobile = userAgents.android;
 userAgents.tablet = userAgents.ipad;
+
+const getMethodRedirectCodes = new Set([300, 301, 302, 303, 304, 305, 307, 308]);
+const allMethodRedirectCodes = new Set([300, 303, 307, 308]);
 
 /**
  * Returns proxy url based on the proxy options.
@@ -883,9 +887,9 @@ class Connect {
 			cookies.push(`${key}=${value}`);
 		});
 
-		const readJar = this.options.readCookieJar;
-		if (readJar) {
-			const jarCookies = await readJar.getCookiesAsync(this.options.url, {});
+		const jar = this.options.readCookieJar || this.options.cookieJar;
+		if (jar) {
+			const jarCookies = await jar.getCookiesAsync(this.options.url, {});
 			if (jarCookies) {
 				jarCookies.forEach((cookie) => {
 					if (!cookieMap[cookie.key]) {
@@ -900,6 +904,52 @@ class Connect {
 		}
 	}
 
+	async _handleRedirect(response, ctx) {
+		if (!this.options.followRedirect) return response;
+		if (!('location' in response.headers)) return response;
+
+		const statusCode = response.statusCode;
+		const method = this.options.method;
+		if (
+			!allMethodRedirectCodes.has(statusCode) &&
+			!(getMethodRedirectCodes.has(statusCode) && (method === 'GET' || method === 'HEAD'))
+		) return response;
+
+		const redirects = ctx.redirectUrls;
+
+		// We're being redirected, we don't care about the response.
+		response.resume();
+
+		if (statusCode === 303) {
+			// Server responded with "see other", indicating that the resource exists at another location,
+			// and the client should request it from that location via GET or HEAD.
+			this.options.method = 'GET';
+		}
+
+		if (redirects.length >= this.options.maxRedirects) {
+			const err = new Error(`Redirected max ${this.options.maxRedirects} times. Aborting.`);
+			err.code = 'EMAXREDIRECTS';
+			throw err;
+		}
+
+		// Handles invalid URLs.
+		const redirectBuffer = Buffer.from(response.headers.location, 'binary').toString();
+		const redirectURL = new URL(redirectBuffer, response.url).toString();
+		redirects.push(redirectURL);
+
+		return this._request(redirectURL, ctx);
+	}
+
+	async _setCookies(response) {
+		const jar = this.options.cookieJar;
+		if (!jar) return;
+
+		const cookies = response.headers['set-cookie'];
+		if (!cookies) return;
+
+		await Promise.all(cookies.map(cookie => jar.setCookieAsync(cookie, response.url)));
+	}
+
 	/**
 	 * get options for underlying library (got)
 	 * @private
@@ -909,16 +959,17 @@ class Connect {
 			throwHttpErrors: false,
 			agent: this.options.agent,
 			decompress: this.options.compress,
-			followRedirect: this.options.followRedirect,
 			timeout: this.options.timeout,
 			encoding: this.options.encoding,
 			body: this.options.body,
 			headers: this.options.headers,
 			method: this.options.method,
-			cookieJar: this.options.cookieJar,
 			rejectUnauthorized: this.options.strictSSL,
 			retry: 0,
-			// max redirects not supported
+			// followRedirect is handled internally by us
+			followRedirect: false,
+			// max redirects is handled by us internally
+			// cookieJar is handled by us internally
 		};
 
 		return options;
@@ -968,6 +1019,49 @@ class Connect {
 		}
 	}
 
+	async _request(url, ctx) {
+		await this._addCookies();
+
+		const gotOptions = this._getOptions(this.options);
+		try {
+			let response = await got(url, gotOptions);
+
+			const status = response.statusCode;
+			if (status === 407) {
+				const e = new Error('407 Proxy Authentication Failed');
+				e.code = 'EPROXYAUTH';
+				throw e;
+			}
+
+			// already supported by got
+			// response.url = response.request.uri.href || this.options.url;
+			// already supported by got
+			// response.requestUrl = this.options.url;
+			// already supported by got
+			// response.headers
+			response.status = status;
+
+			await this._setCookies(response);
+			response = await this._handleRedirect(response, ctx);
+			return response;
+		}
+		catch (e) {
+			if (e instanceof got.TimeoutError) {
+				const err = new Error('Request Timed Out');
+				err.code = 'ETIMEDOUT';
+				throw err;
+			}
+
+			const message = e.message.toLowerCase();
+			if (message.includes('authentication') && message.includes('socks')) {
+				const err = new Error('407 Proxy Authentication Failed');
+				err.code = 'EPROXYAUTH';
+				throw err;
+			}
+
+			throw e;
+		}
+	}
 
 	/**
 	 * It resolves or rejects the promise object. It is
@@ -980,51 +1074,23 @@ class Connect {
 		this._parseUrl();
 		this._addProxy();
 		this._addFields();
-		await this._addCookies();
-
-		const options = this._getOptions();
 
 		const startTime = Date.now();
+		const ctx = {
+			redirectUrls: [],
+		};
+
 		try {
-			const response = await got(this.options.url, options);
-
-			const status = response.statusCode;
-			if (status === 407) {
-				const e = new Error('407 Proxy Authentication Failed');
-				e.code = 'EPROXYAUTH';
-				e.timeTaken = Date.now() - startTime;
-				throw e;
-			}
-
-			// already supported by got
-			// response.url = response.request.uri.href || this.options.url;
-			// already supported by got
-			// response.requestUrl = this.options.url;
-			// already supported by got
-			// response.headers
+			const response = await this._request(this.options.url, ctx);
+			response.redirectUrls = ctx.redirectUrls;
+			response.startTime = startTime;
 			response.timeTaken = Date.now() - startTime;
 			response.cached = false;
-			response.status = status;
 
 			await this._writeCache(response, cacheFilePath);
 			return response;
 		}
 		catch (e) {
-			if (e instanceof got.TimeoutError) {
-				const err = new Error('Request Timed Out');
-				err.code = 'ETIMEDOUT';
-				err.timeTaken = Date.now() - startTime;
-				throw err;
-			}
-
-			const message = e.message.toLowerCase();
-			if (message.includes('authentication') && message.includes('socks')) {
-				const err = new Error('407 Proxy Authentication Failed');
-				err.code = 'EPROXYAUTH';
-				err.timeTaken = Date.now() - startTime;
-				throw err;
-			}
-
 			e.timeTaken = Date.now() - startTime;
 			throw e;
 		}

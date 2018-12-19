@@ -42,6 +42,14 @@ describe('@connect class', () => {
 			redirect(res, '/ip');
 		});
 
+		server.on('/ip-redir-1', (req, res) => {
+			redirect(res, '/ip-redir');
+		});
+
+		server.on('/ip-redir-2', (req, res) => {
+			redirect(res, '/ip-redir-1');
+		});
+
 		server.on('/timeout', (req, res) => {
 			// eslint-disable-next-line max-nested-callbacks
 			setTimeout(() => res.end('hello'), 300);
@@ -97,6 +105,40 @@ describe('@connect class', () => {
 	it('should respect followRedirect(true)', async () => {
 		const response = await connect('ip-redir')
 			.followRedirect();
+		expect(response.statusCode).to.equal(200);
+		expect(response.body).to.equal('127.0.0.1');
+		expect(response.url).to.equal(serverUrl('ip'));
+	});
+
+	it('should respect max redirects', async () => {
+		let response = null;
+		try {
+			response = await connect('ip-redir-1')
+				.maxRedirects(1);
+		}
+		catch (e) {
+			expect(e.code).to.equal('EMAXREDIRECTS');
+		}
+		expect(response).to.equal(null);
+
+		response = await connect('ip-redir-1')
+			.maxRedirects(2);
+		expect(response.statusCode).to.equal(200);
+		expect(response.body).to.equal('127.0.0.1');
+		expect(response.url).to.equal(serverUrl('ip'));
+
+		response = null;
+		try {
+			response = await connect('ip-redir-2')
+				.maxRedirects(2);
+		}
+		catch (e) {
+			expect(e.code).to.equal('EMAXREDIRECTS');
+		}
+		expect(response).to.equal(null);
+
+		response = await connect('ip-redir-2')
+			.maxRedirects(3);
 		expect(response.statusCode).to.equal(200);
 		expect(response.body).to.equal('127.0.0.1');
 		expect(response.url).to.equal(serverUrl('ip'));
@@ -269,7 +311,7 @@ describe('@connect class', () => {
 		await File('cookies').rm();
 	});
 
-	it('should correctly merge local and globalCookies', async () => {
+	it('should correctly merge local and globalCookies (readOnly)', async () => {
 		const response = await connect('all')
 			.globalCookies({readOnly: true})
 			.cookie('a', 'b')
@@ -278,7 +320,15 @@ describe('@connect class', () => {
 		expect(body.cookies).to.equal('a=b; hello=yo; foo=bar');
 	});
 
-	// TODO: merging should not require read only
+	it('should correctly merge local and globalCookies', async () => {
+		const response = await connect('all')
+			.globalCookies()
+			.cookie('a', 'b')
+			.cookie('hello', 'yo');
+		const body = JSON.parse(response.body);
+		expect(body.cookies).to.equal('a=b; hello=yo; foo=bar');
+	});
+
 	it('should merge local and global cookies in a jar', async () => {
 		const jar = Connect.newCookieJar();
 		await connect('all')
@@ -299,6 +349,19 @@ describe('@connect class', () => {
 
 		const body = JSON.parse(response.body);
 		expect(body.cookies).to.equal('a=b; hello=yo; foo=bar');
+
+		const response2 = await connect('all')
+			.cookieJar(jar)
+			.cookie('a', 'b')
+			.cookie('hello', 'yo');
+
+		const cookies3 = jar.getCookiesSync(server.url);
+		expect(cookies3.length).to.equal(2);
+		expect(cookies3[0]).to.deep.contain({key: 'hello', value: 'world'});
+		expect(cookies3[1]).to.deep.contain({key: 'foo', value: 'bar'});
+
+		const body2 = JSON.parse(response2.body);
+		expect(body2.cookies).to.equal('a=b; hello=yo; foo=bar');
 	});
 
 	it('should correctly return body as buffer', async () => {
