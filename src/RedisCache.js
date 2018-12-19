@@ -55,7 +55,6 @@ class RedisCache {
 	 */
 
 	/**
-	 *
 	 * @param {string} prefix
 	 * @param {Redis|redisConf} redisConf
 	 * @param {object} [options={}] These options can also be set on a global level
