@@ -96,6 +96,11 @@ class Connect {
 				'user-agent': userAgents.chrome,
 				accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
 				'accept-language': 'en-US,en;q=0.8',
+				// some sites expect an accept-encoding header
+				'accept-encoding': '',
+				// set empty cookie header if no cookies exist
+				// this is because some sites expect cookie header to be there
+				cookie: '',
 			},
 			// object of cookie values to set
 			cookies: {},
@@ -531,11 +536,6 @@ class Connect {
 	 */
 	compress(askForCompression = true) {
 		this.options.compress = askForCompression;
-		if (askForCompression === false) {
-			// if turning off compression, set accept-encoding to empty
-			// some sites expect an accept-encoding header
-			this.header('accept-encoding', '');
-		}
 		return this;
 	}
 
@@ -897,11 +897,6 @@ class Connect {
 
 		if (cookies.length) {
 			this.header('cookie', cookies.join('; '));
-		}
-		else if (!this.options.cookieJar) {
-			// set empty cookie header if no cookies exist
-			// this is because some sites expect cookie header to be there
-			this.header('cookie', '');
 		}
 	}
 
