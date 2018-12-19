@@ -8,7 +8,7 @@ function sleep(val, timeout = 20) {
 	return new Promise(resolve => setTimeout(() => resolve(val), timeout));
 }
 
-describe('redis cache library', () => {
+describe('redis cache library @rediscache', () => {
 	before(async () => {
 		await cache.clear();
 	});

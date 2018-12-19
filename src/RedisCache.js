@@ -13,12 +13,18 @@ const processId = process.pid;
 const getting = new Map();
 const setting = new Map();
 const getOrSetting = new Map();
+const getOrSettingStale = new Map();
 let globalCache;
 
 async function _withDefault(promise, defaultValue) {
 	const value = await promise;
 	if (value === undefined) return defaultValue;
 	return value;
+}
+
+function parseTTL(ttl) {
+	if (typeof ttl === 'string') return timestring(ttl, 'ms');
+	return ttl;
 }
 
 /**
@@ -236,6 +242,32 @@ class RedisCache {
 		return this.redis.set(prefixedKey, JSON.stringify(value), 'PX', ttl);
 	}
 
+	_setLocal(key, value, ttl = 0) {
+		if (value === undefined) return;
+
+		const data = {
+			c: Date.now(),
+			v: value,
+		};
+
+		this._localCache(key, data, ttl, false);
+	}
+
+	_setBoth(key, value, ttl = 0) {
+		if (value === undefined) return true;
+
+		const data = {
+			c: Date.now(),
+			v: value,
+		};
+
+		if (this.useLocalCache) {
+			this._localCache(key, data, ttl);
+		}
+
+		return this._set(key, data, ttl);
+	}
+
 	_del(key) {
 		return this.redis.unlink(this._key(key));
 	}
@@ -408,6 +440,10 @@ class RedisCache {
 		return this._fetching(getOrSetting, key, value);
 	}
 
+	_getOrSettingStale(key, value) {
+		return this._fetching(getOrSettingStale, key, value);
+	}
+
 	/**
 	 * bypass the cache and compute value directly (useful for debugging / testing)
 	 * NOTE: this'll be only useful in getOrSet or memoize, get will still return from cache
@@ -492,11 +528,16 @@ class RedisCache {
 	 * @param {getRedisOpts} [options]
 	 * @returns {Promise<any>}
 	 */
-	async getStale(key, defaultValue = undefined, options = {}) {
+	async getStale(key, defaultValue = undefined, options = {}, ctx = {}) {
 		if (this.useLocalCache) {
 			const localValue = this._localCache(key);
 			if (localValue !== undefined) {
-				return localValue;
+				if (ctx.staleTTL) {
+					if (localValue.c < Date.now() - ctx.staleTTL) {
+						ctx.isStale = true;
+					}
+				}
+				return localValue.v;
 			}
 		}
 
@@ -508,16 +549,22 @@ class RedisCache {
 		}
 
 		const promise = this._getAuto(key).then(async ([value, ttl]) => {
-			if (value !== undefined && options.parse) {
-				return [await options.parse(value), ttl];
+			if (value === undefined) return [value, ttl];
+			if (ctx.staleTTL) {
+				if (value.c < Date.now() - ctx.staleTTL) {
+					ctx.isStale = true;
+				}
 			}
-			return [value, ttl];
+			if (options.parse) {
+				return [await options.parse(value.v), ttl];
+			}
+			return [value.v, ttl];
 		});
 
 		this._getting(key, promise);
 		const [value, ttl] = await promise;
 		if (this.useLocalCache) {
-			this._localCache(key, value, ttl, false);
+			this._setLocal(key, value, ttl);
 		}
 		this._getting(key, DELETE);
 
@@ -559,14 +606,9 @@ class RedisCache {
 	 * or opts (default: 0)
 	 * @return {boolean}
 	 */
-	async set(key, value, options = {}, ret = {}) {
+	async set(key, value, options = {}, ctx = {}) {
 		let ttl = (typeof options === 'object') ? options.ttl : options;
-		if (typeof ttl === 'string') {
-			ttl = timestring(ttl, 'ms');
-		}
-		else {
-			ttl = ttl || 0;
-		}
+		ttl = parseTTL(ttl);
 
 		try {
 			if (value && value.then) {
@@ -574,30 +616,24 @@ class RedisCache {
 				// resolve it and then cache it
 				this._setting(key, value);
 				const resolvedValue = this._wrapInProxy(key, await value);
-				if (this.useLocalCache) {
-					this._localCache(key, resolvedValue, ttl);
-				}
-				await this._set(key, resolvedValue, ttl);
+				await this._setBoth(key, resolvedValue, ttl);
 				this._setting(key, DELETE);
-				ret.__value = resolvedValue;
+				ctx.result = resolvedValue;
 				return true;
 			}
 			if (typeof value === 'function') {
 				// value is a function
 				// call it and set the result
-				return this.set(key, value(key), ttl, ret);
+				return this.set(key, value(key), ttl, ctx);
 			}
 
 			// value is normal
 			// just set it in the store
 			value = this._wrapInProxy(key, value);
 			this._setting(key, Promise.resolve(value));
-			if (this.useLocalCache) {
-				this._localCache(key, value, ttl);
-			}
-			await this._set(key, value, ttl);
+			await this._setBoth(key, value, ttl);
 			this._setting(key, DELETE);
-			ret.__value = value;
+			ctx.result = value;
 			return true;
 		}
 		catch (error) {
@@ -620,14 +656,26 @@ class RedisCache {
 			return undefined;
 		}
 
-		const ret = {};
-		await this.set(key, value, options, ret);
-		return ret.__value;
+		const ctx = {};
+		await this.set(key, value, options, ctx);
+		return ctx.result;
 	}
 
 	/**
 	 * @typedef {object} setRedisOpts
 	 * @property {number|string} ttl in ms / timestring ('1d 3h') default: 0
+	 * @property {number|string} staleTTL in ms / timestring ('1d 3h')
+	 *  set this if you want stale values to be returned and generation in the background
+	 *  values will be considered stale after this time period
+	 * @property {boolean} [requireResult=true]
+	 *  only valid if stale ttl is given
+	 *  it true, this will return undefined and generate value in background if the key does not exist
+	 *  if false, this will generate value in foreground if the key does not exist
+	 * @property {boolean} [freshResult=false]
+	 *  always return fresh value
+	 *  only valid if stale ttl is given
+	 *  if true, this will generate value in foreground if value is stale
+	 *  if false, this will generate value in background (and return stale value) if value is stale
 	 * @property {(val: any) => Promise<any> | any} parse function to parse value fetched from redis
 	 */
 
@@ -641,6 +689,10 @@ class RedisCache {
 	 * @return {any}
 	 */
 	async getOrSet(key, value, options = {}) {
+		if (options && options.staleTTL) {
+			return this._getOrSetStale(key, value, options);
+		}
+
 		const settingPromise = this._getOrSetting(key);
 		if (settingPromise) {
 			// Some other process is still fetching the value
@@ -659,7 +711,7 @@ class RedisCache {
 		if (this.useLocalCache) {
 			const localValue = this._localCache(key);
 			if (localValue !== undefined) {
-				return localValue;
+				return localValue.v;
 			}
 		}
 
@@ -668,6 +720,54 @@ class RedisCache {
 		const result = await promise;
 		this._getOrSetting(key, DELETE);
 		return result;
+	}
+
+	async _setBackground(key, value, options) {
+		if (this._getOrSettingStale(key)) return;
+
+		// regenerate value in the background
+		this._getOrSettingStale(key, true);
+		setImmediate(async () => {
+			await this.set(key, value, options);
+			this._getOrSettingStale(key, DELETE);
+		});
+	}
+
+	async _getOrSetStale(key, value, options = {}) {
+		// cache is bypassed, return value directly
+		if (this.isBypassed()) {
+			if (typeof value === 'function') return value(key);
+			return value;
+		}
+
+		// try to get the value from local cache first
+		const ctx = {
+			staleTTL: parseTTL(options.staleTTL),
+		};
+
+		const existingValue = await this.getStale(key, undefined, options, ctx);
+		let generateInBg = true;
+		if (existingValue === undefined) {
+			if (options.requireResult === false || options.freshResult) {
+				generateInBg = false;
+			}
+		}
+		else if (ctx.isStale) {
+			if (options.freshResult) {
+				generateInBg = false;
+			}
+		}
+
+		if (!generateInBg) {
+			// regenerate value in the foreground
+			const setCtx = {};
+			await this.set(key, value, options, setCtx);
+			return setCtx.result;
+		}
+
+		// regenerate value in the background
+		this._setBackground(key, value, options);
+		return existingValue;
 	}
 
 	/**
