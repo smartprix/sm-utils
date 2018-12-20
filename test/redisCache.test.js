@@ -3,7 +3,7 @@ import {expect} from 'chai';
 import _ from 'lodash';
 import {RedisCache, Vachan} from '../src/index';
 
-const IS_PIKA = false;
+const IS_PIKA = Boolean(process.env.USE_PIKA);
 
 let conf = {};
 if (IS_PIKA) {
