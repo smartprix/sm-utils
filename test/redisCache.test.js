@@ -3,7 +3,25 @@ import {expect} from 'chai';
 import _ from 'lodash';
 import {RedisCache, Vachan} from '../src/index';
 
-const cache = new RedisCache('test');
+const IS_PIKA = false;
+
+let conf = {};
+if (IS_PIKA) {
+	conf = {
+		port: 9221,
+		type: 'pika',
+	};
+}
+
+function getCache(prefix, options = {}, redisConf = {}) {
+	return new RedisCache(
+		prefix,
+		Object.assign({}, conf, redisConf),
+		options
+	);
+}
+
+const cache = getCache('test');
 function sleep(val, timeout = 20) {
 	return new Promise(resolve => setTimeout(() => resolve(val), timeout));
 }
@@ -111,18 +129,36 @@ describe('redis cache library @rediscache', () => {
 		expect(value).to.equal('default');
 	});
 
-	it('should correctly set ttl', async () => {
+	it('should correctly set ttl', async function () {
+		let multiplier = 1;
+		if (IS_PIKA) {
+			// pika doesn't support ttl of millisecond resolution
+			this.timeout(15000);
+			multiplier = 100;
+		}
+
 		const key = 'g';
 		const value = 'you';
 		expect(await cache.get(key)).to.be.undefined;
-		expect(await cache.set(key, value, 200)).to.be.true;
+		expect(await cache.set(key, value, 40 * multiplier)).to.be.true;
 		expect(await cache.get(key)).to.equal(value);
-		await sleep('', 100);
+		await sleep('', 20 * multiplier);
 		expect(await cache.get(key)).to.equal(value);
-		await sleep('', 40);
+		await sleep('', 10 * multiplier);
 		expect(await cache.get(key)).to.equal(value);
-		await sleep('', 70);
+		await sleep('', 20 * multiplier);
 		expect(await cache.get(key)).to.be.undefined;
+
+		cache.useLocalCache = false;
+		expect(await cache.set(key, value, 40 * multiplier)).to.be.true;
+		expect(await cache.get(key)).to.equal(value);
+		await sleep('', 20 * multiplier);
+		expect(await cache.get(key)).to.equal(value);
+		await sleep('', 10 * multiplier);
+		expect(await cache.get(key)).to.equal(value);
+		await sleep('', 20 * multiplier);
+		expect(await cache.get(key)).to.be.undefined;
+		cache.useLocalCache = true;
 	});
 
 	it('should correctly get stale value', async () => {
@@ -146,7 +182,7 @@ describe('redis cache library @rediscache', () => {
 	});
 
 	it('should correctly return the size', async () => {
-		const cache1 = new RedisCache('test2');
+		const cache1 = getCache('test2');
 		expect(await cache1.size()).to.equal(0);
 		expect(await cache.size()).to.equal(7);
 	});
@@ -168,7 +204,7 @@ describe('redis cache library @rediscache', () => {
 	});
 
 	it('should correctly use localCache', async () => {
-		const redisCache = new RedisCache('test');
+		const redisCache = getCache('test');
 
 		const key = 'localCache';
 		const value = 'rocks!';
@@ -214,7 +250,7 @@ describe('redis cache library @rediscache', () => {
 		};
 
 		RedisCache.logOnLocalWrite = true;
-		const redisCache = new RedisCache('test', {}, {logger});
+		const redisCache = getCache('test', {logger});
 
 		const key = 'localCacheWriteTest';
 		const value = {a: 'b'};
@@ -234,7 +270,7 @@ describe('redis cache library @rediscache', () => {
 	});
 
 	it('should correctly use parse', async () => {
-		const redisCache = new RedisCache('test');
+		const redisCache = getCache('test');
 		let parseCount = 0;
 		class T {
 			constructor(obj) {
@@ -304,7 +340,7 @@ describe('redis cache library @rediscache', () => {
 	});
 
 	it('should correctly bypass the cache globally', async () => {
-		const redisCache = new RedisCache('test_bypass');
+		const redisCache = getCache('test_bypass');
 		await redisCache.clear();
 
 		let i = 0;
@@ -335,7 +371,7 @@ describe('redis cache library @rediscache', () => {
 	});
 
 	it('should correctly del contains', async () => {
-		const redisCache = new RedisCache('test_delcontains');
+		const redisCache = getCache('test_delcontains');
 		await redisCache.set('xorm:category:1', {a: 1});
 		await redisCache.set('xorm:category:2', {a: 2});
 		await redisCache.set('xorm:category:3', {a: 3});
