@@ -191,7 +191,7 @@ describe('cache library @cache', () => {
 	it('should correctly return the size and sizeSync', async () => {
 		const cache1 = new Cache();
 		expect(await cache1.size()).to.equal(0);
-		expect(await cache.size()).to.equal(10);
+		expect(await cache.size()).to.equal(9);
 		expect(await cache.size()).to.equal(cache.sizeSync());
 	});
 

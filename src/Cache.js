@@ -219,6 +219,10 @@ class Cache {
 				// call it and set the result
 				return this.set(key, value(key), ttl);
 			}
+			if (value === undefined) {
+				// don't set undefined value
+				return false;
+			}
 
 			// value is normal
 			// just set it in the store
