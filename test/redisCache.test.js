@@ -11,6 +11,13 @@ if (IS_PIKA) {
 		port: 9221,
 		type: 'pika',
 	};
+
+	// use redis for pub sub
+	// pika pub sub is very slow
+	RedisCache.pubSubRedisConf = {
+		port: 6379,
+		type: 'redis',
+	};
 }
 
 function getCache(prefix, options = {}, redisConf = {}) {

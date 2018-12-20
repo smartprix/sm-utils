@@ -39,11 +39,18 @@ class RedisCache {
 	static _bypass = false;
 	// this causes performace issues, use only when debugging
 	static logOnLocalWrite = false;
+
+	// default redis configuration
 	static defaultRedisConf = {
 		host: '127.0.0.1',
 		port: 6379,
 		password: undefined,
 	};
+
+	// which server to use for pub / sub (sync of local cache)
+	// we need to use a different server because main server might
+	// have bad pubsub performance (eg. pika)
+	static pubSubRedisConf = {};
 
 	/**
 	 * @ignore
@@ -84,8 +91,8 @@ class RedisCache {
 		const type = redisConf.type || this.constructor.defaultRedisConf.type;
 		this.isPika = (type === 'pika');
 
-		/** @type {Redis} */
-		this.redis = this.constructor.getRedis(redis);
+		/** @type [{Redis}, {Redis}] */
+		[this.redis, this.pubRedis] = this.constructor.getRedis(redis);
 
 		if ('useLocalCache' in redisConf) {
 			this.useLocalCache = redisConf.useLocalCache;
@@ -99,46 +106,55 @@ class RedisCache {
 	}
 
 	/**
-	 * @param {redisConf} redis
+	 * @param {redisConf} redisConf
 	 */
-	static getRedis(redis) {
-		const address = `${redis.host}:${redis.port}`;
+	static getRedis(redisConf) {
+		const address = `${redisConf.host}:${redisConf.port}`;
 
 		// cache redis connections in a map to prevent a new connection on each instance
 		if (!redisMap[address]) {
-			redisMap[address] = new Redis(redis);
+			const redis = new Redis(redisConf);
 
-			redisMap[address].on('error', (err) => {
+			redis.on('error', (err) => {
 				this.logger.error(`[RedisCache] error in redis connection on ${address}`, err);
 			});
 
 			// we need a different connection for subscription, because once subscribed
 			// no other commands can be issued
-			this.subscribe(redis);
+			const pubRedis = this.subscribe(redisConf);
+
+			redisMap[address] = [redis, pubRedis];
 		}
 
 		return redisMap[address];
 	}
 
 	/**
-	 * @param {redisConf} redis
+	 * @param {redisConf} redisConf
 	 */
-	static subscribe(redis) {
-		const redisIns = new Redis(redis);
+	static subscribe(redisConf) {
+		const pubSubConf = {};
+		pubSubConf.host = this.pubSubRedisConf.host || redisConf.host;
+		pubSubConf.port = this.pubSubRedisConf.port || redisConf.port;
 
-		redisIns.on('error', (err) => {
-			this.logger.error(`[RedisCache] error in redis connection on ${redis.host}:${redis.port}`, err);
+		const subRedis = new Redis(pubSubConf);
+		const pubRedis = new Redis(pubSubConf);
+
+		subRedis.on('error', (err) => {
+			this.logger.error(`[RedisCache] error in redis connection on ${redisConf.host}:${redisConf.port}`, err);
 		});
 
 		const channelName = `RC:${this.globalPrefix}`;
 
-		redisIns.subscribe(channelName, (err) => {
+		subRedis.subscribe(channelName, (err) => {
 			if (err) {
 				this.logger.error(`[RedisCache] can't subscribe to channel ${channelName}`, err);
 			}
 		});
 
-		redisIns.on('message', this.handleSubscribeMessage.bind(this));
+		subRedis.on('message', this.handleSubscribeMessage.bind(this));
+
+		return pubRedis;
 	}
 
 	static handleSubscribeMessage(channel, message) {
@@ -447,7 +463,7 @@ class RedisCache {
 	}
 
 	_localCache(key, value, ttl = 0, publish = true) {
-		return this.constructor._localCache(this.prefix, key, value, ttl, publish && this.redis);
+		return this.constructor._localCache(this.prefix, key, value, ttl, publish && this.pubRedis);
 	}
 
 	_fetching(map, key, value) {
