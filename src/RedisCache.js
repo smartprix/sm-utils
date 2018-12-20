@@ -81,7 +81,8 @@ class RedisCache {
 		});
 
 		// whether we are using pika
-		this.isPika = (redisConf.type === 'pika');
+		const type = redisConf.type || this.constructor.defaultRedisConf.type;
+		this.isPika = (type === 'pika');
 
 		/** @type {Redis} */
 		this.redis = this.constructor.getRedis(redis);
@@ -256,7 +257,7 @@ class RedisCache {
 	}
 
 	_delPattern(pattern) {
-		if (this.isPika) {
+		if (true) {
 			return this._delPatternPika(pattern);
 		}
 
@@ -297,7 +298,7 @@ class RedisCache {
 	}
 
 	_countPattern(pattern) {
-		if (this.isPika) {
+		if (true) {
 			return this._countPatternPika(pattern);
 		}
 
