@@ -257,7 +257,7 @@ class RedisCache {
 	}
 
 	_delPattern(pattern) {
-		if (true) {
+		if (this.isPika) {
 			return this._delPatternPika(pattern);
 		}
 
@@ -298,7 +298,7 @@ class RedisCache {
 	}
 
 	_countPattern(pattern) {
-		if (true) {
+		if (this.isPika) {
 			return this._countPatternPika(pattern);
 		}
 
