@@ -2,6 +2,8 @@ import Redis from 'ioredis';
 import timestring from 'timestring';
 import {Observer} from 'micro-observer';
 import _ from 'lodash';
+import LRU from './LRU';
+import Cache from './Cache';
 
 const DELETE = Symbol('DELETE');
 const DEL_CONTAINS = Symbol('DEL_CONTAINS');
@@ -103,6 +105,8 @@ class RedisCache {
 		else {
 			this.useLocalCache = this.constructor.useLocalCache;
 		}
+
+		this.maxLocalItems = options.maxLocalItems;
 	}
 
 	/**
@@ -583,7 +587,7 @@ class RedisCache {
 	async getStale(key, defaultValue = undefined, options = {}, ctx = {}) {
 		if (this.useLocalCache) {
 			const localValue = this._localCache(key);
-			if (localValue !== undefined) {
+			if (localValue !== undefined && localValue.v !== undefined) {
 				if (ctx.staleTTL) {
 					if (localValue.c < Date.now() - ctx.staleTTL) {
 						ctx.isStale = true;
@@ -762,7 +766,7 @@ class RedisCache {
 		// try to get the value from local cache first
 		if (this.useLocalCache) {
 			const localValue = this._localCache(key);
-			if (localValue !== undefined) {
+			if (localValue !== undefined && localValue.v !== undefined) {
 				return localValue.v;
 			}
 		}
@@ -820,6 +824,98 @@ class RedisCache {
 		// regenerate value in the background
 		this._setBackground(key, value, options);
 		return existingValue;
+	}
+
+	_getLocalAttachedMap(key) {
+		let value = this._localCache(key);
+		if (value === undefined) {
+			value = {
+				a: new Map(),
+			};
+
+			this._localCache(key, value, 0, false);
+		}
+		else if (value.a === undefined) {
+			value.a = new Map();
+		}
+
+		return value.a;
+	}
+
+	attachMap(key, mapKey = 'default') {
+		const fullMap = this._getLocalAttachedMap(key);
+		let map = fullMap.get(key);
+		if (!map) {
+			map = new Map();
+			fullMap.set(mapKey, map);
+		}
+		return map;
+	}
+
+	attachSet(key, mapKey = 'default') {
+		const fullMap = this._getLocalAttachedMap(key);
+		let set = fullMap.get(key);
+		if (!set) {
+			set = new Set();
+			fullMap.set(mapKey, set);
+		}
+		return set;
+	}
+
+	attachArray(key, mapKey = 'default') {
+		const fullMap = this._getLocalAttachedMap(key);
+		let array = fullMap.get(key);
+		if (!array) {
+			array = [];
+			fullMap.set(mapKey, array);
+		}
+		return array;
+	}
+
+	attachObject(key, mapKey = 'default') {
+		const fullMap = this._getLocalAttachedMap(key);
+		let obj = fullMap.get(key);
+		if (!obj) {
+			obj = {};
+			fullMap.set(mapKey, obj);
+		}
+		return obj;
+	}
+
+	attachLRU(key, mapKey = 'default', {maxItems = 100} = {}) {
+		const fullMap = this._getLocalAttachedMap(key);
+		let lru = fullMap.get(key);
+		if (!lru) {
+			lru = new LRU({maxItems});
+			fullMap.set(mapKey, lru);
+		}
+		return lru;
+	}
+
+	attachCache(key, mapKey = 'default', options = {}) {
+		const fullMap = this._getLocalAttachedMap(key);
+		let cache = fullMap.get(key);
+		if (!cache) {
+			cache = new Cache(options);
+			fullMap.set(mapKey, cache);
+		}
+		return cache;
+	}
+
+	deleteAttached(key, mapKey = 'default') {
+		const value = this._localCache(key);
+		if (!value || !value.a) return;
+		value.a.delete(mapKey);
+	}
+
+	deleteAllAttached(key) {
+		const value = this._localCache(key);
+		if (!value || !value.a) return;
+		value.a.clear();
+		delete value.a;
+		if (value.v === undefined) {
+			this._localCache(key, DELETE, 0, false);
+		}
 	}
 
 	/**
