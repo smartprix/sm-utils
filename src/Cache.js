@@ -42,13 +42,6 @@ class Cache {
 			this.data = new Map();
 		}
 
-		if (this.syncKey) {
-			// synchronize with other instances
-			getSubscribe(this.syncKey).on('message', (message) => {
-				// handle messages
-			});
-		}
-
 		this.ttl = new Map();
 		this.fetching = new Map();
 	}

@@ -8,7 +8,7 @@ function sleep(val, timeout = 20) {
 	return new Promise(resolve => setTimeout(() => resolve(val), timeout));
 }
 
-describe('cache library', () => {
+describe('cache library @cache', () => {
 	it('should get and set values', async () => {
 		const key = 'a';
 		const value = 'this';
