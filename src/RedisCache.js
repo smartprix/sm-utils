@@ -249,8 +249,9 @@ class RedisCache {
 	_del(key) {
 		if (this.isPika) {
 			// pika does not support unlink command
-			this.redis.del(this._key(key));
+			return this.redis.del(this._key(key));
 		}
+
 		return this.redis.unlink(this._key(key));
 	}
 
