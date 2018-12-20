@@ -29,6 +29,12 @@ function getCacheKey(args, key, options) {
 	return key + ':' + JSON.stringify(args);
 }
 
+function tick() {
+	return new Promise((resolve) => {
+		setImmediate(resolve);
+	});
+}
+
 /**
  * Local cache with dogpile prevention
  */
@@ -42,40 +48,41 @@ class Cache {
 			this.data = new Map();
 		}
 
-		this.ttl = new Map();
 		this.fetching = new Map();
 	}
 
+	_get(key, defaultValue = undefined) {
+		const existing = this.data.get(key);
+		if (existing === undefined) return defaultValue;
+		if (existing.t && (existing.c + existing.t < Date.now())) {
+			// value has expired
+			this.data.delete(key);
+			return defaultValue;
+		}
+		return existing.v;
+	}
+
 	_set(key, value, ttl = 0) {
+		const item = {
+			v: value,
+			c: Date.now(),
+		};
+
 		if (ttl <= 0) {
-			this.data.set(key, value);
+			this.data.set(key, item);
 			return;
 		}
 
-		// set value
-		this.data.set(key, value);
-
-		// set ttl
-		clearTimeout(this.ttl.get(key));
-		this.ttl.set(key, setTimeout(() => this.del(key), ttl));
+		item.t = ttl;
+		this.data.set(key, item);
 	}
 
 	_del(key) {
-		// delete ttl
-		if (this.ttl.has(key)) {
-			clearTimeout(this.ttl.get(key));
-			this.ttl.delete(key);
-		}
-
 		// delete data
 		this.data.delete(key);
 	}
 
 	_clear() {
-		// clear ttl
-		this.ttl.forEach(value => clearTimeout(value));
-		this.ttl.clear();
-
 		// clear data
 		this.data.clear();
 		this.fetching.clear();
@@ -88,7 +95,7 @@ class Cache {
 	 * @param {any} defaultValue
 	 */
 	getSync(key, defaultValue = undefined) {
-		return this.getStaleSync(key, defaultValue);
+		return this._get(key, defaultValue);
 	}
 
 	/**
@@ -107,9 +114,7 @@ class Cache {
 			return value;
 		}
 
-		const existing = this.data.get(key);
-		if (existing === undefined) return defaultValue;
-		return existing;
+		return this._get(key, defaultValue);
 	}
 
 	/**
@@ -119,9 +124,7 @@ class Cache {
 	 * @returns {any}
 	 */
 	getStaleSync(key, defaultValue = undefined) {
-		const existing = this.data.get(key);
-		if (existing === undefined) return defaultValue;
-		return existing;
+		return this._get(key, defaultValue);
 	}
 
 	/**
@@ -131,7 +134,7 @@ class Cache {
 	 * @returns {any}
 	 */
 	async getStale(key, defaultValue = undefined) {
-		return this.getStaleSync(key, defaultValue);
+		return this._get(key, defaultValue);
 	}
 
 	/**
@@ -239,14 +242,14 @@ class Cache {
 	 */
 	getOrSetSync(key, value, options = {}) {
 		// key already exists, return it
-		const existing = this.data.get(key);
+		const existing = this._get(key);
 		if (existing !== undefined) return existing;
 
 		// no value given, return undefined
 		if (value === undefined) return undefined;
 
 		this.setSync(key, value, options);
-		return this.data.get(key);
+		return this.data.get(key).v;
 	}
 
 	/**
@@ -267,14 +270,14 @@ class Cache {
 		}
 
 		// key already exists, return it
-		const existing = this.data.get(key);
+		const existing = this._get(key);
 		if (existing !== undefined) return existing;
 
 		// no value given, return undefined
 		if (value === undefined) return undefined;
 
 		await this.set(key, value, options);
-		return this.data.get(key);
+		return this.data.get(key).v;
 	}
 
 	/**
@@ -308,6 +311,7 @@ class Cache {
 
 	/**
 	 * returns the size of the cache (no. of keys)
+	 * NOTE: expired items are returned as part of this count
 	 * @return {number}
 	 */
 	async size() {
@@ -316,6 +320,7 @@ class Cache {
 
 	/**
 	 * returns the size of the cache (no. of keys)
+	 * NOTE: expired items are returned as part of this count
 	 * @return {number}
 	 */
 	sizeSync() {
@@ -336,6 +341,45 @@ class Cache {
 	 */
 	clearSync() {
 		return this._clear();
+	}
+
+	/**
+	 * delete expired items
+	 * NOTE: this method needs to loop over all the items
+	 */
+	async gc() {
+		if (this.data.size < 50000) {
+			this.gcSync();
+			return;
+		}
+
+		let i = 0;
+		for (const [key, value] of this.data) {
+			if (value.t && (value.c + value.t < Date.now())) {
+				// value is expired
+				this.data.delete(key);
+			}
+
+			i++;
+			if (i % 50000 === 0) {
+				// allow other tasks to execute after every 50000 elements
+				// eslint-disable-next-line no-await-in-loop
+				await tick();
+			}
+		}
+	}
+
+	/**
+	 * delete expired items synchronously
+	 * NOTE: this method needs to loop over all the items
+	 */
+	gcSync() {
+		for (const [key, value] of this.data) {
+			if (value.t && (value.c + value.t < Date.now())) {
+				// value is expired
+				this.data.delete(key);
+			}
+		}
 	}
 
 	/**
