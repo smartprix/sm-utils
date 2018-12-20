@@ -274,7 +274,15 @@ class RedisCache {
 		let count = 0;
 		stream.on('data', (keys) => {
 			count += keys.length;
-			if (action) action(keys);
+			if (action) {
+				const result = action(keys);
+				if (result.then) {
+					result.then(
+						() => {},
+						err => this.logger.error(err),
+					);
+				}
+			}
 		});
 
 		return new Promise((resolve) => {
@@ -285,7 +293,7 @@ class RedisCache {
 	_delPatternPika(pattern) {
 		// Pika does not support lua
 		// We have to use scan for deleting keys
-		return this._actionPattern(pattern, keys => this.redis.del(...keys));
+		return this._actionPattern(pattern, keys => (keys.length && this.redis.del(...keys)));
 	}
 
 	_countPattern(pattern) {
