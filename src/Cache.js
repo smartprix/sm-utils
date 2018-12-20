@@ -34,9 +34,9 @@ function getCacheKey(args, key, options) {
  */
 class Cache {
 	constructor(options = {}) {
-		if (options.maxSize) {
+		if (options.maxItems) {
 			// LRU
-			this.data = new LRU({maxSize: options.maxSize});
+			this.data = new LRU({maxItems: options.maxItems});
 		}
 		else {
 			this.data = new Map();

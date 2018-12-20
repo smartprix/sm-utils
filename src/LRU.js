@@ -1,10 +1,10 @@
 /**
  * A Simple LRU Map
  * This maintains 2 maps internally and swaps them when one becomes full
- * NOTE: At any time size of the map will be from 0 to 2 * maxSize
+ * NOTE: At any time size of the map will be from 0 to 2 * maxItems
  *
  * @example
- * const lru = new LRU({maxSize: 1000});
+ * const lru = new LRU({maxItems: 1000});
  * lru.set('hello', 'world');
  * lru.get('hello');
  * lru.delete('hello');
@@ -12,14 +12,14 @@
 class LRU {
 	/**
 	 * @param {object} [options={}]
-	 * @param {number} [options.maxSize] max size of the lru map
+	 * @param {number} [options.maxItems] max items in the lru map
 	 */
 	constructor(options = {}) {
-		if (!(options.maxSize && options.maxSize > 0)) {
-			throw new TypeError('`maxSize` must be a number greater than 0');
+		if (!(options.maxItems && options.maxItems > 0)) {
+			throw new TypeError('`maxItems` must be a number greater than 0');
 		}
 
-		this.maxSize = options.maxSize;
+		this.maxItems = options.maxItems;
 		this.cache = new Map();
 		this.oldCache = new Map();
 		this._size = 0;
@@ -28,7 +28,7 @@ class LRU {
 	_set(key, value) {
 		this.cache.set(key, value);
 
-		if (this.cache.size >= this.maxSize) {
+		if (this.cache.size >= this.maxItems) {
 			this._size = this.cache.size;
 			this.oldCache = this.cache;
 			this.cache = new Map();
