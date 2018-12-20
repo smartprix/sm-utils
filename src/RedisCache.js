@@ -52,6 +52,7 @@ class RedisCache {
 	 * @property {number} port
 	 * @property {string} [auth]
 	 * @property {string} [password]
+	 * @property {string} [type] type of server ('redis' or 'pika')
 	 */
 
 	/**
@@ -71,12 +72,16 @@ class RedisCache {
 			this.redis = redisConf;
 			return;
 		}
+
 		// Use merge because it ignores undefined values unlike Object.assign
 		const redis = _.merge({}, this.constructor.defaultRedisConf, {
 			host: redisConf.host,
 			port: redisConf.port,
 			password: redisConf.password || redisConf.auth,
 		});
+
+		// whether we are using pika
+		this.isPika = (redisConf.type === 'pika');
 
 		/** @type {Redis} */
 		this.redis = this.constructor.getRedis(redis);
@@ -268,6 +273,10 @@ class RedisCache {
 	}
 
 	_del(key) {
+		if (this.isPika) {
+			// pika does not support unlink command
+			this.redis.del(this._key(key));
+		}
 		return this.redis.unlink(this._key(key));
 	}
 

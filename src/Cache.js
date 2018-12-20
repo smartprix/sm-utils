@@ -1,5 +1,6 @@
 /* eslint-disable guard-for-in */
 import timestring from 'timestring';
+import LRU from './LRU';
 
 let globalCache;
 
@@ -32,8 +33,22 @@ function getCacheKey(args, key, options) {
  * Local cache with dogpile prevention
  */
 class Cache {
-	constructor() {
-		this.data = new Map();
+	constructor(options = {}) {
+		if (options.maxSize) {
+			// LRU
+			this.data = new LRU({maxSize: options.maxSize});
+		}
+		else {
+			this.data = new Map();
+		}
+
+		if (this.syncKey) {
+			// synchronize with other instances
+			getSubscribe(this.syncKey).on('message', (message) => {
+				// handle messages
+			});
+		}
+
 		this.ttl = new Map();
 		this.fetching = new Map();
 	}
