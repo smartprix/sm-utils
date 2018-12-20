@@ -16,7 +16,6 @@ const getting = new Map();
 const setting = new Map();
 const getOrSetting = new Map();
 const getOrSettingStale = new Map();
-let globalCache;
 
 async function _withDefault(promise, defaultValue) {
 	const value = await promise;
@@ -1009,111 +1008,6 @@ class RedisCache {
 
 		this._localCache(str, DEL_CONTAINS);
 		return this._delPattern(keyGlob);
-	}
-
-	/**
-	 * Return a global instance of Redis cache
-	 * @param {object} [redis] redis redisConf
-	 * @return {RedisCache}
-	 */
-	static globalCache(redis) {
-		if (!globalCache) globalCache = new this('global', redis);
-		return globalCache;
-	}
-
-	/**
-	 * gets a value from the cache immediately without waiting
-	 * @param {string} key
-	 * @param {any} defaultValue
-	 */
-	static getStale(key, defaultValue) {
-		return this.globalCache().getStale(key, defaultValue);
-	}
-
-	/**
-	 * gets a value from the global cache
-	 * @param {string} key
-	 * @param {any} defaultValue
-	 */
-	static get(key, defaultValue) {
-		return this.globalCache().get(key, defaultValue);
-	}
-
-	/**
-	 * checks if a key exists in the global cache
-	 * @param {string} key
-	 */
-	static has(key) {
-		return this.globalCache().has(key);
-	}
-
-	/**
-	 * sets a value in the global cache
-	 * @param {string} key
-	 * @param {any} value
-	 * @param {number|string|setRedisOpts} [options={}] ttl in ms/timestring('1d 3h') (default: 0)
-	 * or opts with parse and ttl
-	 * @return {boolean}
-	 */
-	static set(key, value, options = {}) {
-		return this.globalCache().set(key, value, options);
-	}
-
-	/**
-	 * gets a value from the global cache, or sets it if it doesn't exist
-	 * @param {string} key key to get
-	 * @param {any} value value to set if the key does not exist
-	 * @param {number|string|setRedisOpts} [options={}] ttl in ms/timestring('1d 3h') (default: 0)
-	 * or opts with parse and ttl
-	 */
-	static getOrSet(key, value, options = {}) {
-		return this.globalCache().getOrSet(key, value, options);
-	}
-
-	/**
-	 * alias for getOrSet
-	 * @param {string} key key to get
-	 * @param {any} value value to set if the key does not exist
-	 * @param {number|string|setRedisOpts} [options={}] ttl in ms/timestring('1d 3h') (default: 0)
-	 * or opts with parse and ttl
-	 */
-	static $(key, value, options = {}) {
-		return this.globalCache().getOrSet(key, value, options);
-	}
-
-	/**
-	 * deletes a value from the global cache
-	 * @param {string} key
-	 */
-	static del(key) {
-		return this.globalCache().del(key);
-	}
-
-	/**
-	 * @return {number} size of the global cache (no. of keys)
-	 */
-	static size() {
-		return this.globalCache().size();
-	}
-
-	/**
-	 * clears the global cache (deletes all keys)
-	 */
-	static clear() {
-		return this.globalCache().clear();
-	}
-
-	/**
-	 *
-	 * memoizes a function (caches the return value of the function)
-	 * @param {string} key
-	 * @param {function} fn
-	 * @param {number|string|setRedisOpts} [options={}] ttl in ms/timestring('1d 3h') (default: 0)
-	 * or opts with parse and ttl
-	 * @return {function}
-	 */
-	static memoize(key, fn, options = {}) {
-		return this.globalCache().memoize(key, fn, options);
 	}
 }
 
