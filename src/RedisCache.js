@@ -203,34 +203,6 @@ class RedisCache {
 		}
 	}
 
-	async _getWithTTL(key) {
-		this.constructor.redisGetCount++;
-		const prefixedKey = this._key(key);
-		const results = await this.redis.pipeline([
-			['get', prefixedKey],
-			['pttl', prefixedKey],
-		]).exec();
-
-		const value = results[0][1];
-		const ttl = results[1][1];
-
-		if (value === null) return [undefined, ttl];
-		try {
-			return [JSON.parse(value), ttl];
-		}
-		catch (err) {
-			return [value, ttl];
-		}
-	}
-
-	async _getAuto(key) {
-		if (this.useLocalCache) {
-			return this._getWithTTL(key);
-		}
-
-		return [await this._get(key), 0];
-	}
-
 	async _has(key) {
 		return this.redis.exists(this._key(key));
 	}
@@ -252,6 +224,7 @@ class RedisCache {
 		const data = {
 			c: Date.now(),
 			v: value,
+			t: ttl,
 		};
 
 		this._localCache(key, data, ttl, false);
@@ -263,6 +236,7 @@ class RedisCache {
 		const data = {
 			c: Date.now(),
 			v: value,
+			t: ttl,
 		};
 
 		if (this.useLocalCache) {
@@ -280,17 +254,62 @@ class RedisCache {
 		return this.redis.unlink(this._key(key));
 	}
 
-	_clear() {
-		const keyGlob = this._key('*');
+	_delPattern(pattern) {
+		if (this.isPika) {
+			return this._delPatternPika(pattern);
+		}
+
 		return this.redis.eval(
-			`for i, name in ipairs(redis.call('KEYS', '${keyGlob}')) do redis.call('UNLINK', name); end`,
+			`local j=0; for i, name in ipairs(redis.call('KEYS', '${pattern}')) do redis.call('UNLINK', name); j=i end return j`,
 			0,
 		);
 	}
 
+	_actionPattern(pattern, action) {
+		const stream = this.redis.scanStream({
+			match: pattern,
+			count: 100,
+		});
+
+		let count = 0;
+		stream.on('data', (keys) => {
+			count += keys.length;
+			if (action) action(keys);
+		});
+
+		return new Promise((resolve) => {
+			stream.on('end', () => resolve(count));
+		});
+	}
+
+	_delPatternPika(pattern) {
+		// Pika does not support lua
+		// We have to use scan for deleting keys
+		return this._actionPattern(pattern, keys => this.redis.del(...keys));
+	}
+
+	_countPattern(pattern) {
+		if (this.isPika) {
+			return this._countPatternPika(pattern);
+		}
+
+		return this.redis.eval(`return #redis.pcall('keys', '${pattern}')`, 0);
+	}
+
+	_countPatternPika(pattern) {
+		// Pika does not support lua
+		// We have to use scan for counting keys
+		return this._actionPattern(pattern);
+	}
+
+	_clear() {
+		const keyGlob = this._key('*');
+		return this._delPattern(keyGlob);
+	}
+
 	_size() {
 		const keyGlob = this._key('*');
-		return this.redis.eval(`return #redis.pcall('keys', '${keyGlob}')`, 0);
+		return this._countPattern(keyGlob);
 	}
 
 	// eslint-disable-next-line max-statements
@@ -556,17 +575,17 @@ class RedisCache {
 			return value;
 		}
 
-		const promise = this._getAuto(key).then(async ([value, ttl]) => {
-			if (value === undefined) return [value, ttl];
+		const promise = this._get(key).then(async (value) => {
+			if (value === undefined) return [value, 0];
 			if (ctx.staleTTL) {
 				if (value.c < Date.now() - ctx.staleTTL) {
 					ctx.isStale = true;
 				}
 			}
 			if (options.parse) {
-				return [await options.parse(value.v), ttl];
+				return [await options.parse(value.v), value.t];
 			}
-			return [value.v, ttl];
+			return [value.v, value.t];
 		});
 
 		this._getting(key, promise);
@@ -868,10 +887,7 @@ class RedisCache {
 		}
 
 		this._localCache(str, DEL_CONTAINS);
-		return this.redis.eval(
-			`local j=0; for i, name in ipairs(redis.call('KEYS', '${keyGlob}')) do redis.call('UNLINK', name); j=i end return j`,
-			0,
-		);
+		return this._delPattern(keyGlob);
 	}
 
 	/**
