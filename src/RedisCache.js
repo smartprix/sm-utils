@@ -272,15 +272,14 @@ class RedisCache {
 		});
 
 		let count = 0;
-		stream.on('data', (keys) => {
+		stream.on('data', async (keys) => {
 			count += keys.length;
 			if (action) {
-				const result = action(keys);
-				if (result.then) {
-					result.then(
-						() => {},
-						err => this.logger.error(err),
-					);
+				try {
+					await action(keys);
+				}
+				catch (e) {
+					this.logger.error(e);
 				}
 			}
 		});
