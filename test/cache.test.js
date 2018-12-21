@@ -243,4 +243,58 @@ describe('cache library @cache', () => {
 		expect(cache.sizeSync()).to.equal(0);
 		expect(cache.getSync('a')).to.be.undefined;
 	});
+
+	it('should correctly use lru', async () => {
+		const aCache = new Cache({maxItems: 3});
+		await aCache.set('a', 'b');
+		await aCache.set('c', 'd');
+		await aCache.set('e', 'f');
+		await aCache.set('g', 'h');
+		await aCache.set('i', 'j');
+		await aCache.set('k', 'l');
+		expect(await aCache.get('a')).to.be.undefined;
+		expect(await aCache.get('c')).to.be.undefined;
+		expect(await aCache.get('e')).to.be.undefined;
+		expect(await aCache.get('g')).to.equal('h');
+		expect(await aCache.get('i')).to.equal('j');
+		expect(await aCache.get('k')).to.equal('l');
+		await aCache.set('a', 'b');
+		await aCache.get('k');
+		await aCache.get('g');
+		await aCache.get('a');
+		await aCache.set('m', 'n');
+		await aCache.get('g');
+		expect(await aCache.get('c')).to.be.undefined;
+		expect(await aCache.get('e')).to.be.undefined;
+		expect(await aCache.get('k')).to.be.undefined;
+		expect(await aCache.get('i')).to.be.undefined;
+		expect(await aCache.get('a')).to.equal('b');
+		expect(await aCache.get('g')).to.equal('h');
+		expect(await aCache.get('m')).to.equal('n');
+	});
+
+	it('should correctly gc a cache', async () => {
+		const aCache = new Cache();
+		aCache.set('a', 'b', 20);
+		aCache.set('c', 'd', 20);
+		aCache.set('e', 'f', 20);
+		aCache.set('g', 'h', 35);
+		aCache.set('i', 'j', 50);
+		aCache.set('k', 'l', 50);
+
+		expect(await aCache.size()).to.equal(6);
+		await sleep('', 10);
+		await aCache.gc();
+		expect(await aCache.size()).to.equal(6);
+		aCache.gcSync();
+		expect(await aCache.size()).to.equal(6);
+		await sleep('', 20);
+		await aCache.gc();
+		expect(await aCache.size()).to.equal(3);
+		await sleep('', 10);
+		aCache.gcSync();
+		expect(await aCache.size()).to.equal(2);
+		expect(await aCache.get('a')).to.be.undefined;
+		expect(await aCache.get('k')).to.equal('l');
+	});
 });
