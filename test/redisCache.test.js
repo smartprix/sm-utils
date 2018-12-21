@@ -316,7 +316,7 @@ describe('redis cache library @rediscache', () => {
 		RedisCache.redisGetCount = 0;
 	});
 
-	// NOTE: below test are only for attachMap, rest of functions should work similarly
+	// NOTE: below test are only for attachMap, rest of attach* functions should work similarly
 	// eslint-disable-next-line max-statements
 	it('should correctly attach local values', async () => {
 		const aCache = getCache('localAttach', {maxLocalItems: 2});
