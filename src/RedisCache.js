@@ -279,7 +279,7 @@ class RedisCache {
 				this._localCache(prefix, key, value);
 			}
 			catch (e) {
-				console.error(e);
+				this.logger.error(e);
 			}
 		}
 		else {
