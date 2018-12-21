@@ -368,14 +368,15 @@ class Cache {
 		}
 
 		let i = 0;
+		const time = Date.now();
 		for (const [key, value] of this.data) {
-			if (value.t && (value.c + value.t < Date.now())) {
+			if (value.t && (time - value.c > value.t)) {
 				// value is expired
 				this.data.delete(key);
 			}
 
 			i++;
-			if (i % 50000 === 0) {
+			if ((i & 32767) === 0) {
 				// allow other tasks to execute after every 50000 elements
 				// eslint-disable-next-line no-await-in-loop
 				await tick();
@@ -388,8 +389,9 @@ class Cache {
 	 * NOTE: this method needs to loop over all the items (expensive)
 	 */
 	gcSync() {
+		const time = Date.now();
 		for (const [key, value] of this.data) {
-			if (value.t && (Date.now() - value.c > value.t)) {
+			if (value.t && (time - value.c > value.t)) {
 				// value is expired
 				this.data.delete(key);
 			}
