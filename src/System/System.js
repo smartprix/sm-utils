@@ -1,5 +1,6 @@
 import childProcess from 'child_process';
 import passwd from 'etc-passwd';
+import util from 'util';
 import Vachan from '../Vachan';
 import gracefulServerShutdown from './gracefulServerShutdown';
 
@@ -7,6 +8,9 @@ import gracefulServerShutdown from './gracefulServerShutdown';
  * System and process utilities
  * @namespace System
  */
+
+const setImmediatePromise = util.promisify(setImmediate);
+const setTimeoutPromise = util.promisify(setTimeout);
 
 let oldUmask = -1;
 let hrtimeDelta;
@@ -241,31 +245,6 @@ function microtime() {
 }
 
 /**
- * Sleep for a specified time (in milliseconds)
- *   Example: await System.sleep(2000);
- * @memberof System
- * @return {Promise<void>}
- */
-async function sleep(timeout) {
-	return new Promise((resolve) => {
-		setTimeout(resolve, timeout);
-	});
-}
-
-/**
- * wait till the next event loop cycle
- * this function is useful if we are running a long blocking task
- * and need to make sure that other callbacks can complete.
- * @memberof System
- * @return {Promise<void>}
- */
-async function tick() {
-	return new Promise((resolve) => {
-		setImmediate(resolve);
-	});
-}
-
-/**
  * exit and kill the process gracefully (after completing all onExit handlers)
  * code can be an exit code or a message (string)
  * if a message is given then it will be logged to console before exiting
@@ -450,8 +429,21 @@ module.exports = {
 	millitime,
 	microtime,
 	nanotime,
-	sleep,
-	tick,
+	/**
+	 * Sleep for a specified time (in milliseconds)
+	 *   Example: await System.sleep(2000);
+	 * @memberof System
+	 * @return {Promise<void>}
+	 */
+	sleep: setTimeoutPromise,
+	/**
+	 * wait till the next event loop cycle
+	 * this function is useful if we are running a long blocking task
+	 * and need to make sure that other callbacks can complete.
+	 * @memberof System
+	 * @return {Promise<void>}
+	 */
+	tick: setImmediatePromise,
 	exit,
 	forceExit,
 	onExit,
