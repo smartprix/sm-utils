@@ -47,7 +47,6 @@
     "lodash": "^4.17.11",
     "micro-observer": "0.0.17",
     "mkdirp": "^0.5.1",
-    "pg": "^7.7.1",
     "rimraf": "^2.6.2",
     "sm-tunnel-agent": "^0.6.3",
     "socks5-client": "^1.2.6",
