@@ -3,6 +3,7 @@ import timestring from 'timestring';
 import LRU from './LRU';
 
 let globalCache;
+const FIFTEEN_MINUTES = 15 * 60 * 1000;
 
 function ttlMs(options) {
 	let ttl = (typeof options === 'object') ? options.ttl : options;
@@ -36,7 +37,7 @@ function tick() {
 }
 
 /**
- * Local cache with dogpile prevention
+ * Local cache with dogpile prevention, lru, ttl and other goodies
  */
 class Cache {
 	constructor(options = {}) {
@@ -54,10 +55,19 @@ class Cache {
 	_get(key, defaultValue = undefined) {
 		const existing = this.data.get(key);
 		if (existing === undefined) return defaultValue;
-		if (existing.t && (existing.c + existing.t < Date.now())) {
-			// value has expired
-			this.data.delete(key);
-			return defaultValue;
+		if (existing.t) {
+			const time = Date.now();
+			if ((time - existing.c) > existing.t) {
+				// value has expired
+				this.data.delete(key);
+
+				// call gc if required
+				if (time - this.gcTime > FIFTEEN_MINUTES) {
+					this.gc().then(() => {}, err => console.error(err));
+				}
+
+				return defaultValue;
+			}
 		}
 		return existing.v;
 	}
@@ -349,7 +359,7 @@ class Cache {
 
 	/**
 	 * delete expired items
-	 * NOTE: this method needs to loop over all the items
+	 * NOTE: this method needs to loop over all the items (expensive)
 	 */
 	async gc() {
 		if (this.data.size < 50000) {
@@ -375,7 +385,7 @@ class Cache {
 
 	/**
 	 * delete expired items synchronously
-	 * NOTE: this method needs to loop over all the items
+	 * NOTE: this method needs to loop over all the items (expensive)
 	 */
 	gcSync() {
 		for (const [key, value] of this.data) {
