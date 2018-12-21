@@ -428,7 +428,6 @@ describe('redis cache library @rediscache', () => {
 				require('@babel/register');
 				const {RedisCache} = require(indexPath);
 				RedisCache.pubSubRedisConf = conf.pubSubRedisConf || {};
-				RedisCache.logger = console;
 				const wCache = new RedisCache('worker_redis', conf);
 
 				const ret = [];
