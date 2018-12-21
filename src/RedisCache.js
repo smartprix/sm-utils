@@ -129,7 +129,7 @@ class RedisCache {
 	// which server to use for pub / sub (sync of local cache)
 	// we need to use a different server because main server might
 	// have bad pubsub performance (eg. pika)
-	static pubSubRedisConf = {};
+	static pubSubRedisConf = null;
 
 	/**
 	 * @ignore
@@ -225,21 +225,13 @@ class RedisCache {
 	 * @param {redisConf} redisConf
 	 */
 	static subscribe(redisConf) {
-		const pubSubConf = {};
-		pubSubConf.host = this.pubSubRedisConf.host || redisConf.host;
-		pubSubConf.port = this.pubSubRedisConf.port || redisConf.port;
-		if (this.pubSubRedisConf.password) {
-			pubSubConf.password = this.pubSubRedisConf.password;
-		}
-		else if (redisConf.password && _.isEmpty(this.pubSubRedisConf)) {
-			pubSubConf.password = redisConf.password;
-		}
+		const pubSubConf = this.pubSubRedisConf || redisConf;
 
 		const subRedis = new Redis(pubSubConf);
 		const pubRedis = new Redis(pubSubConf);
 
 		subRedis.on('error', (err) => {
-			this.logger.error(`[RedisCache] error in redis connection on ${redisConf.host}:${redisConf.port}`, err);
+			this.logger.error(`[RedisCache] error in redis connection on ${pubSubConf.host}:${pubSubConf.port}`, err);
 		});
 
 		const channelName = `RC:${this.globalPrefix}`;
