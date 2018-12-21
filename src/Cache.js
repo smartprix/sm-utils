@@ -362,13 +362,15 @@ class Cache {
 	 * NOTE: this method needs to loop over all the items (expensive)
 	 */
 	async gc() {
+		const time = Date.now();
+		this.gcTime = time;
+
 		if (this.data.size < 50000) {
 			this.gcSync();
 			return;
 		}
 
 		let i = 0;
-		const time = Date.now();
 		for (const [key, value] of this.data) {
 			if (value.t && (time - value.c > value.t)) {
 				// value is expired
@@ -390,6 +392,8 @@ class Cache {
 	 */
 	gcSync() {
 		const time = Date.now();
+		this.gcTime = time;
+
 		for (const [key, value] of this.data) {
 			if (value.t && (time - value.c > value.t)) {
 				// value is expired
