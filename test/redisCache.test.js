@@ -33,13 +33,19 @@ function sleep(val, timeout = 20) {
 	return new Promise(resolve => setTimeout(() => resolve(val), timeout));
 }
 
-async function tick() {
-	return sleep('', 1);
+async function tick(val) {
+	return new Promise(resolve => setImmediate(() => setTimeout(() => resolve(val), 1)));
 }
 
 describe('redis cache library @rediscache', () => {
 	before(async () => {
-		await cache.clear();
+		const aCache = getCache('*');
+		await aCache.delContains('_all_');
+	});
+
+	after(async () => {
+		const aCache = getCache('*');
+		await aCache.delContains('_all_');
 	});
 
 	it('should get and set values', async () => {
@@ -239,8 +245,6 @@ describe('redis cache library @rediscache', () => {
 		await sleep('', 50 * multiplier);
 		expect(await aCache.getOrSet(key, value, opts)).to.equal(4);
 		expect(counter).to.equal(4);
-
-		await aCache.clear();
 	});
 
 	it('should correctly use requireResult and freshResult in staleTTL', async function () {
@@ -251,7 +255,7 @@ describe('redis cache library @rediscache', () => {
 			multiplier = 100;
 		}
 
-		const aCache = getCache('getOrSet_staleTTL');
+		const aCache = getCache('getOrSet_staleTTL_opts');
 		const key = 'g';
 		let counter = 0;
 		const value = () => {
@@ -284,8 +288,106 @@ describe('redis cache library @rediscache', () => {
 		await sleep('', 50 * multiplier);
 		expect(await aCache.getOrSet(key, value, opts)).to.equal(4);
 		expect(counter).to.equal(4);
+	});
+
+	it('should correctly use lru in local items', async () => {
+		RedisCache.redisGetCount = 0;
+		const aCache = getCache('getOrSet_localLRU', {maxLocalItems: 3});
+		await aCache.set('a', 'b');
+		await aCache.set('c', 'd');
+		await aCache.set('e', 'f');
+		await aCache.set('g', 'h');
+		await aCache.set('i', 'j');
+		await aCache.set('k', 'l');
+		expect(aCache.localCache.get('g').v).to.equal('h');
+		expect(aCache.localCache.get('i').v).to.equal('j');
+		expect(aCache.localCache.get('k').v).to.equal('l');
+		expect(await aCache.get('g')).to.equal('h');
+		expect(await aCache.get('i')).to.equal('j');
+		expect(await aCache.get('k')).to.equal('l');
+		expect(RedisCache.redisGetCount).to.equal(0);
+		expect(aCache.localCache.get('a')).to.be.undefined;
+		expect(aCache.localCache.get('c')).to.be.undefined;
+		expect(aCache.localCache.get('e')).to.be.undefined;
+		expect(await aCache.get('a')).to.equal('b');
+		expect(await aCache.get('c')).to.equal('d');
+		expect(await aCache.get('e')).to.equal('f');
+		expect(RedisCache.redisGetCount).to.equal(3);
+		RedisCache.redisGetCount = 0;
+	});
+
+	// NOTE: below test are only for attachMap, rest of functions should work similarly
+	// eslint-disable-next-line max-statements
+	it('should correctly attach local values', async () => {
+		const aCache = getCache('localAttach', {maxLocalItems: 2});
+		await aCache.set('a', 'b', 30);
+		await aCache.set('c', 'd');
+
+		expect(aCache.attachMap('a', 'data1').get('k1')).to.be.undefined;
+		aCache.attachMap('a', 'data1').set('k1', 'v1');
+		expect(aCache.attachMap('a', 'data1').get('k1')).to.equal('v1');
+		expect(aCache.attachMap('c', 'data1').get('k1')).to.be.undefined;
+		aCache.attachMap('a', 'data1').set('k2', 'v2');
+		expect(aCache.attachMap('a', 'data1').get('k2')).to.equal('v2');
+		expect(aCache.attachMap('a', 'data2').get('k1')).to.be.undefined;
+		aCache.attachMap('a', 'data2').set('k1', 'v21');
+		expect(aCache.attachMap('a', 'data2').get('k1')).to.equal('v21');
+		expect(aCache.attachMap('a', 'data1').get('k1')).to.equal('v1');
+
+		// trigger ttl
+		await sleep('', 40);
+		expect(aCache.attachMap('a', 'data1').get('k1')).to.be.undefined;
+		expect(aCache.attachMap('a', 'data2').get('k1')).to.be.undefined;
+		aCache.attachMap('a', 'data1').set('k1', 'v1');
+		expect(aCache.attachMap('a', 'data1').get('k1')).to.equal('v1');
+
+		await aCache.set('a', 'b');
+		expect(aCache.attachMap('a', 'data1').get('k1')).to.be.undefined;
+		aCache.attachMap('a', 'data1').set('k1', 'v1');
+		expect(aCache.attachMap('a', 'data1').get('k1')).to.equal('v1');
+
+		await aCache.del('a');
+		expect(aCache.attachMap('a', 'data1').get('k1')).to.be.undefined;
+		aCache.attachMap('a', 'data1').set('k1', 'v1');
+		expect(aCache.attachMap('a', 'data1').get('k1')).to.equal('v1');
+
+		await aCache.del('a');
+		expect(aCache.attachMap('a', 'data1').get('k1')).to.be.undefined;
+		aCache.attachMap('a', 'data1').set('k1', 'v1');
+		expect(aCache.attachMap('a', 'data1').get('k1')).to.equal('v1');
 
 		await aCache.clear();
+		expect(aCache.attachMap('a', 'data1').get('k1')).to.be.undefined;
+		aCache.attachMap('a', 'data1').set('k1', 'v1');
+		expect(aCache.attachMap('a', 'data1').get('k1')).to.equal('v1');
+
+		await aCache.delContains('a');
+		expect(aCache.attachMap('a', 'data1').get('k1')).to.be.undefined;
+		aCache.attachMap('a', 'data1').set('k1', 'v1');
+		expect(aCache.attachMap('a', 'data1').get('k1')).to.equal('v1');
+
+		// trigger lru
+		await aCache.set('e', 'f');
+		await aCache.set('g', 'h');
+		await aCache.set('i', 'j');
+		expect(aCache.attachMap('a', 'data1').get('k1')).to.be.undefined;
+		aCache.attachMap('a', 'data1').set('k1', 'v1');
+		expect(aCache.attachMap('a', 'data1').get('k1')).to.equal('v1');
+
+		await aCache.set('a', 'b');
+		expect(aCache.attachMap('a', 'data1').get('k1')).to.be.undefined;
+		aCache.attachMap('a', 'data1').set('k1', 'v1');
+		expect(aCache.attachMap('a', 'data1').get('k1')).to.equal('v1');
+		aCache.attachMap('a', 'data2').set('k1', 'v21');
+		expect(aCache.attachMap('a', 'data2').get('k1')).to.equal('v21');
+
+		await aCache.deleteAttached('a', 'data1');
+		expect(aCache.attachMap('a', 'data1').get('k1')).to.be.undefined;
+		expect(aCache.attachMap('a', 'data2').get('k1')).to.equal('v21');
+
+		await aCache.deleteAllAttached('a');
+		expect(aCache.attachMap('a', 'data1').get('k1')).to.be.undefined;
+		expect(aCache.attachMap('a', 'data2').get('k1')).to.be.undefined;
 	});
 
 	it('should correctly get stale value', async () => {

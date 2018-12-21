@@ -71,21 +71,23 @@ function localCacheDelContains(cache, pattern, prefix) {
 			keyRegex = new RegExp(`^${this.prefix}:.*${pattern.replace('*', '.*')}`);
 		}
 
-		cache.forEach((value, key) => {
+		// use for loop because LRU doesn't support forEach yet
+		for (const [, key] of cache) {
 			if (keyRegex.test(key)) {
 				cache.delete(key);
 			}
-		});
+		}
 
 		return;
 	}
 
 	// simple deletion
-	cache.forEach((value, key) => {
+	// use for loop because LRU doesn't support forEach yet
+	for (const [key] of cache) {
 		if (key.includes(pattern)) {
 			cache.delete(key);
 		}
-	});
+	}
 }
 
 async function _withDefault(promise, defaultValue) {
@@ -469,6 +471,7 @@ class RedisCache {
 				this.localCache.delete(key);
 				return undefined;
 			}
+			return res;
 		}
 
 		// delete key
@@ -886,7 +889,7 @@ class RedisCache {
 	 */
 	attachMap(key, mapKey) {
 		const fullMap = this._getLocalAttachedMap(key);
-		let map = fullMap.get(key);
+		let map = fullMap.get(mapKey);
 		if (!map) {
 			map = new Map();
 			fullMap.set(mapKey, map);
@@ -903,7 +906,7 @@ class RedisCache {
 	 */
 	attachSet(key, mapKey) {
 		const fullMap = this._getLocalAttachedMap(key);
-		let set = fullMap.get(key);
+		let set = fullMap.get(mapKey);
 		if (!set) {
 			set = new Set();
 			fullMap.set(mapKey, set);
@@ -920,7 +923,7 @@ class RedisCache {
 	 */
 	attachArray(key, mapKey) {
 		const fullMap = this._getLocalAttachedMap(key);
-		let array = fullMap.get(key);
+		let array = fullMap.get(mapKey);
 		if (!array) {
 			array = [];
 			fullMap.set(mapKey, array);
@@ -937,7 +940,7 @@ class RedisCache {
 	 */
 	attachObject(key, mapKey) {
 		const fullMap = this._getLocalAttachedMap(key);
-		let obj = fullMap.get(key);
+		let obj = fullMap.get(mapKey);
 		if (!obj) {
 			obj = {};
 			fullMap.set(mapKey, obj);
@@ -955,7 +958,7 @@ class RedisCache {
 	 */
 	attachLRU(key, mapKey, {maxItems = 100} = {}) {
 		const fullMap = this._getLocalAttachedMap(key);
-		let lru = fullMap.get(key);
+		let lru = fullMap.get(mapKey);
 		if (!lru) {
 			lru = new LRU({maxItems});
 			fullMap.set(mapKey, lru);
@@ -973,7 +976,7 @@ class RedisCache {
 	 */
 	attachCache(key, mapKey, options = {}) {
 		const fullMap = this._getLocalAttachedMap(key);
-		let cache = fullMap.get(key);
+		let cache = fullMap.get(mapKey);
 		if (!cache) {
 			cache = new Cache(options);
 			fullMap.set(mapKey, cache);
@@ -992,7 +995,7 @@ class RedisCache {
 	 */
 	attachCustom(key, mapKey, func) {
 		const fullMap = this._getLocalAttachedMap(key);
-		let res = fullMap.get(key);
+		let res = fullMap.get(mapKey);
 		if (!res) {
 			res = func();
 			fullMap.set(mapKey, res);
