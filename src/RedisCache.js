@@ -42,7 +42,12 @@ async function gcLocalCacheAsync() {
 }
 
 function gcLocalCache() {
-	gcLocalCacheAsync().then(() => {}, err => console.error(err));
+	gcLocalCacheAsync().then(
+		() => {},
+		(err) => {
+			console.error('[RedisCache] Error while localCache gc', err);
+		},
+	);
 }
 
 // delete all keys containing a pattern

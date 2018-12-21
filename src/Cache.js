@@ -63,7 +63,12 @@ class Cache {
 
 				// call gc if required
 				if (time - this.gcTime > FIFTEEN_MINUTES) {
-					this.gc().then(() => {}, err => console.error(err));
+					this.gc().then(
+						() => {},
+						(err) => {
+							console.error('[Cache] Error while gc', err);
+						},
+					);
 				}
 
 				return defaultValue;
