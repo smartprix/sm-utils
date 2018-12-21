@@ -930,6 +930,16 @@ class RedisCache {
 		return cache;
 	}
 
+	attachCustom(key, mapKey = 'default', func) {
+		const fullMap = this._getLocalAttachedMap(key);
+		let res = fullMap.get(key);
+		if (!res) {
+			res = func();
+			fullMap.set(mapKey, res);
+		}
+		return res;
+	}
+
 	deleteAttached(key, mapKey = 'default') {
 		const value = this._localCache(key);
 		if (!value || !value.a) return;
