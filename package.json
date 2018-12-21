@@ -71,7 +71,8 @@
     "jsdoc": "^3.5.5",
     "mocha": "^5.2.0",
     "np": "^3.0.4",
-    "pem": "^1.13.2"
+    "pem": "^1.13.2",
+    "workerpool": "^3.0.0"
   },
   "eslintConfig": {
     "extends": "smartprix",

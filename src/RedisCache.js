@@ -260,7 +260,8 @@ class RedisCache {
 		// the message is ${pid}\v${prefix}\v${command}\v${args.join('\v')}
 		const [pid, prefix, command, key, ...args] = message.split('\v');
 
-		// RedisCache.logger.log(`[RedisCache] received subscribe command ${command} ${prefix}:${key}`);
+		// const debugMsg = `${command} ${prefix}:${key} [from ${pid} to ${processId}]`;
+		// RedisCache.logger.log(`[RedisCache] received subscribe command ${debugMsg}`);
 
 		if (Number(pid) === processId) {
 			// since the message came from the same process, it's already been handled
@@ -462,7 +463,7 @@ class RedisCache {
 		// the channel is RC:${globalPrefix} => RC:a
 		// the message is ${pid}\v${prefix}\v${command}\v${args.join('\v')}
 
-		const channelName = `RC:${this.globalPrefix}`;
+		const channelName = `RC:${this.constructor.globalPrefix}`;
 		const message = `${processId}\v${this.prefix}\v${command}\v${key}`;
 		this.pubRedis.publish(channelName, message);
 	}

@@ -1,8 +1,11 @@
-/* eslint-disable no-unused-expressions */
+/* eslint-disable no-unused-expressions, max-statements */
 import {expect} from 'chai';
+import path from 'path';
 import _ from 'lodash';
+import Workerpool from 'workerpool';
 import {RedisCache, Vachan} from '../src/index';
 
+let workerpool = Workerpool.pool();
 const IS_PIKA = Boolean(process.env.USE_PIKA);
 
 let conf = {};
@@ -14,10 +17,12 @@ if (IS_PIKA) {
 
 	// use redis for pub sub
 	// pika pub sub is very slow
-	RedisCache.pubSubRedisConf = {
+	const pubSubRedisConf = {
 		port: 6379,
 		type: 'redis',
 	};
+	RedisCache.pubSubRedisConf = pubSubRedisConf;
+	conf.pubSubRedisConf = pubSubRedisConf;
 }
 
 function getCache(prefix, options = {}, redisConf = {}) {
@@ -44,6 +49,9 @@ describe('redis cache library @rediscache', () => {
 	});
 
 	after(async () => {
+		if (workerpool) {
+			workerpool.terminate();
+		}
 		const aCache = getCache('*');
 		await aCache.delContains('_all_');
 	});
@@ -317,7 +325,6 @@ describe('redis cache library @rediscache', () => {
 	});
 
 	// NOTE: below test are only for attachMap, rest of attach* functions should work similarly
-	// eslint-disable-next-line max-statements
 	it('should correctly attach local values', async () => {
 		const aCache = getCache('localAttach', {maxLocalItems: 2});
 		await aCache.set('a', 'b', 30);
@@ -388,6 +395,129 @@ describe('redis cache library @rediscache', () => {
 		await aCache.deleteAllAttached('a');
 		expect(aCache.attachMap('a', 'data1').get('k1')).to.be.undefined;
 		expect(aCache.attachMap('a', 'data2').get('k1')).to.be.undefined;
+	});
+
+	it('should not clear local cache on set for current process', async () => {
+		const aCache = getCache('clearLocal_current');
+		await aCache.set('a', 'b');
+		expect(aCache.localCache.get('a').v).to.equal('b');
+		expect(await aCache.get('a')).to.equal('b');
+		await aCache.set('a', 'd');
+		expect(aCache.localCache.get('a').v).to.equal('d');
+		expect(await aCache.get('a')).to.equal('d');
+		// allow some time for publish to be synchronized
+		await sleep('', 100);
+		expect(aCache.localCache.get('a').v).to.equal('d');
+		expect(await aCache.get('a')).to.equal('d');
+	});
+
+	it('should clear local cache on set for different process', async function () {
+		this.timeout(10000);
+
+		/* eslint-disable */
+		let result = [];
+		try {
+			const indexPath = path.join(__dirname, '../src/index');
+
+			const aCache = getCache('worker_redis');
+			await aCache.set('aw', 'b');
+			expect(aCache.localCache.get('aw').v).to.equal('b');
+			expect(await aCache.get('aw')).to.equal('b');
+
+			const workerFunc = async function (indexPath, conf, command) {
+				require('@babel/register');
+				const {RedisCache} = require(indexPath);
+				RedisCache.pubSubRedisConf = conf.pubSubRedisConf || {};
+				RedisCache.logger = console;
+				const wCache = new RedisCache('worker_redis', conf);
+
+				const ret = [];
+				ret.push(await wCache.get('aw'));
+
+				if (command === 'set') {
+					await wCache.set('aw', 'bw');
+				}
+				else if (command === 'del') {
+					await wCache.del('aw');
+				}
+				else if (command === 'clear') {
+					await wCache.clear('aw');
+				}
+				else if (command === 'del_contains') {
+					await wCache.delContains('aw');
+				}
+
+				ret.push(await wCache.get('aw'));
+				return ret;
+			};
+
+			const exec = async function (command) {
+				return workerpool.exec(workerFunc, [indexPath, conf, command]);
+			}
+
+			result.push(await exec('set'));
+
+			// allow publish to be synchronized
+			await sleep('', 50);
+
+			expect(aCache.localCache.get('aw')).to.be.undefined;
+			expect(await aCache.get('aw')).to.equal('bw');
+			expect(aCache.localCache.get('aw').v).to.be.equal('bw');
+
+			result.push(await exec('del'));
+
+			// allow publish to be synchronized
+			await sleep('', 50);
+
+			expect(aCache.localCache.get('aw')).to.be.undefined;
+			expect(await aCache.get('aw')).to.be.undefined;
+			await aCache.set('aw', 'b');
+			expect(await aCache.get('aw')).to.equal('b');
+			expect(aCache.localCache.get('aw').v).to.be.equal('b');
+
+			result.push(await exec('clear'));
+
+			// allow publish to be synchronized
+			await sleep('', 50);
+
+			expect(aCache.localCache.get('aw')).to.be.undefined;
+			expect(await aCache.get('aw')).to.be.undefined;
+			await aCache.set('aw', 'b');
+			expect(await aCache.get('aw')).to.equal('b');
+			expect(aCache.localCache.get('aw').v).to.be.equal('b');
+
+			result.push(await exec('del_contains'));
+
+			// allow publish to be synchronized
+			await sleep('', 50);
+
+			expect(aCache.localCache.get('aw')).to.be.undefined;
+			expect(await aCache.get('aw')).to.be.undefined;
+			await aCache.set('aw', 'b');
+			expect(await aCache.get('aw')).to.equal('b');
+			expect(aCache.localCache.get('aw').v).to.be.equal('b');
+
+			// test attach
+			expect(aCache.attachMap('aw', 'data').get('k1')).to.be.undefined;
+			aCache.attachMap('aw', 'data').set('k1', 'v1');
+			expect(aCache.attachMap('aw', 'data').get('k1')).to.equal('v1');
+
+			result.push(await exec('set'));
+
+			// allow publish to be synchronized
+			await sleep('', 50);
+
+			expect(aCache.attachMap('aw', 'data').get('k1')).to.be.undefined;
+			expect(aCache.localCache.get('aw').v).to.be.undefined;
+		}
+		finally {
+			workerpool.terminate();
+			workerpool = null;
+		}
+
+		expect(result).to.deep.equal([['b', 'bw'], ['bw', null], ['b', null], ['b', null], ['b', 'bw']]);
+		/* eslint-enable */
+		/* eslint-disable no-unused-expressions */
 	});
 
 	it('should correctly get stale value', async () => {
