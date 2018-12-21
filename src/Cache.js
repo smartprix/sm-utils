@@ -389,7 +389,7 @@ class Cache {
 	 */
 	gcSync() {
 		for (const [key, value] of this.data) {
-			if (value.t && (value.c + value.t < Date.now())) {
+			if (value.t && (Date.now() - value.c > value.t)) {
 				// value is expired
 				this.data.delete(key);
 			}
