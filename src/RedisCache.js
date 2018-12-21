@@ -870,7 +870,14 @@ class RedisCache {
 		return value.a;
 	}
 
-	attachMap(key, mapKey = 'default') {
+	/**
+	 * attach and return a local map to the redis cache key
+	 * the local map would be deleted if redis cache key gets deleted
+	 * @param {string} key
+	 * @param {string} mapKey
+	 * @return {Map}
+	 */
+	attachMap(key, mapKey) {
 		const fullMap = this._getLocalAttachedMap(key);
 		let map = fullMap.get(key);
 		if (!map) {
@@ -880,7 +887,14 @@ class RedisCache {
 		return map;
 	}
 
-	attachSet(key, mapKey = 'default') {
+	/**
+	 * attach and return a local set to the redis cache key
+	 * the local set would be deleted if redis cache key gets deleted
+	 * @param {string} key
+	 * @param {string} mapKey
+	 * @return {Set}
+	 */
+	attachSet(key, mapKey) {
 		const fullMap = this._getLocalAttachedMap(key);
 		let set = fullMap.get(key);
 		if (!set) {
@@ -890,7 +904,14 @@ class RedisCache {
 		return set;
 	}
 
-	attachArray(key, mapKey = 'default') {
+	/**
+	 * attach and return a local array to the redis cache key
+	 * the local array would be deleted if redis cache key gets deleted
+	 * @param {string} key
+	 * @param {string} mapKey
+	 * @return {Array}
+	 */
+	attachArray(key, mapKey) {
 		const fullMap = this._getLocalAttachedMap(key);
 		let array = fullMap.get(key);
 		if (!array) {
@@ -900,7 +921,14 @@ class RedisCache {
 		return array;
 	}
 
-	attachObject(key, mapKey = 'default') {
+	/**
+	 * attach and return a local object to the redis cache key
+	 * the local object would be deleted if redis cache key gets deleted
+	 * @param {string} key
+	 * @param {string} mapKey
+	 * @return {object}
+	 */
+	attachObject(key, mapKey) {
 		const fullMap = this._getLocalAttachedMap(key);
 		let obj = fullMap.get(key);
 		if (!obj) {
@@ -910,7 +938,15 @@ class RedisCache {
 		return obj;
 	}
 
-	attachLRU(key, mapKey = 'default', {maxItems = 100} = {}) {
+	/**
+	 * attach and return a local lru map to the redis cache key
+	 * the local lru map would be deleted if redis cache key gets deleted
+	 * @param {string} key
+	 * @param {string} mapKey
+	 * @param {object} options options for the lru map
+	 * @return {LRU}
+	 */
+	attachLRU(key, mapKey, {maxItems = 100} = {}) {
 		const fullMap = this._getLocalAttachedMap(key);
 		let lru = fullMap.get(key);
 		if (!lru) {
@@ -920,7 +956,15 @@ class RedisCache {
 		return lru;
 	}
 
-	attachCache(key, mapKey = 'default', options = {}) {
+	/**
+	 * attach and return a local cache object to the redis cache key
+	 * the local cache would be deleted if redis cache key gets deleted
+	 * @param {string} key
+	 * @param {string} mapKey
+	 * @param {object} options options for the cache object
+	 * @return {Cache}
+	 */
+	attachCache(key, mapKey, options = {}) {
 		const fullMap = this._getLocalAttachedMap(key);
 		let cache = fullMap.get(key);
 		if (!cache) {
@@ -930,7 +974,16 @@ class RedisCache {
 		return cache;
 	}
 
-	attachCustom(key, mapKey = 'default', func) {
+	/**
+	 * attach and return a custom object to the redis cache key
+	 * custom object should be returned by the func
+	 * the object would be deleted if redis cache key gets deleted
+	 * @param {string} key
+	 * @param {string} mapKey
+	 * @param {function} func functions that returns the object
+	 * @return {any}
+	 */
+	attachCustom(key, mapKey, func) {
 		const fullMap = this._getLocalAttachedMap(key);
 		let res = fullMap.get(key);
 		if (!res) {
@@ -940,12 +993,21 @@ class RedisCache {
 		return res;
 	}
 
-	deleteAttached(key, mapKey = 'default') {
+	/**
+	 * delete an attached object to a key
+	 * @param {string} key
+	 * @param {string} mapKey
+	 */
+	deleteAttached(key, mapKey) {
 		const value = this._localCache(key);
 		if (!value || !value.a) return;
 		value.a.delete(mapKey);
 	}
 
+	/**
+	 * delete all attached objects to a key
+	 * @param {string} key
+	 */
 	deleteAllAttached(key) {
 		const value = this._localCache(key);
 		if (!value || !value.a) return;
