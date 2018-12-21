@@ -830,9 +830,10 @@ class RedisCache {
 		};
 
 		const existingValue = await this.getStale(key, undefined, options, ctx);
+		// true = generate in bg, false = generate in fg, null = don't generate
 		let generateInBg = true;
 		if (existingValue === undefined) {
-			if (options.requireResult === false || options.freshResult) {
+			if (options.requireResult !== false || options.freshResult) {
 				generateInBg = false;
 			}
 		}
@@ -841,16 +842,22 @@ class RedisCache {
 				generateInBg = false;
 			}
 		}
+		else {
+			generateInBg = null;
+		}
 
-		if (!generateInBg) {
+		if (generateInBg === false) {
 			// regenerate value in the foreground
 			const setCtx = {};
 			await this.set(key, value, options, setCtx);
 			return setCtx.result;
 		}
 
-		// regenerate value in the background
-		this._setBackground(key, value, options);
+		if (generateInBg === true) {
+			// regenerate value in the background
+			this._setBackground(key, value, options);
+		}
+
 		return existingValue;
 	}
 

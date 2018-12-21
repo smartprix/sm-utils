@@ -33,6 +33,10 @@ function sleep(val, timeout = 20) {
 	return new Promise(resolve => setTimeout(() => resolve(val), timeout));
 }
 
+async function tick() {
+	return sleep('', 1);
+}
+
 describe('redis cache library @rediscache', () => {
 	before(async () => {
 		await cache.clear();
@@ -166,6 +170,122 @@ describe('redis cache library @rediscache', () => {
 		await sleep('', 20 * multiplier);
 		expect(await cache.get(key)).to.be.undefined;
 		cache.useLocalCache = true;
+	});
+
+	it('should correctly use ttl in getOrSet', async function () {
+		let multiplier = 1;
+		if (IS_PIKA) {
+			// pika doesn't support ttl of millisecond resolution
+			this.timeout(15000);
+			multiplier = 100;
+		}
+
+		const aCache = getCache('getOrSet_ttl');
+		const key = 'g';
+		let counter = 0;
+		const value = () => {
+			counter++;
+			return sleep(counter, 1);
+		};
+
+		const opts = {ttl: 40 * multiplier};
+
+		expect(await aCache.getOrSet(key, value, opts)).to.equal(1);
+		await sleep('', 10 * multiplier);
+		expect(await aCache.getOrSet(key, value, opts)).to.equal(1);
+		await sleep('', 20 * multiplier);
+		expect(await aCache.getOrSet(key, value, opts)).to.equal(1);
+		await sleep('', 20 * multiplier);
+		expect(await aCache.getOrSet(key, value, opts)).to.equal(2);
+		expect(counter).to.equal(2);
+
+		await aCache.clear();
+	});
+
+	it('should correctly use staleTTL in getOrSet', async function () {
+		let multiplier = 1;
+		if (IS_PIKA) {
+			// pika doesn't support ttl of millisecond resolution
+			this.timeout(15000);
+			multiplier = 100;
+		}
+
+		const aCache = getCache('getOrSet_staleTTL');
+		const key = 'g';
+		let counter = 0;
+		const value = () => {
+			counter++;
+			return sleep(counter, 0);
+		};
+
+		const opts = {
+			ttl: 40 * multiplier,
+			staleTTL: 20 * multiplier,
+		};
+
+		expect(await aCache.getOrSet(key, value, opts)).to.equal(1);
+		await sleep('', 10 * multiplier);
+		expect(await aCache.getOrSet(key, value, opts)).to.equal(1);
+		await sleep('', 15 * multiplier);
+		expect(await aCache.getOrSet(key, value, opts)).to.equal(1);
+		await tick();
+		expect(await aCache.getOrSet(key, value, opts)).to.equal(2);
+		await tick();
+		expect(await aCache.getOrSet(key, value, opts)).to.equal(2);
+		await sleep('', 25 * multiplier);
+		expect(await aCache.getOrSet(key, value, opts)).to.equal(2);
+		await tick();
+		expect(await aCache.getOrSet(key, value, opts)).to.equal(3);
+		await sleep('', 50 * multiplier);
+		expect(await aCache.getOrSet(key, value, opts)).to.equal(4);
+		expect(counter).to.equal(4);
+
+		await aCache.clear();
+	});
+
+	it('should correctly use requireResult and freshResult in staleTTL', async function () {
+		let multiplier = 1;
+		if (IS_PIKA) {
+			// pika doesn't support ttl of millisecond resolution
+			this.timeout(15000);
+			multiplier = 100;
+		}
+
+		const aCache = getCache('getOrSet_staleTTL');
+		const key = 'g';
+		let counter = 0;
+		const value = () => {
+			counter++;
+			return sleep(counter, 0);
+		};
+
+		const opts = {
+			ttl: 40 * multiplier,
+			staleTTL: 20 * multiplier,
+			requireResult: false,
+		};
+
+		expect(await aCache.getOrSet(key, value, opts)).to.be.undefined;
+		await tick();
+		expect(await aCache.getOrSet(key, value, opts)).to.equal(1);
+		opts.freshResult = true;
+		await sleep('', 10 * multiplier);
+		expect(await aCache.getOrSet(key, value, opts)).to.equal(1);
+		await sleep('', 15 * multiplier);
+		expect(await aCache.getOrSet(key, value, opts)).to.equal(2);
+		await tick();
+		expect(await aCache.getOrSet(key, value, opts)).to.equal(2);
+		await tick();
+		expect(await aCache.getOrSet(key, value, opts)).to.equal(2);
+		await sleep('', 25 * multiplier);
+		expect(await aCache.getOrSet(key, value, opts)).to.equal(3);
+		await tick();
+		expect(await aCache.getOrSet(key, value, opts)).to.equal(3);
+		await sleep('', 50 * multiplier);
+		expect(await aCache.getOrSet(key, value, opts)).to.equal(4);
+		expect(counter).to.equal(4);
+
+		await aCache.clear();
 	});
 
 	it('should correctly get stale value', async () => {
