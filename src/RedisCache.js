@@ -228,6 +228,12 @@ class RedisCache {
 		const pubSubConf = {};
 		pubSubConf.host = this.pubSubRedisConf.host || redisConf.host;
 		pubSubConf.port = this.pubSubRedisConf.port || redisConf.port;
+		if (this.pubSubRedisConf.password) {
+			pubSubConf.password = this.pubSubRedisConf.password;
+		}
+		else if (redisConf.password && _.isEmpty(this.pubSubRedisConf)) {
+			pubSubConf.password = redisConf.password;
+		}
 
 		const subRedis = new Redis(pubSubConf);
 		const pubRedis = new Redis(pubSubConf);
