@@ -59,8 +59,7 @@ function isVowel(char) {
  * @return {boolean}
  */
 function isConsonant(char) {
-	if (!char || char.length !== 1) return false;
-	return !isVowel(char);
+	return (/^[bcdfghjklmnpqrstvwxys]$/i).test(char);
 }
 
 /**
