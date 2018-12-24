@@ -35,6 +35,10 @@ commander
 			// write empty string in case of null and undefined
 			process.stdout.write('');
 		}
+		else if (typeof value === 'object') {
+			// stringify value in case of object
+			process.stdout.write(JSON.stringify(value));
+		}
 		else {
 			process.stdout.write(String(value));
 		}
