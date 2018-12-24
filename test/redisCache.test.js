@@ -1,16 +1,59 @@
-/* eslint-disable no-unused-expressions */
+/* eslint-disable no-unused-expressions, max-statements */
 import {expect} from 'chai';
+import path from 'path';
 import _ from 'lodash';
+import Workerpool from 'workerpool';
 import {RedisCache, Vachan} from '../src/index';
 
-const cache = new RedisCache('test');
+let workerpool = Workerpool.pool();
+const IS_PIKA = Boolean(process.env.USE_PIKA);
+
+let conf = {};
+if (IS_PIKA) {
+	conf = {
+		port: 9221,
+		type: 'pika',
+	};
+
+	// use redis for pub sub
+	// pika pub sub is very slow
+	const pubSubRedisConf = {
+		port: 6379,
+		type: 'redis',
+	};
+	RedisCache.pubSubRedisConf = pubSubRedisConf;
+	conf.pubSubRedisConf = pubSubRedisConf;
+}
+
+function getCache(prefix, options = {}, redisConf = {}) {
+	return new RedisCache(
+		prefix,
+		Object.assign({}, conf, redisConf),
+		options
+	);
+}
+
+const cache = getCache('test');
 function sleep(val, timeout = 20) {
 	return new Promise(resolve => setTimeout(() => resolve(val), timeout));
 }
 
-describe('redis cache library', () => {
+async function tick(val) {
+	return new Promise(resolve => setImmediate(() => setTimeout(() => resolve(val), 1)));
+}
+
+describe('redis cache library @rediscache', () => {
 	before(async () => {
-		await cache.clear();
+		const aCache = getCache('*');
+		await aCache.delContains('_all_');
+	});
+
+	after(async () => {
+		if (workerpool) {
+			workerpool.terminate();
+		}
+		const aCache = getCache('*');
+		await aCache.delContains('_all_');
 	});
 
 	it('should get and set values', async () => {
@@ -111,18 +154,369 @@ describe('redis cache library', () => {
 		expect(value).to.equal('default');
 	});
 
-	it('should correctly set ttl', async () => {
+	it('should correctly set ttl', async function () {
+		let multiplier = 1;
+		if (IS_PIKA) {
+			// pika doesn't support ttl of millisecond resolution
+			this.timeout(15000);
+			multiplier = 100;
+		}
+
 		const key = 'g';
 		const value = 'you';
 		expect(await cache.get(key)).to.be.undefined;
-		expect(await cache.set(key, value, 200)).to.be.true;
+		expect(await cache.set(key, value, 40 * multiplier)).to.be.true;
 		expect(await cache.get(key)).to.equal(value);
-		await sleep('', 100);
+		await sleep('', 20 * multiplier);
 		expect(await cache.get(key)).to.equal(value);
-		await sleep('', 40);
+		await sleep('', 10 * multiplier);
 		expect(await cache.get(key)).to.equal(value);
-		await sleep('', 70);
+		await sleep('', 20 * multiplier);
 		expect(await cache.get(key)).to.be.undefined;
+
+		cache.useLocalCache = false;
+		expect(await cache.set(key, value, 40 * multiplier)).to.be.true;
+		expect(await cache.get(key)).to.equal(value);
+		await sleep('', 20 * multiplier);
+		expect(await cache.get(key)).to.equal(value);
+		await sleep('', 10 * multiplier);
+		expect(await cache.get(key)).to.equal(value);
+		await sleep('', 20 * multiplier);
+		expect(await cache.get(key)).to.be.undefined;
+		cache.useLocalCache = true;
+	});
+
+	it('should correctly use ttl in getOrSet', async function () {
+		let multiplier = 1;
+		if (IS_PIKA) {
+			// pika doesn't support ttl of millisecond resolution
+			this.timeout(15000);
+			multiplier = 100;
+		}
+
+		const aCache = getCache('getOrSet_ttl');
+		const key = 'g';
+		let counter = 0;
+		const value = () => {
+			counter++;
+			return sleep(counter, 1);
+		};
+
+		const opts = {ttl: 40 * multiplier};
+
+		expect(await aCache.getOrSet(key, value, opts)).to.equal(1);
+		await sleep('', 10 * multiplier);
+		expect(await aCache.getOrSet(key, value, opts)).to.equal(1);
+		await sleep('', 20 * multiplier);
+		expect(await aCache.getOrSet(key, value, opts)).to.equal(1);
+		await sleep('', 20 * multiplier);
+		expect(await aCache.getOrSet(key, value, opts)).to.equal(2);
+		expect(counter).to.equal(2);
+
+		await aCache.clear();
+	});
+
+	it('should correctly use staleTTL in getOrSet', async function () {
+		let multiplier = 1;
+		if (IS_PIKA) {
+			// pika doesn't support ttl of millisecond resolution
+			this.timeout(15000);
+			multiplier = 100;
+		}
+
+		const aCache = getCache('getOrSet_staleTTL');
+		const key = 'g';
+		let counter = 0;
+		const value = () => {
+			counter++;
+			return sleep(counter, 0);
+		};
+
+		const opts = {
+			ttl: 40 * multiplier,
+			staleTTL: 20 * multiplier,
+		};
+
+		expect(await aCache.getOrSet(key, value, opts)).to.equal(1);
+		await sleep('', 10 * multiplier);
+		expect(await aCache.getOrSet(key, value, opts)).to.equal(1);
+		await sleep('', 15 * multiplier);
+		expect(await aCache.getOrSet(key, value, opts)).to.equal(1);
+		await tick();
+		expect(await aCache.getOrSet(key, value, opts)).to.equal(2);
+		await tick();
+		expect(await aCache.getOrSet(key, value, opts)).to.equal(2);
+		await sleep('', 25 * multiplier);
+		expect(await aCache.getOrSet(key, value, opts)).to.equal(2);
+		await tick();
+		expect(await aCache.getOrSet(key, value, opts)).to.equal(3);
+		await sleep('', 50 * multiplier);
+		expect(await aCache.getOrSet(key, value, opts)).to.equal(4);
+		expect(counter).to.equal(4);
+	});
+
+	it('should correctly use requireResult and freshResult in staleTTL', async function () {
+		let multiplier = 1;
+		if (IS_PIKA) {
+			// pika doesn't support ttl of millisecond resolution
+			this.timeout(15000);
+			multiplier = 100;
+		}
+
+		const aCache = getCache('getOrSet_staleTTL_opts');
+		const key = 'g';
+		let counter = 0;
+		const value = () => {
+			counter++;
+			return sleep(counter, 0);
+		};
+
+		const opts = {
+			ttl: 40 * multiplier,
+			staleTTL: 20 * multiplier,
+			requireResult: false,
+		};
+
+		expect(await aCache.getOrSet(key, value, opts)).to.be.undefined;
+		await tick();
+		expect(await aCache.getOrSet(key, value, opts)).to.equal(1);
+		opts.freshResult = true;
+		await sleep('', 10 * multiplier);
+		expect(await aCache.getOrSet(key, value, opts)).to.equal(1);
+		await sleep('', 15 * multiplier);
+		expect(await aCache.getOrSet(key, value, opts)).to.equal(2);
+		await tick();
+		expect(await aCache.getOrSet(key, value, opts)).to.equal(2);
+		await tick();
+		expect(await aCache.getOrSet(key, value, opts)).to.equal(2);
+		await sleep('', 25 * multiplier);
+		expect(await aCache.getOrSet(key, value, opts)).to.equal(3);
+		await tick();
+		expect(await aCache.getOrSet(key, value, opts)).to.equal(3);
+		await sleep('', 50 * multiplier);
+		expect(await aCache.getOrSet(key, value, opts)).to.equal(4);
+		expect(counter).to.equal(4);
+	});
+
+	it('should correctly use lru in local items', async () => {
+		RedisCache.redisGetCount = 0;
+		const aCache = getCache('getOrSet_localLRU', {maxLocalItems: 3});
+		await aCache.set('a', 'b');
+		await aCache.set('c', 'd');
+		await aCache.set('e', 'f');
+		await aCache.set('g', 'h');
+		await aCache.set('i', 'j');
+		await aCache.set('k', 'l');
+		expect(aCache.localCache.get('g').v).to.equal('h');
+		expect(aCache.localCache.get('i').v).to.equal('j');
+		expect(aCache.localCache.get('k').v).to.equal('l');
+		expect(await aCache.get('g')).to.equal('h');
+		expect(await aCache.get('i')).to.equal('j');
+		expect(await aCache.get('k')).to.equal('l');
+		expect(RedisCache.redisGetCount).to.equal(0);
+		expect(aCache.localCache.get('a')).to.be.undefined;
+		expect(aCache.localCache.get('c')).to.be.undefined;
+		expect(aCache.localCache.get('e')).to.be.undefined;
+		expect(await aCache.get('a')).to.equal('b');
+		expect(await aCache.get('c')).to.equal('d');
+		expect(await aCache.get('e')).to.equal('f');
+		expect(RedisCache.redisGetCount).to.equal(3);
+		RedisCache.redisGetCount = 0;
+	});
+
+	// NOTE: below test are only for attachMap, rest of attach* functions should work similarly
+	it('should correctly attach local values', async () => {
+		const aCache = getCache('localAttach', {maxLocalItems: 2});
+		await aCache.set('a', 'b', 30);
+		await aCache.set('c', 'd');
+
+		expect(aCache.attachMap('a', 'data1').get('k1')).to.be.undefined;
+		aCache.attachMap('a', 'data1').set('k1', 'v1');
+		expect(aCache.attachMap('a', 'data1').get('k1')).to.equal('v1');
+		expect(aCache.attachMap('c', 'data1').get('k1')).to.be.undefined;
+		aCache.attachMap('a', 'data1').set('k2', 'v2');
+		expect(aCache.attachMap('a', 'data1').get('k2')).to.equal('v2');
+		expect(aCache.attachMap('a', 'data2').get('k1')).to.be.undefined;
+		aCache.attachMap('a', 'data2').set('k1', 'v21');
+		expect(aCache.attachMap('a', 'data2').get('k1')).to.equal('v21');
+		expect(aCache.attachMap('a', 'data1').get('k1')).to.equal('v1');
+
+		// trigger ttl
+		await sleep('', 40);
+		expect(aCache.attachMap('a', 'data1').get('k1')).to.be.undefined;
+		expect(aCache.attachMap('a', 'data2').get('k1')).to.be.undefined;
+		aCache.attachMap('a', 'data1').set('k1', 'v1');
+		expect(aCache.attachMap('a', 'data1').get('k1')).to.equal('v1');
+
+		await aCache.set('a', 'b');
+		expect(aCache.attachMap('a', 'data1').get('k1')).to.be.undefined;
+		aCache.attachMap('a', 'data1').set('k1', 'v1');
+		expect(aCache.attachMap('a', 'data1').get('k1')).to.equal('v1');
+
+		await aCache.del('a');
+		expect(aCache.attachMap('a', 'data1').get('k1')).to.be.undefined;
+		aCache.attachMap('a', 'data1').set('k1', 'v1');
+		expect(aCache.attachMap('a', 'data1').get('k1')).to.equal('v1');
+
+		await aCache.del('a');
+		expect(aCache.attachMap('a', 'data1').get('k1')).to.be.undefined;
+		aCache.attachMap('a', 'data1').set('k1', 'v1');
+		expect(aCache.attachMap('a', 'data1').get('k1')).to.equal('v1');
+
+		await aCache.clear();
+		expect(aCache.attachMap('a', 'data1').get('k1')).to.be.undefined;
+		aCache.attachMap('a', 'data1').set('k1', 'v1');
+		expect(aCache.attachMap('a', 'data1').get('k1')).to.equal('v1');
+
+		await aCache.delContains('a');
+		expect(aCache.attachMap('a', 'data1').get('k1')).to.be.undefined;
+		aCache.attachMap('a', 'data1').set('k1', 'v1');
+		expect(aCache.attachMap('a', 'data1').get('k1')).to.equal('v1');
+
+		// trigger lru
+		await aCache.set('e', 'f');
+		await aCache.set('g', 'h');
+		await aCache.set('i', 'j');
+		expect(aCache.attachMap('a', 'data1').get('k1')).to.be.undefined;
+		aCache.attachMap('a', 'data1').set('k1', 'v1');
+		expect(aCache.attachMap('a', 'data1').get('k1')).to.equal('v1');
+
+		await aCache.set('a', 'b');
+		expect(aCache.attachMap('a', 'data1').get('k1')).to.be.undefined;
+		aCache.attachMap('a', 'data1').set('k1', 'v1');
+		expect(aCache.attachMap('a', 'data1').get('k1')).to.equal('v1');
+		aCache.attachMap('a', 'data2').set('k1', 'v21');
+		expect(aCache.attachMap('a', 'data2').get('k1')).to.equal('v21');
+
+		await aCache.deleteAttached('a', 'data1');
+		expect(aCache.attachMap('a', 'data1').get('k1')).to.be.undefined;
+		expect(aCache.attachMap('a', 'data2').get('k1')).to.equal('v21');
+
+		await aCache.deleteAllAttached('a');
+		expect(aCache.attachMap('a', 'data1').get('k1')).to.be.undefined;
+		expect(aCache.attachMap('a', 'data2').get('k1')).to.be.undefined;
+	});
+
+	it('should not clear local cache on set for current process', async () => {
+		const aCache = getCache('clearLocal_current');
+		await aCache.set('a', 'b');
+		expect(aCache.localCache.get('a').v).to.equal('b');
+		expect(await aCache.get('a')).to.equal('b');
+		await aCache.set('a', 'd');
+		expect(aCache.localCache.get('a').v).to.equal('d');
+		expect(await aCache.get('a')).to.equal('d');
+		// allow some time for publish to be synchronized
+		await sleep('', 100);
+		expect(aCache.localCache.get('a').v).to.equal('d');
+		expect(await aCache.get('a')).to.equal('d');
+	});
+
+	it('should clear local cache on set for different process', async function () {
+		this.timeout(10000);
+
+		/* eslint-disable */
+		let result = [];
+		try {
+			const indexPath = path.join(__dirname, '../src/index');
+
+			const aCache = getCache('worker_redis');
+			await aCache.set('aw', 'b');
+			expect(aCache.localCache.get('aw').v).to.equal('b');
+			expect(await aCache.get('aw')).to.equal('b');
+
+			const workerFunc = async function (indexPath, conf, command) {
+				require('@babel/register');
+				const {RedisCache} = require(indexPath);
+				RedisCache.pubSubRedisConf = conf.pubSubRedisConf || {};
+				const wCache = new RedisCache('worker_redis', conf);
+
+				const ret = [];
+				ret.push(await wCache.get('aw'));
+
+				if (command === 'set') {
+					await wCache.set('aw', 'bw');
+				}
+				else if (command === 'del') {
+					await wCache.del('aw');
+				}
+				else if (command === 'clear') {
+					await wCache.clear('aw');
+				}
+				else if (command === 'del_contains') {
+					await wCache.delContains('aw');
+				}
+
+				ret.push(await wCache.get('aw'));
+				return ret;
+			};
+
+			const exec = async function (command) {
+				return workerpool.exec(workerFunc, [indexPath, conf, command]);
+			}
+
+			result.push(await exec('set'));
+
+			// allow publish to be synchronized
+			await sleep('', 50);
+
+			expect(aCache.localCache.get('aw')).to.be.undefined;
+			expect(await aCache.get('aw')).to.equal('bw');
+			expect(aCache.localCache.get('aw').v).to.be.equal('bw');
+
+			result.push(await exec('del'));
+
+			// allow publish to be synchronized
+			await sleep('', 50);
+
+			expect(aCache.localCache.get('aw')).to.be.undefined;
+			expect(await aCache.get('aw')).to.be.undefined;
+			await aCache.set('aw', 'b');
+			expect(await aCache.get('aw')).to.equal('b');
+			expect(aCache.localCache.get('aw').v).to.be.equal('b');
+
+			result.push(await exec('clear'));
+
+			// allow publish to be synchronized
+			await sleep('', 50);
+
+			expect(aCache.localCache.get('aw')).to.be.undefined;
+			expect(await aCache.get('aw')).to.be.undefined;
+			await aCache.set('aw', 'b');
+			expect(await aCache.get('aw')).to.equal('b');
+			expect(aCache.localCache.get('aw').v).to.be.equal('b');
+
+			result.push(await exec('del_contains'));
+
+			// allow publish to be synchronized
+			await sleep('', 50);
+
+			expect(aCache.localCache.get('aw')).to.be.undefined;
+			expect(await aCache.get('aw')).to.be.undefined;
+			await aCache.set('aw', 'b');
+			expect(await aCache.get('aw')).to.equal('b');
+			expect(aCache.localCache.get('aw').v).to.be.equal('b');
+
+			// test attach
+			expect(aCache.attachMap('aw', 'data').get('k1')).to.be.undefined;
+			aCache.attachMap('aw', 'data').set('k1', 'v1');
+			expect(aCache.attachMap('aw', 'data').get('k1')).to.equal('v1');
+
+			result.push(await exec('set'));
+
+			// allow publish to be synchronized
+			await sleep('', 50);
+
+			expect(aCache.attachMap('aw', 'data').get('k1')).to.be.undefined;
+			expect(aCache.localCache.get('aw').v).to.be.undefined;
+		}
+		finally {
+			workerpool.terminate();
+			workerpool = null;
+		}
+
+		expect(result).to.deep.equal([['b', 'bw'], ['bw', null], ['b', null], ['b', null], ['b', 'bw']]);
+		/* eslint-enable */
+		/* eslint-disable no-unused-expressions */
 	});
 
 	it('should correctly get stale value', async () => {
@@ -146,7 +540,7 @@ describe('redis cache library', () => {
 	});
 
 	it('should correctly return the size', async () => {
-		const cache1 = new RedisCache('test2');
+		const cache1 = getCache('test2');
 		expect(await cache1.size()).to.equal(0);
 		expect(await cache.size()).to.equal(7);
 	});
@@ -168,7 +562,7 @@ describe('redis cache library', () => {
 	});
 
 	it('should correctly use localCache', async () => {
-		const redisCache = new RedisCache('test');
+		const redisCache = getCache('test');
 
 		const key = 'localCache';
 		const value = 'rocks!';
@@ -214,7 +608,7 @@ describe('redis cache library', () => {
 		};
 
 		RedisCache.logOnLocalWrite = true;
-		const redisCache = new RedisCache('test', {}, {logger});
+		const redisCache = getCache('test', {logger});
 
 		const key = 'localCacheWriteTest';
 		const value = {a: 'b'};
@@ -234,7 +628,7 @@ describe('redis cache library', () => {
 	});
 
 	it('should correctly use parse', async () => {
-		const redisCache = new RedisCache('test');
+		const redisCache = getCache('test');
 		let parseCount = 0;
 		class T {
 			constructor(obj) {
@@ -304,7 +698,7 @@ describe('redis cache library', () => {
 	});
 
 	it('should correctly bypass the cache globally', async () => {
-		const redisCache = new RedisCache('test_bypass');
+		const redisCache = getCache('test_bypass');
 		await redisCache.clear();
 
 		let i = 0;
@@ -335,7 +729,7 @@ describe('redis cache library', () => {
 	});
 
 	it('should correctly del contains', async () => {
-		const redisCache = new RedisCache('test_delcontains');
+		const redisCache = getCache('test_delcontains');
 		await redisCache.set('xorm:category:1', {a: 1});
 		await redisCache.set('xorm:category:2', {a: 2});
 		await redisCache.set('xorm:category:3', {a: 3});

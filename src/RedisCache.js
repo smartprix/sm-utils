@@ -2,24 +2,114 @@ import Redis from 'ioredis';
 import timestring from 'timestring';
 import {Observer} from 'micro-observer';
 import _ from 'lodash';
+import util from 'util';
+import LRU from './LRU';
+import Cache from './Cache';
 
 const DELETE = Symbol('DELETE');
 const DEL_CONTAINS = Symbol('DEL_CONTAINS');
 const CLEAR = Symbol('CLEAR');
 const redisMap = {};
-const localCache = new Map();
-const localCacheTTL = new Map();
+const globalLocalCache = new Map();
+globalLocalCache.set('*', new Map());
 const processId = process.pid;
 const getting = new Map();
 const setting = new Map();
 const getOrSetting = new Map();
-let globalCache;
+const getOrSettingStale = new Map();
+
+const tick = util.promisify(setImmediate);
+
+// delete expired values from local cache
+async function gcLocalCacheAsync() {
+	let i = 0;
+	const time = Date.now();
+	for (const [, cache] of globalLocalCache) {
+		for (const [key, value] of cache) {
+			if (value.t && (time - value.c > value.t)) {
+				// value is expired
+				cache.delete(key);
+			}
+
+			i++;
+			if ((i & 32767) === 0) {
+				// allow other tasks to execute after every 32768 elements
+				// eslint-disable-next-line no-await-in-loop
+				await tick();
+			}
+		}
+	}
+}
+
+function gcLocalCache() {
+	gcLocalCacheAsync().then(
+		() => {},
+		(err) => {
+			console.error('[RedisCache] Error while localCache gc', err);
+		},
+	);
+}
+
+// delete all keys containing a pattern
+function localCacheDelContains(cache, pattern, prefix) {
+	if (prefix === '*') {
+		// delete for all caches
+		globalLocalCache.forEach((lCache) => {
+			localCacheDelContains(lCache, pattern);
+		});
+
+		return;
+	}
+
+	if (pattern === '_all_') {
+		// clear the cache
+		cache.clear();
+		return;
+	}
+
+	if (pattern.includes('*')) {
+		let keyRegex;
+		if (pattern === '*') {
+			keyRegex = new RegExp(pattern.replace('*', '.*'));
+		}
+		else {
+			keyRegex = new RegExp(`^${this.prefix}:.*${pattern.replace('*', '.*')}`);
+		}
+
+		// use for loop because LRU doesn't support forEach yet
+		for (const [, key] of cache) {
+			if (keyRegex.test(key)) {
+				cache.delete(key);
+			}
+		}
+
+		return;
+	}
+
+	// simple deletion
+	// use for loop because LRU doesn't support forEach yet
+	for (const [key] of cache) {
+		if (key.includes(pattern)) {
+			cache.delete(key);
+		}
+	}
+}
 
 async function _withDefault(promise, defaultValue) {
 	const value = await promise;
 	if (value === undefined) return defaultValue;
 	return value;
 }
+
+function parseTTL(ttl) {
+	if (typeof ttl === 'string') return timestring(ttl, 'ms');
+	return ttl;
+}
+
+// Garbage collection of local cache
+const FIFTEEN_MINUTES = 15 * 60 * 1000;
+const gcTimer = setInterval(gcLocalCache, FIFTEEN_MINUTES);
+gcTimer.unref(); // unref gc timer so it allows process to exit
 
 /**
  * Cache backed by Redis
@@ -33,11 +123,18 @@ class RedisCache {
 	static _bypass = false;
 	// this causes performace issues, use only when debugging
 	static logOnLocalWrite = false;
+
+	// default redis configuration
 	static defaultRedisConf = {
 		host: '127.0.0.1',
 		port: 6379,
 		password: undefined,
 	};
+
+	// which server to use for pub / sub (sync of local cache)
+	// we need to use a different server because main server might
+	// have bad pubsub performance (eg. pika)
+	static pubSubRedisConf = null;
 
 	/**
 	 * @ignore
@@ -46,10 +143,10 @@ class RedisCache {
 	 * @property {number} port
 	 * @property {string} [auth]
 	 * @property {string} [password]
+	 * @property {string} [type] type of server ('redis' or 'pika')
 	 */
 
 	/**
-	 *
 	 * @param {string} prefix
 	 * @param {Redis|redisConf} redisConf
 	 * @param {object} [options={}] These options can also be set on a global level
@@ -66,6 +163,7 @@ class RedisCache {
 			this.redis = redisConf;
 			return;
 		}
+
 		// Use merge because it ignores undefined values unlike Object.assign
 		const redis = _.merge({}, this.constructor.defaultRedisConf, {
 			host: redisConf.host,
@@ -73,8 +171,12 @@ class RedisCache {
 			password: redisConf.password || redisConf.auth,
 		});
 
-		/** @type {Redis} */
-		this.redis = this.constructor.getRedis(redis);
+		// whether we are using pika
+		const type = redisConf.type || this.constructor.defaultRedisConf.type;
+		this.isPika = (type === 'pika');
+
+		/** @type [{Redis}, {Redis}] */
+		[this.redis, this.pubRedis] = this.constructor.getRedis(redis);
 
 		if ('useLocalCache' in redisConf) {
 			this.useLocalCache = redisConf.useLocalCache;
@@ -85,49 +187,69 @@ class RedisCache {
 		else {
 			this.useLocalCache = this.constructor.useLocalCache;
 		}
+
+		this.localCache = globalLocalCache.get(this.prefix);
+		if (!this.localCache) {
+			if (options.maxLocalItems) {
+				// LRU
+				this.localCache = new LRU({maxItems: options.maxLocalItems});
+			}
+			else {
+				this.localCache = new Map();
+			}
+
+			globalLocalCache.set(this.prefix, this.localCache);
+		}
 	}
 
 	/**
-	 * @param {redisConf} redis
+	 * @param {redisConf} redisConf
 	 */
-	static getRedis(redis) {
-		const address = `${redis.host}:${redis.port}`;
+	static getRedis(redisConf) {
+		const address = `${redisConf.host}:${redisConf.port}`;
 
 		// cache redis connections in a map to prevent a new connection on each instance
 		if (!redisMap[address]) {
-			redisMap[address] = new Redis(redis);
+			const redis = new Redis(redisConf);
 
-			redisMap[address].on('error', (err) => {
+			redis.on('error', (err) => {
 				this.logger.error(`[RedisCache] error in redis connection on ${address}`, err);
 			});
 
 			// we need a different connection for subscription, because once subscribed
 			// no other commands can be issued
-			this.subscribe(redis);
+			const pubRedis = this.subscribe(redisConf);
+
+			redisMap[address] = [redis, pubRedis];
 		}
 
 		return redisMap[address];
 	}
 
 	/**
-	 * @param {redisConf} redis
+	 * @param {redisConf} redisConf
 	 */
-	static subscribe(redis) {
-		const redisIns = new Redis(redis);
+	static subscribe(redisConf) {
+		const pubSubConf = this.pubSubRedisConf || redisConf;
 
-		redisIns.on('error', (err) => {
-			this.logger.error(`[RedisCache] error in redis connection on ${redis.host}:${redis.port}`, err);
+		const subRedis = new Redis(pubSubConf);
+		const pubRedis = new Redis(pubSubConf);
+
+		subRedis.on('error', (err) => {
+			this.logger.error(`[RedisCache] error in redis connection on ${pubSubConf.host}:${pubSubConf.port}`, err);
 		});
 
 		const channelName = `RC:${this.globalPrefix}`;
 
-		redisIns.subscribe(channelName, (err) => {
+		subRedis.subscribe(channelName, (err) => {
 			if (err) {
 				this.logger.error(`[RedisCache] can't subscribe to channel ${channelName}`, err);
 			}
 		});
 
-		redisIns.on('message', this.handleSubscribeMessage.bind(this));
+		subRedis.on('message', this.handleSubscribeMessage.bind(this));
+
+		return pubRedis;
 	}
 
 	static handleSubscribeMessage(channel, message) {
@@ -135,7 +257,8 @@ class RedisCache {
 		// the message is ${pid}\v${prefix}\v${command}\v${args.join('\v')}
 		const [pid, prefix, command, key, ...args] = message.split('\v');
 
-		// RedisCache.logger.log(`[RedisCache] received subscribe command ${command} ${prefix}:${key}`);
+		// const debugMsg = `${command} ${prefix}:${key} [from ${pid} to ${processId}]`;
+		// RedisCache.logger.log(`[RedisCache] received subscribe command ${debugMsg}`);
 
 		if (Number(pid) === processId) {
 			// since the message came from the same process, it's already been handled
@@ -155,24 +278,18 @@ class RedisCache {
 			this._localCache(prefix, key, DEL_CONTAINS);
 		}
 		else if (command === 'set') {
-			const ttl = Number(args[0]);
-			const value = args[1];
-
-			this._localCache(prefix, key, value, ttl);
+			// NOTE: set command is not being used currently
+			try {
+				const value = JSON.parse(args[0]);
+				this._localCache(prefix, key, value);
+			}
+			catch (e) {
+				this.logger.error(e);
+			}
 		}
 		else {
 			this.logger.error(`[RedisCache] unknown subscribe command ${command}`);
 		}
-	}
-
-	// key for localCahce
-	static _localKey(prefix, key) {
-		return `${prefix}:${key}`;
-	}
-
-	// key for localCahce
-	_localKey(key) {
-		return `${this.prefix}:${key}`;
 	}
 
 	// get prefixed key for redis
@@ -193,34 +310,6 @@ class RedisCache {
 		}
 	}
 
-	async _getWithTTL(key) {
-		this.constructor.redisGetCount++;
-		const prefixedKey = this._key(key);
-		const results = await this.redis.pipeline([
-			['get', prefixedKey],
-			['pttl', prefixedKey],
-		]).exec();
-
-		const value = results[0][1];
-		const ttl = results[1][1];
-
-		if (value === null) return [undefined, ttl];
-		try {
-			return [JSON.parse(value), ttl];
-		}
-		catch (err) {
-			return [value, ttl];
-		}
-	}
-
-	async _getAuto(key) {
-		if (this.useLocalCache) {
-			return this._getWithTTL(key);
-		}
-
-		return [await this._get(key), 0];
-	}
-
 	async _has(key) {
 		return this.redis.exists(this._key(key));
 	}
@@ -236,150 +325,184 @@ class RedisCache {
 		return this.redis.set(prefixedKey, JSON.stringify(value), 'PX', ttl);
 	}
 
+	_setLocal(key, value, ttl = 0) {
+		if (value === undefined) return;
+
+		const data = {
+			c: Date.now(),
+			v: value,
+		};
+
+		if (ttl > 0) {
+			data.t = ttl;
+		}
+
+		this._localCache(key, data, false);
+	}
+
+	_setBoth(key, value, ttl = 0) {
+		if (value === undefined) return true;
+
+		const data = {
+			c: Date.now(),
+			v: value,
+		};
+
+		if (ttl > 0) {
+			data.t = ttl;
+		}
+
+		if (this.useLocalCache) {
+			this._localCache(key, data);
+		}
+
+		return this._set(key, data, ttl);
+	}
+
 	_del(key) {
+		if (this.isPika) {
+			// pika does not support unlink command
+			return this.redis.del(this._key(key));
+		}
+
 		return this.redis.unlink(this._key(key));
 	}
 
-	_clear() {
-		const keyGlob = this._key('*');
+	_delPattern(pattern) {
+		if (this.isPika) {
+			return this._delPatternPika(pattern);
+		}
+
 		return this.redis.eval(
-			`for i, name in ipairs(redis.call('KEYS', '${keyGlob}')) do redis.call('UNLINK', name); end`,
+			`local j=0; for i, name in ipairs(redis.call('KEYS', '${pattern}')) do redis.call('UNLINK', name); j=i end return j`,
 			0,
 		);
 	}
 
+	_actionPattern(pattern, action) {
+		const stream = this.redis.scanStream({
+			match: pattern,
+			count: 100,
+		});
+
+		let count = 0;
+		stream.on('data', async (keys) => {
+			count += keys.length;
+			if (action) {
+				try {
+					await action(keys);
+				}
+				catch (e) {
+					this.logger.error(e);
+				}
+			}
+		});
+
+		return new Promise((resolve) => {
+			stream.on('end', () => resolve(count));
+		});
+	}
+
+	_delPatternPika(pattern) {
+		// Pika does not support lua
+		// We have to use scan for deleting keys
+		return this._actionPattern(pattern, keys => (keys.length && this.redis.del(...keys)));
+	}
+
+	_countPattern(pattern) {
+		if (this.isPika) {
+			return this._countPatternPika(pattern);
+		}
+
+		return this.redis.eval(`return #redis.pcall('keys', '${pattern}')`, 0);
+	}
+
+	_countPatternPika(pattern) {
+		// Pika does not support lua
+		// We have to use scan for counting keys
+		return this._actionPattern(pattern);
+	}
+
+	_clear() {
+		const keyGlob = this._key('*');
+		return this._delPattern(keyGlob);
+	}
+
 	_size() {
 		const keyGlob = this._key('*');
-		return this.redis.eval(`return #redis.pcall('keys', '${keyGlob}')`, 0);
+		return this._countPattern(keyGlob);
 	}
 
 	// eslint-disable-next-line max-statements
-	static _localCache(prefix, key, value, ttl = 0, redis = null) {
+	static _localCache(prefix, key, value) {
+		const cache = globalLocalCache.get(prefix);
+		if (!cache) return undefined;
+
+		// delete key
+		if (value === DELETE) {
+			return cache.delete(key);
+		}
+
+		// clear cache
+		if (value === CLEAR) {
+			return cache.clear();
+		}
+
+		// delete keys containing a pattern
+		if (value === DEL_CONTAINS) {
+			return localCacheDelContains(cache, key, prefix);
+		}
+
+		return undefined;
+	}
+
+	_localCachePublish(command, key = 'null') {
 		// the channel is RC:${globalPrefix} => RC:a
 		// the message is ${pid}\v${prefix}\v${command}\v${args.join('\v')}
 
-		const prefixedKey = this._localKey(prefix, key);
-		if (value === undefined) {
-			const cached = localCache.get(prefixedKey);
-			if (cached === undefined) return undefined;
-			return cached;
-		}
-
-		if (value === CLEAR) {
-			if (redis) {
-				const channelName = `RC:${this.globalPrefix}`;
-				const message = `${processId}\v${prefix}\vclear\vnull`;
-				redis.publish(channelName, message);
-			}
-
-			localCache.forEach((_value, _key) => {
-				if (_key.startsWith(`${prefix}:`)) {
-					// delete ttl
-					if (localCacheTTL.has(_key)) {
-						clearTimeout(localCacheTTL.get(_key));
-						localCacheTTL.delete(_key);
-					}
-
-					// delete data
-					localCache.delete(_key);
-				}
-			});
-
-			return undefined;
-		}
-
-		if (value === DEL_CONTAINS) {
-			if (redis) {
-				const channelName = `RC:${this.globalPrefix}`;
-				const message = `${processId}\v${prefix}\vdel_contains\v${key}`;
-				redis.publish(channelName, message);
-			}
-
-			const delKey = (_key) => {
-				// delete ttl
-				if (localCacheTTL.has(_key)) {
-					clearTimeout(localCacheTTL.get(_key));
-					localCacheTTL.delete(_key);
-				}
-
-				// delete data
-				localCache.delete(_key);
-			};
-
-			if (key.includes('*')) {
-				let keyRegex;
-				if (prefix === '*') {
-					keyRegex = new RegExp(key.replace('*', '.*'));
-				}
-				else {
-					keyRegex = new RegExp(`^${this.prefix}:.*${key.replace('*', '.*')}`);
-				}
-
-				localCache.forEach((_value, _key) => {
-					if (keyRegex.test(_key)) {
-						delKey(_key);
-					}
-				});
-			}
-			else {
-				// delete all keys
-				if (key === '_all_') key = '';
-
-				const anyPrefix = (prefix === '*');
-				localCache.forEach((_value, _key) => {
-					if (
-						(anyPrefix || _key.startsWith(`${prefix}:`)) &&
-						_key.includes(key)
-					) {
-						delKey(_key);
-					}
-				});
-			}
-
-			return undefined;
-		}
-
-		if (value === DELETE) {
-			if (redis) {
-				const channelName = `RC:${this.globalPrefix}`;
-				const message = `${processId}\v${prefix}\vdelete\v${key}`;
-				redis.publish(channelName, message);
-			}
-
-			// delete ttl
-			if (localCacheTTL.has(prefixedKey)) {
-				clearTimeout(localCacheTTL.get(prefixedKey));
-				localCacheTTL.delete(prefixedKey);
-			}
-
-			// delete data
-			localCache.delete(prefixedKey);
-			return undefined;
-		}
-
-		// set value
-		if (redis) {
-			const channelName = `RC:${this.globalPrefix}`;
-			const message = `${processId}\v${prefix}\vsetdel\v${key}`;
-			redis.publish(channelName, message);
-		}
-
-		localCache.set(prefixedKey, value);
-		if (ttl > 0) {
-			// set ttl
-			clearTimeout(localCacheTTL.get(prefixedKey));
-			localCacheTTL.set(prefixedKey, setTimeout(() => {
-				clearTimeout(localCacheTTL.get(prefixedKey));
-				localCacheTTL.delete(prefixedKey);
-				localCache.delete(prefixedKey);
-			}, ttl));
-		}
-
-		return value;
+		const channelName = `RC:${this.constructor.globalPrefix}`;
+		const message = `${processId}\v${this.prefix}\v${command}\v${key}`;
+		this.pubRedis.publish(channelName, message);
 	}
 
-	_localCache(key, value, ttl = 0, publish = true) {
-		return this.constructor._localCache(this.prefix, key, value, ttl, publish && this.redis);
+	_localCache(key, value, publish = true) {
+		// get key
+		if (value === undefined) {
+			const res = this.localCache.get(key);
+			if (res === undefined || !res.t) return res;
+			if ((Date.now() - res.c) > res.t) {
+				// value has expired
+				this.localCache.delete(key);
+				return undefined;
+			}
+			return res;
+		}
+
+		// delete key
+		if (value === DELETE) {
+			if (publish) this._localCachePublish('delete', key);
+			this.localCache.delete(key);
+			return undefined;
+		}
+
+		// clear cache
+		if (value === CLEAR) {
+			if (publish) this._localCachePublish('clear');
+			this.localCache.clear();
+			return undefined;
+		}
+
+		// delete keys containing a pattern
+		if (value === DEL_CONTAINS) {
+			if (publish) this._localCachePublish('del_contains', key);
+			localCacheDelContains(this.localCache, key, this.prefix);
+			return undefined;
+		}
+
+		// set key
+		if (publish) this._localCachePublish('setdel', key);
+		this.localCache.set(key, value);
+		return value;
 	}
 
 	_fetching(map, key, value) {
@@ -406,6 +529,10 @@ class RedisCache {
 
 	_getOrSetting(key, value) {
 		return this._fetching(getOrSetting, key, value);
+	}
+
+	_getOrSettingStale(key, value) {
+		return this._fetching(getOrSettingStale, key, value);
 	}
 
 	/**
@@ -492,11 +619,16 @@ class RedisCache {
 	 * @param {getRedisOpts} [options]
 	 * @returns {Promise<any>}
 	 */
-	async getStale(key, defaultValue = undefined, options = {}) {
+	async getStale(key, defaultValue = undefined, options = {}, ctx = {}) {
 		if (this.useLocalCache) {
 			const localValue = this._localCache(key);
-			if (localValue !== undefined) {
-				return localValue;
+			if (localValue !== undefined && localValue.v !== undefined) {
+				if (ctx.staleTTL) {
+					if (localValue.c < Date.now() - ctx.staleTTL) {
+						ctx.isStale = true;
+					}
+				}
+				return localValue.v;
 			}
 		}
 
@@ -507,17 +639,23 @@ class RedisCache {
 			return value;
 		}
 
-		const promise = this._getAuto(key).then(async ([value, ttl]) => {
-			if (value !== undefined && options.parse) {
-				return [await options.parse(value), ttl];
+		const promise = this._get(key).then(async (value) => {
+			if (value === undefined) return [value, 0];
+			if (ctx.staleTTL) {
+				if (value.c < Date.now() - ctx.staleTTL) {
+					ctx.isStale = true;
+				}
 			}
-			return [value, ttl];
+			if (options.parse) {
+				return [await options.parse(value.v), value.t];
+			}
+			return [value.v, value.t];
 		});
 
 		this._getting(key, promise);
 		const [value, ttl] = await promise;
 		if (this.useLocalCache) {
-			this._localCache(key, value, ttl, false);
+			this._setLocal(key, value, ttl);
 		}
 		this._getting(key, DELETE);
 
@@ -559,14 +697,9 @@ class RedisCache {
 	 * or opts (default: 0)
 	 * @return {boolean}
 	 */
-	async set(key, value, options = {}, ret = {}) {
+	async set(key, value, options = {}, ctx = {}) {
 		let ttl = (typeof options === 'object') ? options.ttl : options;
-		if (typeof ttl === 'string') {
-			ttl = timestring(ttl, 'ms');
-		}
-		else {
-			ttl = ttl || 0;
-		}
+		ttl = parseTTL(ttl);
 
 		try {
 			if (value && value.then) {
@@ -574,30 +707,24 @@ class RedisCache {
 				// resolve it and then cache it
 				this._setting(key, value);
 				const resolvedValue = this._wrapInProxy(key, await value);
-				if (this.useLocalCache) {
-					this._localCache(key, resolvedValue, ttl);
-				}
-				await this._set(key, resolvedValue, ttl);
+				await this._setBoth(key, resolvedValue, ttl);
 				this._setting(key, DELETE);
-				ret.__value = resolvedValue;
+				ctx.result = resolvedValue;
 				return true;
 			}
 			if (typeof value === 'function') {
 				// value is a function
 				// call it and set the result
-				return this.set(key, value(key), ttl, ret);
+				return this.set(key, value(key), ttl, ctx);
 			}
 
 			// value is normal
 			// just set it in the store
 			value = this._wrapInProxy(key, value);
 			this._setting(key, Promise.resolve(value));
-			if (this.useLocalCache) {
-				this._localCache(key, value, ttl);
-			}
-			await this._set(key, value, ttl);
+			await this._setBoth(key, value, ttl);
 			this._setting(key, DELETE);
-			ret.__value = value;
+			ctx.result = value;
 			return true;
 		}
 		catch (error) {
@@ -620,14 +747,26 @@ class RedisCache {
 			return undefined;
 		}
 
-		const ret = {};
-		await this.set(key, value, options, ret);
-		return ret.__value;
+		const ctx = {};
+		await this.set(key, value, options, ctx);
+		return ctx.result;
 	}
 
 	/**
 	 * @typedef {object} setRedisOpts
 	 * @property {number|string} ttl in ms / timestring ('1d 3h') default: 0
+	 * @property {number|string} staleTTL in ms / timestring ('1d 3h')
+	 *  set this if you want stale values to be returned and generation in the background
+	 *  values will be considered stale after this time period
+	 * @property {boolean} [requireResult=true]
+	 *  only valid if stale ttl is given
+	 *  it true, this will return undefined and generate value in background if the key does not exist
+	 *  if false, this will generate value in foreground if the key does not exist
+	 * @property {boolean} [freshResult=false]
+	 *  always return fresh value
+	 *  only valid if stale ttl is given
+	 *  if true, this will generate value in foreground if value is stale
+	 *  if false, this will generate value in background (and return stale value) if value is stale
 	 * @property {(val: any) => Promise<any> | any} parse function to parse value fetched from redis
 	 */
 
@@ -641,6 +780,10 @@ class RedisCache {
 	 * @return {any}
 	 */
 	async getOrSet(key, value, options = {}) {
+		if (options && options.staleTTL) {
+			return this._getOrSetStale(key, value, options);
+		}
+
 		const settingPromise = this._getOrSetting(key);
 		if (settingPromise) {
 			// Some other process is still fetching the value
@@ -658,8 +801,8 @@ class RedisCache {
 		// try to get the value from local cache first
 		if (this.useLocalCache) {
 			const localValue = this._localCache(key);
-			if (localValue !== undefined) {
-				return localValue;
+			if (localValue !== undefined && localValue.v !== undefined) {
+				return localValue.v;
 			}
 		}
 
@@ -668,6 +811,225 @@ class RedisCache {
 		const result = await promise;
 		this._getOrSetting(key, DELETE);
 		return result;
+	}
+
+	async _setBackground(key, value, options) {
+		if (this._getOrSettingStale(key)) return;
+
+		// regenerate value in the background
+		this._getOrSettingStale(key, true);
+		setImmediate(async () => {
+			await this.set(key, value, options);
+			this._getOrSettingStale(key, DELETE);
+		});
+	}
+
+	async _getOrSetStale(key, value, options = {}) {
+		// cache is bypassed, return value directly
+		if (this.isBypassed()) {
+			if (typeof value === 'function') return value(key);
+			return value;
+		}
+
+		// try to get the value from local cache first
+		const ctx = {
+			staleTTL: parseTTL(options.staleTTL),
+		};
+
+		const existingValue = await this.getStale(key, undefined, options, ctx);
+		// true = generate in bg, false = generate in fg, null = don't generate
+		let generateInBg = true;
+		if (existingValue === undefined) {
+			if (options.requireResult !== false || options.freshResult) {
+				generateInBg = false;
+			}
+		}
+		else if (ctx.isStale) {
+			if (options.freshResult) {
+				generateInBg = false;
+			}
+		}
+		else {
+			generateInBg = null;
+		}
+
+		if (generateInBg === false) {
+			// regenerate value in the foreground
+			const setCtx = {};
+			await this.set(key, value, options, setCtx);
+			return setCtx.result;
+		}
+
+		if (generateInBg === true) {
+			// regenerate value in the background
+			this._setBackground(key, value, options);
+		}
+
+		return existingValue;
+	}
+
+	_getLocalAttachedMap(key) {
+		let value = this._localCache(key);
+		if (value === undefined) {
+			value = {
+				a: new Map(),
+			};
+
+			this._localCache(key, value, false);
+		}
+		else if (value.a === undefined) {
+			value.a = new Map();
+		}
+
+		return value.a;
+	}
+
+	/**
+	 * attach and return a local map to the redis cache key
+	 * the local map would be deleted if redis cache key gets deleted
+	 * @param {string} key
+	 * @param {string} mapKey
+	 * @return {Map}
+	 */
+	attachMap(key, mapKey) {
+		const fullMap = this._getLocalAttachedMap(key);
+		let map = fullMap.get(mapKey);
+		if (!map) {
+			map = new Map();
+			fullMap.set(mapKey, map);
+		}
+		return map;
+	}
+
+	/**
+	 * attach and return a local set to the redis cache key
+	 * the local set would be deleted if redis cache key gets deleted
+	 * @param {string} key
+	 * @param {string} mapKey
+	 * @return {Set}
+	 */
+	attachSet(key, mapKey) {
+		const fullMap = this._getLocalAttachedMap(key);
+		let set = fullMap.get(mapKey);
+		if (!set) {
+			set = new Set();
+			fullMap.set(mapKey, set);
+		}
+		return set;
+	}
+
+	/**
+	 * attach and return a local array to the redis cache key
+	 * the local array would be deleted if redis cache key gets deleted
+	 * @param {string} key
+	 * @param {string} mapKey
+	 * @return {Array}
+	 */
+	attachArray(key, mapKey) {
+		const fullMap = this._getLocalAttachedMap(key);
+		let array = fullMap.get(mapKey);
+		if (!array) {
+			array = [];
+			fullMap.set(mapKey, array);
+		}
+		return array;
+	}
+
+	/**
+	 * attach and return a local object to the redis cache key
+	 * the local object would be deleted if redis cache key gets deleted
+	 * @param {string} key
+	 * @param {string} mapKey
+	 * @return {object}
+	 */
+	attachObject(key, mapKey) {
+		const fullMap = this._getLocalAttachedMap(key);
+		let obj = fullMap.get(mapKey);
+		if (!obj) {
+			obj = {};
+			fullMap.set(mapKey, obj);
+		}
+		return obj;
+	}
+
+	/**
+	 * attach and return a local lru map to the redis cache key
+	 * the local lru map would be deleted if redis cache key gets deleted
+	 * @param {string} key
+	 * @param {string} mapKey
+	 * @param {object} options options for the lru map
+	 * @return {LRU}
+	 */
+	attachLRU(key, mapKey, {maxItems = 100} = {}) {
+		const fullMap = this._getLocalAttachedMap(key);
+		let lru = fullMap.get(mapKey);
+		if (!lru) {
+			lru = new LRU({maxItems});
+			fullMap.set(mapKey, lru);
+		}
+		return lru;
+	}
+
+	/**
+	 * attach and return a local cache object to the redis cache key
+	 * the local cache would be deleted if redis cache key gets deleted
+	 * @param {string} key
+	 * @param {string} mapKey
+	 * @param {object} options options for the cache object
+	 * @return {Cache}
+	 */
+	attachCache(key, mapKey, options = {}) {
+		const fullMap = this._getLocalAttachedMap(key);
+		let cache = fullMap.get(mapKey);
+		if (!cache) {
+			cache = new Cache(options);
+			fullMap.set(mapKey, cache);
+		}
+		return cache;
+	}
+
+	/**
+	 * attach and return a custom object to the redis cache key
+	 * custom object should be returned by the func
+	 * the object would be deleted if redis cache key gets deleted
+	 * @param {string} key
+	 * @param {string} mapKey
+	 * @param {function} func functions that returns the object
+	 * @return {any}
+	 */
+	attachCustom(key, mapKey, func) {
+		const fullMap = this._getLocalAttachedMap(key);
+		let res = fullMap.get(mapKey);
+		if (!res) {
+			res = func();
+			fullMap.set(mapKey, res);
+		}
+		return res;
+	}
+
+	/**
+	 * delete an attached object to a key
+	 * @param {string} key
+	 * @param {string} mapKey
+	 */
+	deleteAttached(key, mapKey) {
+		const value = this._localCache(key);
+		if (!value || !value.a) return;
+		value.a.delete(mapKey);
+	}
+
+	/**
+	 * delete all attached objects to a key
+	 * @param {string} key
+	 */
+	deleteAllAttached(key) {
+		const value = this._localCache(key);
+		if (!value || !value.a) return;
+		value.a.clear();
+		delete value.a;
+		if (value.v === undefined) {
+			this._localCache(key, DELETE, false);
+		}
 	}
 
 	/**
@@ -760,115 +1122,7 @@ class RedisCache {
 		}
 
 		this._localCache(str, DEL_CONTAINS);
-		return this.redis.eval(
-			`local j=0; for i, name in ipairs(redis.call('KEYS', '${keyGlob}')) do redis.call('UNLINK', name); j=i end return j`,
-			0,
-		);
-	}
-
-	/**
-	 * Return a global instance of Redis cache
-	 * @param {object} [redis] redis redisConf
-	 * @return {RedisCache}
-	 */
-	static globalCache(redis) {
-		if (!globalCache) globalCache = new this('global', redis);
-		return globalCache;
-	}
-
-	/**
-	 * gets a value from the cache immediately without waiting
-	 * @param {string} key
-	 * @param {any} defaultValue
-	 */
-	static getStale(key, defaultValue) {
-		return this.globalCache().getStale(key, defaultValue);
-	}
-
-	/**
-	 * gets a value from the global cache
-	 * @param {string} key
-	 * @param {any} defaultValue
-	 */
-	static get(key, defaultValue) {
-		return this.globalCache().get(key, defaultValue);
-	}
-
-	/**
-	 * checks if a key exists in the global cache
-	 * @param {string} key
-	 */
-	static has(key) {
-		return this.globalCache().has(key);
-	}
-
-	/**
-	 * sets a value in the global cache
-	 * @param {string} key
-	 * @param {any} value
-	 * @param {number|string|setRedisOpts} [options={}] ttl in ms/timestring('1d 3h') (default: 0)
-	 * or opts with parse and ttl
-	 * @return {boolean}
-	 */
-	static set(key, value, options = {}) {
-		return this.globalCache().set(key, value, options);
-	}
-
-	/**
-	 * gets a value from the global cache, or sets it if it doesn't exist
-	 * @param {string} key key to get
-	 * @param {any} value value to set if the key does not exist
-	 * @param {number|string|setRedisOpts} [options={}] ttl in ms/timestring('1d 3h') (default: 0)
-	 * or opts with parse and ttl
-	 */
-	static getOrSet(key, value, options = {}) {
-		return this.globalCache().getOrSet(key, value, options);
-	}
-
-	/**
-	 * alias for getOrSet
-	 * @param {string} key key to get
-	 * @param {any} value value to set if the key does not exist
-	 * @param {number|string|setRedisOpts} [options={}] ttl in ms/timestring('1d 3h') (default: 0)
-	 * or opts with parse and ttl
-	 */
-	static $(key, value, options = {}) {
-		return this.globalCache().getOrSet(key, value, options);
-	}
-
-	/**
-	 * deletes a value from the global cache
-	 * @param {string} key
-	 */
-	static del(key) {
-		return this.globalCache().del(key);
-	}
-
-	/**
-	 * @return {number} size of the global cache (no. of keys)
-	 */
-	static size() {
-		return this.globalCache().size();
-	}
-
-	/**
-	 * clears the global cache (deletes all keys)
-	 */
-	static clear() {
-		return this.globalCache().clear();
-	}
-
-	/**
-	 *
-	 * memoizes a function (caches the return value of the function)
-	 * @param {string} key
-	 * @param {function} fn
-	 * @param {number|string|setRedisOpts} [options={}] ttl in ms/timestring('1d 3h') (default: 0)
-	 * or opts with parse and ttl
-	 * @return {function}
-	 */
-	static memoize(key, fn, options = {}) {
-		return this.globalCache().memoize(key, fn, options);
+		return this._delPattern(keyGlob);
 	}
 }
 

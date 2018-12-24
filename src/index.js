@@ -2,6 +2,7 @@ import File from './File';
 import Crypt from './Crypt';
 import Connect from './Connect';
 import Cache from './Cache';
+import LRU from './LRU';
 import Queue from './Queue';
 import RedisCache from './RedisCache';
 import System from './System';
@@ -33,6 +34,7 @@ export {
 	Crypt,
 	Connect,
 	Cache,
+	LRU,
 	Queue,
 	RedisCache,
 	System,
