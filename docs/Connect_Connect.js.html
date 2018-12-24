@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>Str/Str.js - Documentation</title>
+    <title>Connect/Connect.js - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -33,7 +33,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">Str/Str.js</h1>
+    <h1 class="page-title">Connect/Connect.js</h1>
     
 
     
@@ -43,394 +43,1160 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import _ from 'lodash';
-import numberToWords from './numberToWords';
+            <pre class="prettyprint source linenums"><code>import path from 'path';
+import util from 'util';
+import {URL, URLSearchParams} from 'url';
+import _ from 'lodash';
+import got from 'got';
+import {CookieJar} from 'tough-cookie';
+import FileCookieStore from 'tough-cookie-file-store';
+import {
+	httpAgent as socksHttpAgent,
+	httpsAgent as socksHttpsAgent,
+} from './socksProxyAgent';
+import {
+	httpAgent as proxyHttpAgent,
+	httpsAgent as proxyHttpsAgent,
+} from './httpProxyAgent';
+import File from '../File';
+import Crypt from '../Crypt';
 
-/**
- * String utilities
- * @namespace Str
- */
+CookieJar.prototype.getCookiesAsync = util.promisify(CookieJar.prototype.getCookies);
+CookieJar.prototype.setCookieAsync = util.promisify(CookieJar.prototype.setCookie);
 
-/**
- * Inverts the case of a string
- * @example
- * Str.invertCase('Hello iPhone'); // => 'hELLO IpHONE'
- * @memberof Str
- * @param {string} str
- * @return {string}
- */
-function invertCase(str) {
-	let output = '';
-	let code = '';
-
-	for (let i = 0, len = str.length - 1; i &lt;= len; i++) {
-		code = str.charCodeAt(i);
-		if (code >= 65 &amp;&amp; code &lt;= 90) {
-			output += str.charAt(i).toLowerCase();
-		}
-		else if (code >= 97 &amp;&amp; code &lt;= 122) {
-			output += str.charAt(i).toUpperCase();
-		}
-		else {
-			output += str.charAt(i);
-		}
-	}
-
-	return output;
-}
-
-/**
- * is the character given is a vowel?
- * @example
- * Str.isVowel('a') // => true
- * Str.isVowel('f') // => false
- * Str.isVowel('ae') // => false
- * @memberof Str
- * @param {string} char
- * @return {boolean}
- */
-function isVowel(char) {
-	return (/^[aeiou]$/i).test(char);
-}
-
-/**
- * is the character given is a consonant?
- * @example
- * Str.isConsonant('a') // => false
- * Str.isConsonant('f') // => true
- * Str.isConsonant('ff') // => false
- * @memberof Str
- * @param {string} char
- * @return {boolean}
- */
-function isConsonant(char) {
-	return (/^[bcdfghjklmnpqrstvwxys]$/i).test(char);
-}
-
-/**
- * Get the plural of a string
- * @memberof Str
- * @param {string} str
- * @return {string}
- */
-function plural(str) {
-	if (!str || str.length &lt;= 2) return str;
-
-	if (str.charAt(str.length - 1) === 'y') {
-		if (isVowel(str.charAt(str.length - 2))) {
-			// If the y has a vowel before it (i.e. toys), then you just add the s.
-			return str + 's';
-		}
-
-		// If a this ends in y with a consonant before it (fly)
-		// you drop the y and add -ies to make it plural.
-		return str.slice(0, -1) + 'ies';
-	}
-	if (str.substring(str.length - 2) === 'us') {
-		// ends in us -> i, needs to preceed the generic 's' rule
-		return str.slice(0, -2) + 'i';
-	}
-	if (
-		['ch', 'sh'].indexOf(str.substring(str.length - 2)) !== -1 ||
-		['x', 's'].indexOf(str.charAt(str.length - 1)) !== -1
-	) {
-		// If a this ends in ch, sh, x, s, you add -es to make it plural.
-		return str + 'es';
-	}
-
-	// anything else, just add s
-	return str + 's';
-}
-
-/**
- * Pluralize a character if the count is greater than 1
- * @memberof Str
- * @param {string} str
- * @param {number} [count=2]
- * @return {string}
- */
-function pluralize(str, count = 2) {
-	if (count &lt;= 1) return str;
-	return plural(str);
-}
-
-/**
- * transform a string by replacing characters from from string to to string
- * @example
- * Str.transform('abc', 'bc', 'de') // => 'ade'
- * @memberof Str
- * @param {string} str string to transform
- * @param {string} from characters to replace in the string
- * @param {string} to characters to replace with in the string
- * @return {string} transformed string
- */
-function transform(str, from, to) {
-	const len = str.length;
-	let out = '';
-	let pos;
-
-	for (let i = 0; i &lt; len; i++) {
-		pos = from.indexOf(str.charAt(i));
-		if (pos >= 0) {
-			out += to.charAt(pos);
-		}
-		else {
-			out += str.charAt(i);
-		}
-	}
-
-	return out;
-}
-
-/**
- * Break String From Next Given Character After A Given Position
- * @memberof Str
- * @param {string} str
- * @param {number} pos
- * @param {string} [char=' ']
- * @return {string}
- */
-function trimToNext(str, pos, char = ' ') {
-	const trimPos = str.indexOf(char, pos);
-	if (trimPos !== -1) {
-		return _.trimEnd(str.substring(0, trimPos), char);
-	}
-
-	return _.trimEnd(str, char);
-}
-
-const numberLocaleCache = {};
-function _getNumberLocale(options) {
-	const {locale = 'en', currency = undefined, decimals = 0} = options;
-	const localeKey = `${locale}${currency}${decimals}`;
-	if (!(localeKey in numberLocaleCache)) {
-		numberLocaleCache[localeKey] = new Intl.NumberFormat(locale, {
-			style: currency ? 'currency' : 'decimal',
-			currency,
-			minimumFractionDigits: decimals,
-			maximumFractionDigits: decimals,
-		});
-	}
-
-	return numberLocaleCache[localeKey];
-}
-
-/**
- * @typedef {object} numberFormatOpts
- * @property {string} locale like 'en-IN'
- * @property {string} currency like 'INR'
- * @property {number} decimals number of decimal places to return
- */
-
-/**
- * Format a number according to a particular locale
- * Similar to Number.toLocaleFormat, except being significantly faster
- *
- * @memberof Str
- * @param {number} number the number to format
- * @param {numberFormatOpts|string} [options={}]
- * 	string of locale or options object {locale: 'en', decimals: 0}
- * @return {string} formatted number
- */
-function numberFormat(number, options = {}) {
-	if (typeof options === 'string') {
-		options = {locale: options};
-	}
-
-	return _getNumberLocale(options).format(number);
-}
-
-/**
- * Space clean a string
- * Converts consecutive multiple spaces / tabs / newlines in the string into a single space
- * @memberof Str
- * @param {string} str
- * @return {string}
- */
-function spaceClean(str) {
-	if (!str) return '';
-	return str.replace(/(?:\s|&amp;nbsp;|&amp;#32;)+/ig, ' ').trim();
-}
-
-/**
- * Rotate a string by 13 characters
- *
- * @memberof Str
- * @param {string} str the string to be rotated
- * @return {string} rotated string
- */
-function rot13(str) {
-	const s = [];
-	for (let i = 0; i &lt; str.length; i++) {
-		const j = str.charCodeAt(i);
-		if (((j >= 65) &amp;&amp; (j &lt;= 77)) || ((j >= 97) &amp;&amp; (j &lt;= 109))) {
-			s[i] = String.fromCharCode(j + 13);
-		}
-		else if (((j >= 78) &amp;&amp; (j &lt;= 90)) || ((j >= 110) &amp;&amp; (j &lt;= 122))) {
-			s[i] = String.fromCharCode(j - 13);
-		}
-		else {
-			s[i] = String.fromCharCode(j);
-		}
-	}
-
-	return s.join('');
-}
-
-/**
- * Rotate a string by 47 characters
- *
- * @memberof Str
- * @param {string} str the string to be rotated
- * @return {string} rotated string
- */
-function rot47(str) {
-	const s = [];
-	for (let i = 0; i &lt; str.length; i++) {
-		const j = str.charCodeAt(i);
-		if ((j >= 33) &amp;&amp; (j &lt;= 126)) {
-			s[i] = String.fromCharCode(33 + ((j + 14) % 94));
-		}
-		else {
-			s[i] = String.fromCharCode(j);
-		}
-	}
-
-	return s.join('');
-}
-
-/**
- * Parses a json string, returns null if string is invalid (instead of throwing error)
- * If the input is not a string (already parsed), returns the input itself
- *
- * @memberof Str
- * @param {any} str
- * @return {object|null}
- */
-function tryParseJson(str) {
-	if (str == null) return null;
-	if (typeof str !== 'string') return str;
-
-	try {
-		return JSON.parse(str);
-	}
-	catch (e) {
-		return null;
-	}
-}
-
-/**
- * Stringifies an object only if it is not already a string
- * If it is already a string returns the string itself
- * If it is undefined, returns 'null'
- *
- * @memberof Str
- * @param {any} obj
- * @returns {string}
- */
-function tryStringifyJson(obj) {
-	if (obj == null) return 'null';
-	if (typeof obj === 'string') return obj;
-	return JSON.stringify(obj);
-}
-
-/**
- * Strip html tags from a string
- * @memberof Str
- * @param {string} str the string to remove tags from
- * @param {object} options object containing:
- * 	allowed: array of allowed tags eg. ['p', 'b', 'span'], default: []
- * 	blocked: array of blocked tags eg. ['p'], default: []
- * 	replaceWith: replace the removed tags with this string, default: ''
- *
- * if allowed is not given and blocked is given
- * then by default all tags not mentioned in blocked are allowed
- *
- * @return {string} resulting string by removing all tags mentioned
- */
-function stripTags(str, options = {}) {
-	if (!str) return '';
-
-	const tags = /&lt;\/?([a-z][a-z0-9]*)\b[^>]*>/gi;
-	const commentsAndPhpTags = /&lt;!--[\s\S]*?-->|&lt;\?(?:php)?[\s\S]*?\?>/gi;
-
-	const replaceWith = options.replaceWith || '';
-	const allowed = options.allowed;
-	const blocked = options.blocked;
-
-	const replaceTags = function ($0, $1) {
-		if (blocked) {
-			// tag is blocked
-			if (blocked.includes($1.toLowerCase())) return replaceWith;
-			// allowed is not given and blocked is, that means all tags are allowed
-			if (!allowed) return $0;
-		}
-		// tag is allowed
-		if (allowed &amp;&amp; allowed.includes($1.toLowerCase())) return $0;
-		// by default all tags are blocked
-		return replaceWith;
-	};
-
-	let after = String(str);
-	// eslint-disable-next-line no-constant-condition
-	while (true) {
-		const before = after;
-		after = before
-			.replace(commentsAndPhpTags, replaceWith)
-			.replace(tags, replaceTags);
-
-		// return once no more tags are removed
-		if (before === after) {
-			return after;
-		}
-	}
-}
-
-/**
- * Escape a string for including in regular expressions
- * @memberof Str
- * @param {string} str string to escape
- * @return {string} escaped string
- */
-function escapeRegex(str) {
-	if (!str) return '';
-	return String(str).replace(/[-[\]{}()*+!&lt;=:?./\\^$|#,]/g, '\\$&amp;');
-}
-
-/**
- * replace special characters within a string
- * NOTE: it replaces multiple special characters with single replaceWith character
- * @param {string} str
- * @param {string} replaceWith
- * @returns {string}
- */
-function replaceSpecialChars(str, replaceWith = '') {
-	const result = str.replace(/[!@#$%^&amp;*()_+\-=[\]{};':"\\|,.&lt;>/\s]+/g, replaceWith);
-	if (replaceWith) {
-		return _.trim(result, replaceWith);
-	}
-	return result;
-}
-
-export default {
-	invertCase,
-	isVowel,
-	isConsonant,
-	plural,
-	pluralize,
-	transform,
-	trimToNext,
-	numberFormat,
-	numberToWords,
-	spaceClean,
-	rot13,
-	rot47,
-	tryParseJson,
-	tryStringifyJson,
-	stripTags,
-	escapeRegex,
-	replaceSpecialChars,
+const userAgents = {
+	chrome: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3163.100 Safari/537.36',
+	edge: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.79 Safari/537.36 Edge/14.14393',
+	firefox: 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:63.0) Gecko/20100101 Firefox/63.0',
+	ie: 'Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko',
+	operaMini: 'Opera/9.80 (Android; Opera Mini/8.0.1807/36.1609; U; en) Presto/2.12.423 Version/12.16',
+	googlebot: 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
+	googlebotMobile: '​Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.96 Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
+	android: 'Mozilla/5.0 (Linux; Android 8.0.0; ONEPLUS A3003) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.80 Mobile Safari/537.36',
+	iphone: 'Mozilla/6.0 (iPhone; CPU iPhone OS 8_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/8.0 Mobile/10A5376e Safari/8536.25',
+	ipad: 'Mozilla/5.0 (iPad; CPU OS 5_0 like Mac OS X) AppleWebKit/534.46 (KHTML, like Gecko) Version/5.0.2 Mobile/9A5248d Safari/6533.18.5',
 };
+
+userAgents.windows = userAgents.chrome;
+userAgents.safariMobile = userAgents.iphone;
+userAgents.chromeMobile = userAgents.android;
+userAgents.desktop = userAgents.chrome;
+userAgents.mobile = userAgents.android;
+userAgents.tablet = userAgents.ipad;
+
+const getMethodRedirectCodes = new Set([300, 301, 302, 303, 304, 305, 307, 308]);
+const allMethodRedirectCodes = new Set([300, 303, 307, 308]);
+
+/**
+ * Returns proxy url based on the proxy options.
+ *
+ * @param  {object} proxy proxy options
+ * @return {string} proxy url based on the options
+ * @private
+ */
+// eslint-disable-next-line no-unused-vars
+function makeProxyUrl(proxy) {
+	let url = `${proxy.host}:${proxy.port}`;
+	if (proxy.auth &amp;&amp; proxy.auth.username) {
+		url = `${encodeURIComponent(proxy.auth.username)}:${encodeURIComponent(proxy.auth.password)}@${url}`;
+	}
+
+	if (proxy.type === 'socks' || proxy.type === 'socks5') {
+		return `socks5://${url}`;
+	}
+
+	return `http://${url}`;
+}
+
+function httpProxyAgent(options) {
+	return {
+		http: proxyHttpAgent(options),
+		https: proxyHttpsAgent(options),
+	};
+}
+
+function socksProxyAgent(options) {
+	return {
+		http: socksHttpAgent(options),
+		https: socksHttpsAgent(options),
+	};
+}
+
+/**
+ * Simple &amp; Powerful HTTP request client.
+ */
+class Connect {
+	/**
+	 * Creates a new Connect object.
+	 * @constructor
+	 */
+	constructor() {
+		/**
+		 * Various options (or parameters) defining the Connection
+		 * @private
+		 */
+		this.options = {
+			// url to send request at
+			url: null,
+			// method of the request (GET / POST / OPTIONS / DELETE / PATCH / PUT)
+			method: 'GET',
+			// headers to set
+			headers: {
+				'user-agent': userAgents.chrome,
+				accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+				'accept-language': 'en-US,en;q=0.8',
+				// some sites expect an accept-encoding header
+				'accept-encoding': '',
+				// set empty cookie header if no cookies exist
+				// this is because some sites expect cookie header to be there
+				cookie: '',
+			},
+			// object of cookie values to set
+			cookies: {},
+			// cookie jar
+			cookieJar: null,
+			// whether to follow redirects
+			followRedirect: true,
+			// maximum number of redirects to follow
+			maxRedirects: 6,
+			// whether to ask for compressed response (automatically handles accept-encoding)
+			compress: true,
+			// whether to return the result as a stream
+			stream: false,
+			// timeout of the request
+			timeout: 120 * 1000,
+			// whether to verify ssl certificate
+			strictSSL: false,
+			// proxy details (should be {address, port, type, auth: {username, password}})
+			// type can be http, https, socks
+			proxy: {},
+			// post fields (or query params in case of GET)
+			fields: {},
+			// query params
+			query: {},
+			// encoding of the response, if null body is returned as buffer
+			encoding: 'utf8',
+			// body of the request (valid in case of POST / PUT / PATCH)
+			body: '',
+			// custom http &amp; https agent (should be {http: agent, https: agent})
+			agent: null,
+		};
+	}
+
+	/**
+	 * Set the url for the connection.
+	 *
+	 * @param {string} url
+	 * @return {Connect} self
+	 */
+	url(url) {
+		this.options.url = url;
+		return this;
+	}
+
+	/**
+	 * @static
+	 * Creates and returns a new Connect object with the given url.
+	 *
+	 * @param {string} url
+	 * @return {Connect} A new Connect object with url set to the given url
+	 */
+	static url(url) {
+		const connect = new this();
+		connect.url(url);
+		return connect;
+	}
+
+	/**
+	 * @static
+	 * Creates and returns a new Connect object (with get method) with the given url.
+	 *
+	 * @param {string} url
+	 * @return {Connect} A new Connect object with url set to the given url
+	 */
+	static get(url) {
+		const connect = new this();
+		connect.url(url);
+		connect.get();
+		return connect;
+	}
+
+	/**
+	 * @static
+	 * Creates and returns a new Connect object (with post method) with the given url.
+	 *
+	 * @param {string} url
+	 * @return {Connect} A new Connect object with url set to the given url
+	 */
+	static post(url) {
+		const connect = new this();
+		connect.url(url);
+		connect.post();
+		return connect;
+	}
+
+	/**
+	 * @static
+	 * Creates and returns a new Connect object (with put method) with the given url.
+	 *
+	 * @param {string} url
+	 * @return {Connect} A new Connect object with url set to the given url
+	 */
+	static put(url) {
+		const connect = new this();
+		connect.url(url);
+		connect.put();
+		return connect;
+	}
+
+	/**
+	 * @static
+	 * Returns a new cookie jar.
+	 * @param {Array&lt;any>} args
+	 * @return {CookieJar} A cookie jar
+	 */
+	static newCookieJar(...args) {
+		return new CookieJar(...args);
+	}
+
+	static _getGlobalCookieJar() {
+		if (!this._globalCookieJar) {
+			this._globalCookieJar = this.newCookieJar();
+		}
+		return this._globalCookieJar;
+	}
+
+	/**
+	 * Set or unset the followRedirect option for the connection.
+	 *
+	 * @param {boolean} shouldFollowRedirect boolean representing whether to follow redirect or not
+	 * @return {Connect} self
+	 */
+	followRedirect(shouldFollowRedirect = true) {
+		this.options.followRedirect = shouldFollowRedirect;
+		return this;
+	}
+
+	/**
+	 * Set the number of maximum redirects to follow
+	 * @param {number} numRedirects max number of redirects
+	 */
+	maxRedirects(numRedirects) {
+		this.options.maxRedirects = numRedirects;
+		return this;
+	}
+
+	/**
+	 * Set value of a header parameter for the connection.
+	 *
+	 * @param {string|object} headerName name of the header parameter whose value is to be set
+	 * @param {string|undefined} headerValue value to be set
+	 * @return {Connect} self
+	 */
+	header(headerName, headerValue) {
+		if (typeof headerName === 'string') {
+			this.options.headers[headerName.toLowerCase()] = headerValue;
+		}
+		else {
+			Object.assign(
+				this.options.headers,
+				_.mapKeys(headerName, (val, key) => key.toLowerCase()),
+			);
+		}
+
+		return this;
+	}
+
+	/**
+	 * Set value of the headers for the connection.
+	 *
+	 * @param {object} headers object representing the headers for the connection
+	 * @return {Connect} self
+	 */
+	headers(headers) {
+		Object.assign(this.options.headers, headers);
+		return this;
+	}
+
+	/**
+	 * Set the body of the connection object.
+	 *
+	 * @param {any} body value for body
+	 *  if body is an object, contentType will be set to application/json and body will be stringified
+	 * @param {string} [contentType=null] string representing the content type of the body
+	 *  contentType can be null or json
+	 * @return {Connect} self
+	 */
+	body(body, contentType = null) {
+		if (contentType === 'json') {
+			this.contentType('json');
+		}
+
+		this.options.body = body;
+		return this;
+	}
+
+	/**
+	 * Set the 'Referer' field in the headers.
+	 *
+	 * @param {string} referer referer value
+	 * @return {Connect}
+	 */
+	referer(referer) {
+		this.header('referer', referer);
+		return this;
+	}
+
+	/**
+	 * Set the 'User-Agent' field in the headers.
+	 * can be either name of the browser / platform or full user agent
+	 * name can be:
+	 *  chrome, firefox, ie, edge, safari, googlebot
+	 *  chromeMobile, safariMobile, googlebotMobile, operaMini
+	 *  windows, android, iphone, ipad, desktop, mobile, tablet
+	 *
+	 * @param {string} userAgent name of the user-agent or its value
+	 * @return {Connect} self
+	 */
+	userAgent(userAgent) {
+		this.header('user-agent', userAgents[userAgent] || userAgent);
+		return this;
+	}
+
+	/**
+	 * Set the 'Content-Type' field in the headers.
+	 *
+	 * @param  {string} contentType value for content-type
+	 * @return {Connect}
+	 */
+	contentType(contentType) {
+		if (contentType === 'json') {
+			this.header('content-type', 'application/json');
+		}
+		else if (contentType === 'form') {
+			this.header('content-type', 'application/x-www-form-urlencoded');
+		}
+		else {
+			this.header('content-type', contentType);
+		}
+
+		return this;
+	}
+
+	/**
+	 * Returns whether the content-type is JSON or not
+	 *
+	 * @return {boolean} true, if content-type is JSON; false, otherwise
+	 */
+	isJSON() {
+		return this.options.headers['content-type'] === 'application/json';
+	}
+
+	/**
+	 * Returns whether the content-type is Form or not
+	 *
+	 * @return {boolean} true, if content-type is JSON; false, otherwise
+	 */
+	isForm() {
+		return this.options.headers['content-type'] === 'application/x-www-form-urlencoded';
+	}
+
+	/**
+	 * Sets the value of a cookie.
+	 * Can be used to enable global cookies, if cookieName is set to true
+	 * and cookieValue is undefined (or is not passed as an argument).
+	 * Can also be used to set multiple cookies by passing in an object
+	 * representing the cookies and their values as key:value pairs.
+	 *
+	 * @param {string|boolean|object} cookieName  represents the name of the
+	 * cookie to be set, or the cookies object
+	 * @param {string|undefined} [cookieValue] cookie value to be set
+	 * @return {Connect} self
+	 */
+	cookie(cookieName, cookieValue) {
+		if (cookieName === true &amp;&amp; cookieValue === undefined) {
+			this.globalCookies();
+		}
+		if (typeof cookieName === 'string') {
+			this.options.cookies[cookieName] = cookieValue;
+		}
+		else {
+			Object.assign(this.options.cookies, cookieName);
+		}
+
+		return this;
+	}
+
+	/**
+	 * Sets multiple cookies.
+	 * Can be used to enable global cookies, if cookies is set to true.
+	 *
+	 * @param {object|boolean} cookies object representing the cookies
+	 * and their values as key:value pairs.
+	 * @return {Connect} self
+	 */
+	cookies(cookies) {
+		if (cookies === true) {
+			this.globalCookies();
+		}
+		else {
+			Object.assign(this.options.cookies, cookies);
+		}
+
+		return this;
+	}
+
+	/**
+	 * Enable global cookies.
+	 *
+	 * @param {boolean|object} [options=true]
+	 * @return {Connect} self
+	 */
+	globalCookies(options = true) {
+		if (options === false || options === null) return this;
+		const jar = this.constructor._getGlobalCookieJar();
+		if (options === true) {
+			this.options.cookieJar = jar;
+			return this;
+		}
+		if (options.readOnly) {
+			this.options.readCookieJar = jar;
+		}
+
+		return this;
+	}
+
+	/**
+	 * Set the value of cookie jar based on a file (cookie store).
+	 *
+	 * @param  {string} fileName name of (or path to) the file
+	 * @return {Connect}         self
+	 */
+	cookieFile(fileName, options = {}) {
+		const cookieJar = this.constructor.newCookieJar(new FileCookieStore(fileName));
+		this.cookieJar(cookieJar, options);
+		return this;
+	}
+
+	/**
+	 * Set the value of cookie jar.
+	 *
+	 * @param  {CookieJar} cookieJar value to be set
+	 * @return {Connect}             self
+	 */
+	cookieJar(cookieJar, options = {}) {
+		if (options.readOnly) {
+			this.options.readCookieJar = cookieJar;
+		}
+		else {
+			this.options.cookieJar = cookieJar;
+		}
+
+		return this;
+	}
+
+	/**
+	 * Set request timeout.
+	 *
+	 * @param  {number} timeout timeout value in seconds
+	 * @return {Connect} self
+	 */
+	timeout(timeout) {
+		this.options.timeout = timeout * 1000;
+		return this;
+	}
+
+	/**
+	 * Set request timeout.
+	 *
+	 * @param  {number} timeoutInMs timeout value in milliseconds
+	 * @return {Connect}            self
+	 */
+	timeoutMs(timeoutInMs) {
+		this.options.timeout = timeoutInMs;
+		return this;
+	}
+
+	/**
+	 * alias for timeoutMs
+	 * @param {number} timeoutInMs
+	 * @return {Connect}
+	 */
+	timeoutMilli(timeoutInMs) {
+		return this.timeoutMs(timeoutInMs);
+	}
+
+	/**
+	 * Set value of a field in the options.
+	 * Can also be used to set multiple fields by passing in an object
+	 * representing the field-names and their values as key:value pairs.
+	 *
+	 * @param {string|object} fieldName name of the field to be set, or the fields object
+	 * @param {string|undefined} [fieldValue] value to be set
+	 * @return {Connect} self
+	 */
+	field(fieldName, fieldValue) {
+		if (typeof fieldName === 'string') {
+			this.options.fields[fieldName] = fieldValue;
+		}
+		else {
+			Object.assign(this.options.fields, fieldName);
+		}
+
+		return this;
+	}
+
+	/**
+	 * Set multiple fields.
+	 *
+	 * @param {object} fields object representing the field-names and their
+	 *  values as key:value pairs
+	 * @return {Connect} self
+	 */
+	fields(fields) {
+		Object.assign(this.options.fields, fields);
+		return this;
+	}
+
+	/**
+	 * Set value of a query parameter
+	 * Can also be used to set multiple query params by passing in an object
+	 * representing the param-names and their values as key:value pairs.
+	 *
+	 * @param {string|object} fieldName name of the field to be set, or the fields object
+	 * @param {string|undefined} [fieldValue] value to be set
+	 * @return {Connect} self
+	 */
+	query(name, value) {
+		if (typeof name === 'string') {
+			this.options.query[name] = value;
+		}
+		else {
+			Object.assign(this.options.query, name);
+		}
+
+		return this;
+	}
+
+	/**
+	 * set whether to ask for compressed response (handles decompression automatically)
+	 * @param {boolean} [askForCompression=true] whether to ask for compressed response
+	 * @return {Connect} self
+	 */
+	compress(askForCompression = true) {
+		this.options.compress = askForCompression;
+		return this;
+	}
+
+	/**
+	 * Set the request method for the connection.
+	 *
+	 * @param {string} method one of the HTTP request methods ('GET', 'PUT', 'POST', etc.)
+	 * @return {Connect} self
+	 */
+	method(method) {
+		this.options.method = (method || 'GET').toUpperCase();
+		return this;
+	}
+
+	/**
+	 * @typedef {object} auth
+	 * @property {string} username
+	 * @property {string} password
+	 */
+
+	/**
+	 * Set username and password for authentication.
+	 *
+	 * @param {string | auth} username
+	 * @param {string|undefined} password
+	 * @return {Connect} self
+	 */
+	httpAuth(username, password) {
+		let auth = '';
+		if (typeof username === 'string') {
+			if (password === undefined) {
+				// username is of the format username:password
+				auth = username;
+			}
+			else {
+				// username &amp; password are strings
+				auth = `${username}:${password}`;
+			}
+		}
+		else if (username.username) {
+			// username argument is an object of {username, password}
+			auth = `${username.username}:${username.password}`;
+		}
+
+		this.header('authorization', 'Basic ' + Buffer.from(auth).toString('base64'));
+		return this;
+	}
+
+	/**
+	 * Set bearer token for authorization
+	 * @param {string} token
+	 * @return {Connect} self
+	 */
+	bearerToken(token) {
+		this.header('authorization', `Bearer ${token}`);
+		return this;
+	}
+
+	/**
+	 * Set api token using x-api-token header
+	 * @param {string} token
+	 * @return {Connect} self
+	 */
+	apiToken(token) {
+		this.header('x-api-token', token);
+		return this;
+	}
+
+	/**
+	 * Set proxy address (or options).
+	 *
+	 * @param {string|object} proxy proxy address, or object representing proxy options
+	 * @return {Connect} self
+	 */
+	proxy(proxy) {
+		// actual proxy is added at the end using _addProxy
+		// this is because we need the url (http or https) to add the proxy
+		// and url might be added after this method
+		if (typeof proxy === 'string') {
+			Object.assign(this.options.proxy, {
+				address: proxy,
+				port: null,
+				type: 'http',
+			});
+		}
+		else if (proxy.host) {
+			const proxyCopy = {...proxy};
+			if (proxyCopy.host) {
+				proxyCopy.address = proxyCopy.host;
+				delete proxyCopy.host;
+			}
+			this.options.proxy = proxyCopy;
+		}
+		else {
+			this.options.proxy = proxy;
+		}
+
+		return this;
+	}
+
+	/**
+	 * Set address and port for an http proxy.
+	 *
+	 * @param {string} proxyAddress
+	 * @param {number} proxyPort
+	 * @return {Connect} self
+	 */
+	httpProxy(proxyAddress, proxyPort) {
+		Object.assign(this.options.proxy, {
+			address: proxyAddress,
+			port: proxyPort,
+			type: 'http',
+		});
+
+		return this;
+	}
+
+	/**
+	 * Set address and port for a socks proxy.
+	 *
+	 * @param {string} proxyAddress
+	 * @param {number} proxyPort
+	 * @return {Connect} self
+	 */
+	socksProxy(proxyAddress, proxyPort) {
+		Object.assign(this.options.proxy, {
+			address: proxyAddress,
+			port: proxyPort,
+			type: 'socks',
+		});
+
+		return this;
+	}
+
+	/**
+	 * Set username and password for proxy.
+	 *
+	 * @param {string} username
+	 * @param {string} password
+	 * @return {Connect} self
+	 */
+	proxyAuth(username, password) {
+		if (typeof username === 'string') {
+			// username &amp; password are strings
+			this.options.proxy.auth = {
+				username,
+				password,
+			};
+		}
+		else if (username.username) {
+			// username argument is an object of {username, password}
+			this.options.proxy.auth = username;
+		}
+
+		return this;
+	}
+
+	/**
+	 * Set request method to 'GET'.
+	 *
+	 * @return {Connect} self
+	 */
+	get() {
+		this.method('GET');
+		return this;
+	}
+
+	/**
+	 * Set request method to 'POST'.
+	 *
+	 * @return {Connect} self
+	 */
+	post() {
+		this.method('POST');
+		return this;
+	}
+
+	/**
+	 * Set request method to 'PUT'.
+	 *
+	 * @return {Connect} self
+	 */
+	put() {
+		this.method('PUT');
+		return this;
+	}
+
+	/**
+	 * Set cache directory for the connection.
+	 *
+	 * @param {string} dir name or path to the directory
+	 * @return {Connect} self
+	 */
+	cacheDir(dir) {
+		this.resposeCacheDir = dir;
+		return this;
+	}
+
+	/**
+	 * Set if the body is to be returned as a buffer
+	 *
+	 * @param {boolean} [returnAsBuffer=true]
+	 * @return {Connect} self
+	 */
+	asBuffer(returnAsBuffer = true) {
+		if (returnAsBuffer) {
+			this.options.encoding = null;
+		}
+		else if (this.options.encoding === null) {
+			this.options.encoding = 'utf8';
+		}
+		return this;
+	}
+
+	/**
+	 * Set the path for file for saving the response.
+	 *
+	 * @param  {string} filePath
+	 * @return {Connect}         self
+	 */
+	save(filePath) {
+		// get response as buffer
+		this.asBuffer();
+		this.saveFilePath = filePath;
+		return this;
+	}
+
+	_parseUrl() {
+		if (this.options.url.includes('@')) {
+			// parse url and extract http auth
+			// got does not accept auth in urls
+			const url = new URL(this.options.url);
+			if (url.username) {
+				this.httpAuth(url.username, url.password || '');
+				url.username = '';
+				url.password = '';
+				this.options.url = url.toString();
+			}
+		}
+	}
+
+	/**
+	 * Add proxy based on the proxy options. Proxy is added,
+	 * if and only if proxy address has been previously set.
+	 * If no proxy type is previously set, 'http' is taken as
+	 * the default proxy type.
+	 *
+	 * NOTE: This function is for internal use
+	 * @private
+	 */
+	_addProxy() {
+		const proxy = this.options.proxy;
+		if (!proxy) return;
+		if (typeof proxy === 'string') return;
+
+		this.options.proxy = null;
+		if (!proxy.address) return;
+
+		const proxyType = proxy.type || 'http';
+
+		const proxyOpts = {};
+		const address = proxy.address.replace('http://', '');
+		proxyOpts.host = address.split(':')[0];
+		proxyOpts.port = proxy.port || address.split(':')[1] || 1080;
+		if (proxy.auth &amp;&amp; proxy.auth.username) {
+			proxyOpts.auth = {...proxy.auth};
+		}
+
+		if (proxyType === 'http' || proxyType === 'https') {
+			this.options.agent = httpProxyAgent({proxy: proxyOpts});
+		}
+		else if (proxyType === 'socks' || proxyType === 'socks5') {
+			this.options.agent = socksProxyAgent({proxy: proxyOpts});
+		}
+	}
+
+	/**
+	 * Add the options 'fields' to the options body, form or qs
+	 * on the basis of the request method.
+	 *
+	 * NOTE: This function is for internal use
+	 * @private
+	 */
+	_addFields() {
+		const hasBody = ['POST', 'PUT', 'PATCH'].includes(this.options.method);
+
+		if (!this.options.body) {
+			if (_.isEmpty(this.options.fields)) {
+				return;
+			}
+
+			this.options.body = this.options.fields;
+			if (hasBody &amp;&amp; !this.options.headers['content-type']) {
+				this.contentType('form');
+			}
+		}
+		else if (typeof this.options.body === 'object') {
+			if (!_.isEmpty(this.options.fields)) {
+				Object.assign(this.options.body, this.options.fields);
+			}
+			if (hasBody &amp;&amp; !this.options.headers['content-type']) {
+				this.contentType('json');
+			}
+		}
+
+		if (hasBody) {
+			if (this.isJSON()) {
+				if (typeof this.options.body === 'object') {
+					this.options.body = JSON.stringify(this.options.body);
+				}
+			}
+			else if (this.isForm()) {
+				if (typeof this.options.body === 'object') {
+					this.options.body = (new URLSearchParams(this.options.body)).toString();
+				}
+			}
+		}
+		else {
+			this.options.query = this.options.query || {};
+			if (this.options.body &amp;&amp; (typeof this.options.body === 'object')) {
+				Object.assign(this.options.body, this.options.query);
+				this.options.query = this.options.body;
+				this.options.body = '';
+			}
+		}
+
+		if (!_.isEmpty(this.options.query)) {
+			const qs = (new URLSearchParams(this.options.query)).toString();
+			const joiner = this.options.url.includes('?') ? '&amp;' : '?';
+			this.options.url += (joiner + qs);
+		}
+	}
+
+	/**
+	 * Add cookies in the options to the header.
+	 *
+	 * NOTE: This function is for internal use
+	 * @private
+	 */
+	async _addCookies() {
+		const cookieMap = this.options.cookies || {};
+
+		const cookies = [];
+		_.forEach(cookieMap, (value, key) => {
+			cookies.push(`${key}=${value}`);
+		});
+
+		const jar = this.options.readCookieJar || this.options.cookieJar;
+		if (jar) {
+			const jarCookies = await jar.getCookiesAsync(this.options.url, {});
+			if (jarCookies) {
+				jarCookies.forEach((cookie) => {
+					if (!cookieMap[cookie.key]) {
+						cookies.push(`${cookie.key}=${cookie.value}`);
+					}
+				});
+			}
+		}
+
+		if (cookies.length) {
+			this.header('cookie', cookies.join('; '));
+		}
+	}
+
+	async _handleRedirect(response, ctx) {
+		if (!this.options.followRedirect) return response;
+		if (!('location' in response.headers)) return response;
+
+		const statusCode = response.statusCode;
+		const method = this.options.method;
+		if (
+			!allMethodRedirectCodes.has(statusCode) &amp;&amp;
+			!(getMethodRedirectCodes.has(statusCode) &amp;&amp; (method === 'GET' || method === 'HEAD'))
+		) return response;
+
+		const redirects = ctx.redirectUrls;
+
+		// We're being redirected, we don't care about the response.
+		response.resume();
+
+		if (statusCode === 303) {
+			// Server responded with "see other", indicating that the resource exists at another location,
+			// and the client should request it from that location via GET or HEAD.
+			this.options.method = 'GET';
+		}
+
+		if (redirects.length >= this.options.maxRedirects) {
+			const err = new Error(`Redirected max ${this.options.maxRedirects} times. Aborting.`);
+			err.code = 'EMAXREDIRECTS';
+			throw err;
+		}
+
+		// Handles invalid URLs.
+		const redirectBuffer = Buffer.from(response.headers.location, 'binary').toString();
+		const redirectURL = new URL(redirectBuffer, response.url).toString();
+		redirects.push(redirectURL);
+
+		return this._request(redirectURL, ctx);
+	}
+
+	async _setCookies(response) {
+		const jar = this.options.cookieJar;
+		if (!jar) return;
+
+		const cookies = response.headers['set-cookie'];
+		if (!cookies) return;
+
+		await Promise.all(cookies.map(cookie => jar.setCookieAsync(cookie, response.url)));
+	}
+
+	/**
+	 * get options for underlying library (got)
+	 * @private
+	 */
+	_getOptions() {
+		const options = {
+			throwHttpErrors: false,
+			agent: this.options.agent,
+			decompress: this.options.compress,
+			timeout: this.options.timeout,
+			encoding: this.options.encoding,
+			body: this.options.body,
+			headers: this.options.headers,
+			method: this.options.method,
+			rejectUnauthorized: this.options.strictSSL,
+			retry: 0,
+			// followRedirect is handled internally by us
+			followRedirect: false,
+			// max redirects is handled by us internally
+			// cookieJar is handled by us internally
+		};
+
+		return options;
+	}
+
+	async _readCache() {
+		if (!this.resposeCacheDir) {
+			return this._makeFetchPromise(null);
+		}
+
+		const cacheKey = Crypt.md5(
+			JSON.stringify(_.pick(this.options, ['url', 'method', 'fields', 'body']))
+		);
+
+		const cacheFilePath = path.join(this.resposeCacheDir, cacheKey);
+		try {
+			const contents = await File(cacheFilePath).read();
+			const response = {
+				body: contents,
+				statusCode: 200,
+				status: 200,
+				url: this.options.url,
+				timeTaken: 0,
+				cached: true,
+			};
+
+			return response;
+		}
+		catch (e) {
+			// Ignore Errors
+			return this._makeFetchPromise(cacheFilePath);
+		}
+	}
+
+	async _writeCache(response, cacheFilePath) {
+		const promises = [];
+
+		if (this.saveFilePath) {
+			promises.push(File(this.saveFilePath).write(response.body));
+		}
+		if (cacheFilePath &amp;&amp; response.statusCode === 200) {
+			promises.push(File(cacheFilePath).write(response.body));
+		}
+
+		if (promises.length) {
+			await Promise.all(promises);
+		}
+	}
+
+	async _request(url, ctx) {
+		await this._addCookies();
+
+		const gotOptions = this._getOptions(this.options);
+		try {
+			let response = await got(url, gotOptions);
+
+			const status = response.statusCode;
+			if (status === 407) {
+				const e = new Error('407 Proxy Authentication Failed');
+				e.code = 'EPROXYAUTH';
+				throw e;
+			}
+
+			// already supported by got
+			// response.url = response.request.uri.href || this.options.url;
+			// already supported by got
+			// response.requestUrl = this.options.url;
+			// already supported by got
+			// response.headers
+			response.status = status;
+
+			await this._setCookies(response);
+			response = await this._handleRedirect(response, ctx);
+			return response;
+		}
+		catch (e) {
+			if (e instanceof got.TimeoutError) {
+				const err = new Error('Request Timed Out');
+				err.code = 'ETIMEDOUT';
+				throw err;
+			}
+
+			const message = e.message.toLowerCase();
+			if (message.includes('authentication') &amp;&amp; message.includes('socks')) {
+				const err = new Error('407 Proxy Authentication Failed');
+				err.code = 'EPROXYAUTH';
+				throw err;
+			}
+
+			throw e;
+		}
+	}
+
+	/**
+	 * It resolves or rejects the promise object. It is
+	 * used by fetch() to make the promise.
+	 *
+	 * NOTE: This function is for internal use
+	 * @private
+	 */
+	async _makeFetchPromise(cacheFilePath) {
+		this._parseUrl();
+		this._addProxy();
+		this._addFields();
+
+		const startTime = Date.now();
+		const ctx = {
+			redirectUrls: [],
+		};
+
+		try {
+			const response = await this._request(this.options.url, ctx);
+			response.redirectUrls = ctx.redirectUrls;
+			response.startTime = startTime;
+			response.timeTaken = Date.now() - startTime;
+			response.cached = false;
+
+			await this._writeCache(response, cacheFilePath);
+			return response;
+		}
+		catch (e) {
+			e.timeTaken = Date.now() - startTime;
+			throw e;
+		}
+	}
+
+	/**
+	 * @typedef {object} response
+	 * @property {string} body the actual response body
+	 * @property {string} url the final url downloaded after following all redirects
+	 * @property {number} timeTaken time taken (in ms) for the request
+	 * @property {boolean} cached false if the response was downloaded, true if returned from a cache
+	 * @property {number} statusCode
+	 */
+
+	/**
+	 * It creates and returns a promise based on the information
+	 * passed to and parameters of this object.
+	 *
+	 * @return {Promise&lt;response>} a promise that resolves to response
+	 */
+	async fetch() {
+		if (!this.promise) {
+			this.promise = this._readCache();
+		}
+		return this.promise;
+	}
+
+	/**
+	 * It is used for method chaining.
+	 *
+	 * @template T
+	 * @param  {(res: response) => T} successCallback To be called if the Promise is fulfilled
+	 * @param  {(err: Error) => T} [errorCallback] function to be called if the Promise is rejected
+	 * @return {Promise&lt;T>} a Promise in pending state
+	 */
+	async then(successCallback, errorCallback) {
+		return this.fetch().then(successCallback, errorCallback);
+	}
+
+	/**
+	 * It is also used for method chaining, but handles rejected cases only.
+	 *
+	 * @template T
+	 * @param  {(err: Error) => T} errorCallback function to be called if the Promise is rejected
+	 * @return {Promise&lt;T>} a Promise in pending state
+	 */
+	async catch(errorCallback) {
+		return this.fetch().catch(errorCallback);
+	}
+
+	/**
+	 * finally method of promise returned
+	 * @param {() => T} callback function to be called if the promise is fullfilled or rejected
+	 * @return {Promise&lt;T>} a Promise in pending state
+	 */
+	async finally(callback) {
+		return this.fetch().finally(callback);
+	}
+}
+
+export default Connect;
 </code></pre>
         </article>
     </section>

@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>Str/Str.js - Documentation</title>
+    <title>LRU.js - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -33,7 +33,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">Str/Str.js</h1>
+    <h1 class="page-title">LRU.js</h1>
     
 
     
@@ -43,394 +43,171 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import _ from 'lodash';
-import numberToWords from './numberToWords';
-
-/**
- * String utilities
- * @namespace Str
- */
-
-/**
- * Inverts the case of a string
+            <pre class="prettyprint source linenums"><code>/**
+ * A Simple LRU Map
+ * This maintains 2 maps internally and swaps them when one becomes full
+ * NOTE: At any time size of the map will be from 0 to 2 * maxItems
+ *
  * @example
- * Str.invertCase('Hello iPhone'); // => 'hELLO IpHONE'
- * @memberof Str
- * @param {string} str
- * @return {string}
+ * const lru = new LRU({maxItems: 1000});
+ * lru.set('hello', 'world');
+ * lru.get('hello');
+ * lru.delete('hello');
  */
-function invertCase(str) {
-	let output = '';
-	let code = '';
-
-	for (let i = 0, len = str.length - 1; i &lt;= len; i++) {
-		code = str.charCodeAt(i);
-		if (code >= 65 &amp;&amp; code &lt;= 90) {
-			output += str.charAt(i).toLowerCase();
+class LRU {
+	/**
+	 * @param {object} [options={}]
+	 * @param {number} [options.maxItems] max items in the lru map
+	 */
+	constructor(options = {}) {
+		if (!(options.maxItems &amp;&amp; options.maxItems > 0)) {
+			throw new TypeError('`maxItems` must be a number greater than 0');
 		}
-		else if (code >= 97 &amp;&amp; code &lt;= 122) {
-			output += str.charAt(i).toUpperCase();
+
+		this.maxItems = options.maxItems;
+		this.cache = new Map();
+		this.oldCache = new Map();
+		this._size = 0;
+	}
+
+	_set(key, value) {
+		this.cache.set(key, value);
+
+		if (this.cache.size >= this.maxItems) {
+			this._size = this.cache.size;
+			this.oldCache = this.cache;
+			this.cache = new Map();
+		}
+	}
+
+	/**
+	 * gets a value from the lru map
+	 * @param {any} key
+	 * @returns {any}
+	 */
+	get(key) {
+		const value = this.cache.get(key);
+		if (value !== undefined) return value;
+
+		const oldValue = this.oldCache.get(key);
+		if (oldValue) {
+			this._set(key, oldValue);
+			return oldValue;
+		}
+
+		return undefined;
+	}
+
+	/**
+	 * sets a value in the lru map
+	 * @param {any} key
+	 * @param {any} value
+	 */
+	set(key, value) {
+		if (this.cache.has(key)) {
+			this.cache.set(key, value);
 		}
 		else {
-			output += str.charAt(i);
+			this._size++;
+			this._set(key, value);
+		}
+
+		return this;
+	}
+
+	/**
+	 * returns whether a value exists in the lru map
+	 * @param {any} key
+	 * @returns {boolean}
+	 */
+	has(key) {
+		return this.cache.has(key) || this.oldCache.has(key);
+	}
+
+	/**
+	 * gets a value from the lru map without touching the lru sequence
+	 * @param {any} key
+	 * @returns {any}
+	 */
+	peek(key) {
+		const value = this.cache.get(key);
+		if (value !== undefined) return value;
+
+		const oldValue = this.oldCache.get(key);
+		if (oldValue) return oldValue;
+
+		return undefined;
+	}
+
+	/**
+	 * deletes a value from the lru map
+	 * @param {any} key
+	 * @returns {boolean} whether any key was deleted
+	 */
+	delete(key) {
+		const newDeleted = this.cache.delete(key);
+		const oldDeleted = this.oldCache.delete(key);
+		const deleted = oldDeleted || newDeleted;
+		if (deleted) {
+			this._size--;
+		}
+
+		return deleted;
+	}
+
+	/**
+	 * removes all values from the lru map
+	 */
+	clear() {
+		this.cache.clear();
+		this.oldCache.clear();
+		this._size = 0;
+	}
+
+	/**
+	 * return an iterator over the keys of the lru map
+	 */
+	* keys() {
+		for (const [key] of this) {
+			yield key;
 		}
 	}
 
-	return output;
-}
-
-/**
- * is the character given is a vowel?
- * @example
- * Str.isVowel('a') // => true
- * Str.isVowel('f') // => false
- * Str.isVowel('ae') // => false
- * @memberof Str
- * @param {string} char
- * @return {boolean}
- */
-function isVowel(char) {
-	return (/^[aeiou]$/i).test(char);
-}
-
-/**
- * is the character given is a consonant?
- * @example
- * Str.isConsonant('a') // => false
- * Str.isConsonant('f') // => true
- * Str.isConsonant('ff') // => false
- * @memberof Str
- * @param {string} char
- * @return {boolean}
- */
-function isConsonant(char) {
-	return (/^[bcdfghjklmnpqrstvwxys]$/i).test(char);
-}
-
-/**
- * Get the plural of a string
- * @memberof Str
- * @param {string} str
- * @return {string}
- */
-function plural(str) {
-	if (!str || str.length &lt;= 2) return str;
-
-	if (str.charAt(str.length - 1) === 'y') {
-		if (isVowel(str.charAt(str.length - 2))) {
-			// If the y has a vowel before it (i.e. toys), then you just add the s.
-			return str + 's';
-		}
-
-		// If a this ends in y with a consonant before it (fly)
-		// you drop the y and add -ies to make it plural.
-		return str.slice(0, -1) + 'ies';
-	}
-	if (str.substring(str.length - 2) === 'us') {
-		// ends in us -> i, needs to preceed the generic 's' rule
-		return str.slice(0, -2) + 'i';
-	}
-	if (
-		['ch', 'sh'].indexOf(str.substring(str.length - 2)) !== -1 ||
-		['x', 's'].indexOf(str.charAt(str.length - 1)) !== -1
-	) {
-		// If a this ends in ch, sh, x, s, you add -es to make it plural.
-		return str + 'es';
-	}
-
-	// anything else, just add s
-	return str + 's';
-}
-
-/**
- * Pluralize a character if the count is greater than 1
- * @memberof Str
- * @param {string} str
- * @param {number} [count=2]
- * @return {string}
- */
-function pluralize(str, count = 2) {
-	if (count &lt;= 1) return str;
-	return plural(str);
-}
-
-/**
- * transform a string by replacing characters from from string to to string
- * @example
- * Str.transform('abc', 'bc', 'de') // => 'ade'
- * @memberof Str
- * @param {string} str string to transform
- * @param {string} from characters to replace in the string
- * @param {string} to characters to replace with in the string
- * @return {string} transformed string
- */
-function transform(str, from, to) {
-	const len = str.length;
-	let out = '';
-	let pos;
-
-	for (let i = 0; i &lt; len; i++) {
-		pos = from.indexOf(str.charAt(i));
-		if (pos >= 0) {
-			out += to.charAt(pos);
-		}
-		else {
-			out += str.charAt(i);
+	/**
+	 * return an iterator over the values of the lru map
+	 */
+	* values() {
+		for (const [, value] of this) {
+			yield value;
 		}
 	}
 
-	return out;
-}
-
-/**
- * Break String From Next Given Character After A Given Position
- * @memberof Str
- * @param {string} str
- * @param {number} pos
- * @param {string} [char=' ']
- * @return {string}
- */
-function trimToNext(str, pos, char = ' ') {
-	const trimPos = str.indexOf(char, pos);
-	if (trimPos !== -1) {
-		return _.trimEnd(str.substring(0, trimPos), char);
-	}
-
-	return _.trimEnd(str, char);
-}
-
-const numberLocaleCache = {};
-function _getNumberLocale(options) {
-	const {locale = 'en', currency = undefined, decimals = 0} = options;
-	const localeKey = `${locale}${currency}${decimals}`;
-	if (!(localeKey in numberLocaleCache)) {
-		numberLocaleCache[localeKey] = new Intl.NumberFormat(locale, {
-			style: currency ? 'currency' : 'decimal',
-			currency,
-			minimumFractionDigits: decimals,
-			maximumFractionDigits: decimals,
-		});
-	}
-
-	return numberLocaleCache[localeKey];
-}
-
-/**
- * @typedef {object} numberFormatOpts
- * @property {string} locale like 'en-IN'
- * @property {string} currency like 'INR'
- * @property {number} decimals number of decimal places to return
- */
-
-/**
- * Format a number according to a particular locale
- * Similar to Number.toLocaleFormat, except being significantly faster
- *
- * @memberof Str
- * @param {number} number the number to format
- * @param {numberFormatOpts|string} [options={}]
- * 	string of locale or options object {locale: 'en', decimals: 0}
- * @return {string} formatted number
- */
-function numberFormat(number, options = {}) {
-	if (typeof options === 'string') {
-		options = {locale: options};
-	}
-
-	return _getNumberLocale(options).format(number);
-}
-
-/**
- * Space clean a string
- * Converts consecutive multiple spaces / tabs / newlines in the string into a single space
- * @memberof Str
- * @param {string} str
- * @return {string}
- */
-function spaceClean(str) {
-	if (!str) return '';
-	return str.replace(/(?:\s|&amp;nbsp;|&amp;#32;)+/ig, ' ').trim();
-}
-
-/**
- * Rotate a string by 13 characters
- *
- * @memberof Str
- * @param {string} str the string to be rotated
- * @return {string} rotated string
- */
-function rot13(str) {
-	const s = [];
-	for (let i = 0; i &lt; str.length; i++) {
-		const j = str.charCodeAt(i);
-		if (((j >= 65) &amp;&amp; (j &lt;= 77)) || ((j >= 97) &amp;&amp; (j &lt;= 109))) {
-			s[i] = String.fromCharCode(j + 13);
+	/**
+	 * return an iterator over the entries (key, value) of the lru map
+	 */
+	* [Symbol.iterator]() {
+		for (const item of this.cache) {
+			yield item;
 		}
-		else if (((j >= 78) &amp;&amp; (j &lt;= 90)) || ((j >= 110) &amp;&amp; (j &lt;= 122))) {
-			s[i] = String.fromCharCode(j - 13);
-		}
-		else {
-			s[i] = String.fromCharCode(j);
+
+		for (const item of this.oldCache) {
+			const [key] = item;
+			if (!this.cache.has(key)) {
+				yield item;
+			}
 		}
 	}
 
-	return s.join('');
-}
-
-/**
- * Rotate a string by 47 characters
- *
- * @memberof Str
- * @param {string} str the string to be rotated
- * @return {string} rotated string
- */
-function rot47(str) {
-	const s = [];
-	for (let i = 0; i &lt; str.length; i++) {
-		const j = str.charCodeAt(i);
-		if ((j >= 33) &amp;&amp; (j &lt;= 126)) {
-			s[i] = String.fromCharCode(33 + ((j + 14) % 94));
-		}
-		else {
-			s[i] = String.fromCharCode(j);
-		}
-	}
-
-	return s.join('');
-}
-
-/**
- * Parses a json string, returns null if string is invalid (instead of throwing error)
- * If the input is not a string (already parsed), returns the input itself
- *
- * @memberof Str
- * @param {any} str
- * @return {object|null}
- */
-function tryParseJson(str) {
-	if (str == null) return null;
-	if (typeof str !== 'string') return str;
-
-	try {
-		return JSON.parse(str);
-	}
-	catch (e) {
-		return null;
+	/**
+	 * returns the size of the lru map (number of items in the map)
+	 * @returns {number}
+	 */
+	get size() {
+		return this._size;
 	}
 }
 
-/**
- * Stringifies an object only if it is not already a string
- * If it is already a string returns the string itself
- * If it is undefined, returns 'null'
- *
- * @memberof Str
- * @param {any} obj
- * @returns {string}
- */
-function tryStringifyJson(obj) {
-	if (obj == null) return 'null';
-	if (typeof obj === 'string') return obj;
-	return JSON.stringify(obj);
-}
-
-/**
- * Strip html tags from a string
- * @memberof Str
- * @param {string} str the string to remove tags from
- * @param {object} options object containing:
- * 	allowed: array of allowed tags eg. ['p', 'b', 'span'], default: []
- * 	blocked: array of blocked tags eg. ['p'], default: []
- * 	replaceWith: replace the removed tags with this string, default: ''
- *
- * if allowed is not given and blocked is given
- * then by default all tags not mentioned in blocked are allowed
- *
- * @return {string} resulting string by removing all tags mentioned
- */
-function stripTags(str, options = {}) {
-	if (!str) return '';
-
-	const tags = /&lt;\/?([a-z][a-z0-9]*)\b[^>]*>/gi;
-	const commentsAndPhpTags = /&lt;!--[\s\S]*?-->|&lt;\?(?:php)?[\s\S]*?\?>/gi;
-
-	const replaceWith = options.replaceWith || '';
-	const allowed = options.allowed;
-	const blocked = options.blocked;
-
-	const replaceTags = function ($0, $1) {
-		if (blocked) {
-			// tag is blocked
-			if (blocked.includes($1.toLowerCase())) return replaceWith;
-			// allowed is not given and blocked is, that means all tags are allowed
-			if (!allowed) return $0;
-		}
-		// tag is allowed
-		if (allowed &amp;&amp; allowed.includes($1.toLowerCase())) return $0;
-		// by default all tags are blocked
-		return replaceWith;
-	};
-
-	let after = String(str);
-	// eslint-disable-next-line no-constant-condition
-	while (true) {
-		const before = after;
-		after = before
-			.replace(commentsAndPhpTags, replaceWith)
-			.replace(tags, replaceTags);
-
-		// return once no more tags are removed
-		if (before === after) {
-			return after;
-		}
-	}
-}
-
-/**
- * Escape a string for including in regular expressions
- * @memberof Str
- * @param {string} str string to escape
- * @return {string} escaped string
- */
-function escapeRegex(str) {
-	if (!str) return '';
-	return String(str).replace(/[-[\]{}()*+!&lt;=:?./\\^$|#,]/g, '\\$&amp;');
-}
-
-/**
- * replace special characters within a string
- * NOTE: it replaces multiple special characters with single replaceWith character
- * @param {string} str
- * @param {string} replaceWith
- * @returns {string}
- */
-function replaceSpecialChars(str, replaceWith = '') {
-	const result = str.replace(/[!@#$%^&amp;*()_+\-=[\]{};':"\\|,.&lt;>/\s]+/g, replaceWith);
-	if (replaceWith) {
-		return _.trim(result, replaceWith);
-	}
-	return result;
-}
-
-export default {
-	invertCase,
-	isVowel,
-	isConsonant,
-	plural,
-	pluralize,
-	transform,
-	trimToNext,
-	numberFormat,
-	numberToWords,
-	spaceClean,
-	rot13,
-	rot47,
-	tryParseJson,
-	tryStringifyJson,
-	stripTags,
-	escapeRegex,
-	replaceSpecialChars,
-};
+module.exports = LRU;
 </code></pre>
         </article>
     </section>

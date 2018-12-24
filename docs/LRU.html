@@ -3,7 +3,7 @@
 <head>
     
     <meta charset="utf-8">
-    <title>Str/Str.js - Documentation</title>
+    <title>LRU - Documentation</title>
     
     
     <script src="scripts/prettify/prettify.js"></script>
@@ -33,407 +33,1361 @@
 
 <div id="main">
     
-    <h1 class="page-title">Str/Str.js</h1>
+    <h1 class="page-title">LRU</h1>
     
 
     
 
 
 
+
+<section>
+
+<header>
     
-    <section>
-        <article>
-            <pre class="prettyprint source linenums"><code>import _ from 'lodash';
-import numberToWords from './numberToWords';
+        <h2>
+        LRU
+        </h2>
+        
+            <div class="class-description"><p>A Simple LRU Map<br>This maintains 2 maps internally and swaps them when one becomes full<br>NOTE: At any time size of the map will be from 0 to 2 * maxItems</p></div>
+        
+    
+</header>
 
-/**
- * String utilities
- * @namespace Str
- */
+<article>
+    
+        <div class="container-overview">
+        
+            
 
-/**
- * Inverts the case of a string
- * @example
- * Str.invertCase('Hello iPhone'); // => 'hELLO IpHONE'
- * @memberof Str
- * @param {string} str
- * @return {string}
- */
-function invertCase(str) {
-	let output = '';
-	let code = '';
+    
+    <h2>Constructor</h2>
+    
 
-	for (let i = 0, len = str.length - 1; i &lt;= len; i++) {
-		code = str.charCodeAt(i);
-		if (code >= 65 &amp;&amp; code &lt;= 90) {
-			output += str.charAt(i).toLowerCase();
-		}
-		else if (code >= 97 &amp;&amp; code &lt;= 122) {
-			output += str.charAt(i).toUpperCase();
-		}
-		else {
-			output += str.charAt(i);
-		}
-	}
+    <h4 class="name" id="LRU"><span class="type-signature"></span>new LRU<span class="signature">(options<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
 
-	return output;
-}
+    
 
-/**
- * is the character given is a vowel?
- * @example
- * Str.isVowel('a') // => true
- * Str.isVowel('f') // => false
- * Str.isVowel('ae') // => false
- * @memberof Str
- * @param {string} char
- * @return {boolean}
- */
-function isVowel(char) {
-	return (/^[aeiou]$/i).test(char);
-}
 
-/**
- * is the character given is a consonant?
- * @example
- * Str.isConsonant('a') // => false
- * Str.isConsonant('f') // => true
- * Str.isConsonant('ff') // => false
- * @memberof Str
- * @param {string} char
- * @return {boolean}
- */
-function isConsonant(char) {
-	return (/^[bcdfghjklmnpqrstvwxys]$/i).test(char);
-}
 
-/**
- * Get the plural of a string
- * @memberof Str
- * @param {string} str
- * @return {string}
- */
-function plural(str) {
-	if (!str || str.length &lt;= 2) return str;
 
-	if (str.charAt(str.length - 1) === 'y') {
-		if (isVowel(str.charAt(str.length - 2))) {
-			// If the y has a vowel before it (i.e. toys), then you just add the s.
-			return str + 's';
-		}
+<dl class="details">
 
-		// If a this ends in y with a consonant before it (fly)
-		// you drop the y and add -ies to make it plural.
-		return str.slice(0, -1) + 'ies';
-	}
-	if (str.substring(str.length - 2) === 'us') {
-		// ends in us -> i, needs to preceed the generic 's' rule
-		return str.slice(0, -2) + 'i';
-	}
-	if (
-		['ch', 'sh'].indexOf(str.substring(str.length - 2)) !== -1 ||
-		['x', 's'].indexOf(str.charAt(str.length - 1)) !== -1
-	) {
-		// If a this ends in ch, sh, x, s, you add -es to make it plural.
-		return str + 'es';
-	}
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="LRU.js.html">LRU.js</a>, <a href="LRU.js.html#line12">line 12</a>
+    </li></ul></dd>
+    
 
-	// anything else, just add s
-	return str + 's';
-}
+    
 
-/**
- * Pluralize a character if the count is greater than 1
- * @memberof Str
- * @param {string} str
- * @param {number} [count=2]
- * @return {string}
- */
-function pluralize(str, count = 2) {
-	if (count &lt;= 1) return str;
-	return plural(str);
-}
+    
 
-/**
- * transform a string by replacing characters from from string to to string
- * @example
- * Str.transform('abc', 'bc', 'de') // => 'ade'
- * @memberof Str
- * @param {string} str string to transform
- * @param {string} from characters to replace in the string
- * @param {string} to characters to replace with in the string
- * @return {string} transformed string
- */
-function transform(str, from, to) {
-	const len = str.length;
-	let out = '';
-	let pos;
+    
 
-	for (let i = 0; i &lt; len; i++) {
-		pos = from.indexOf(str.charAt(i));
-		if (pos >= 0) {
-			out += to.charAt(pos);
-		}
-		else {
-			out += str.charAt(i);
-		}
-	}
+    
 
-	return out;
-}
+    
 
-/**
- * Break String From Next Given Character After A Given Position
- * @memberof Str
- * @param {string} str
- * @param {number} pos
- * @param {string} [char=' ']
- * @return {string}
- */
-function trimToNext(str, pos, char = ' ') {
-	const trimPos = str.indexOf(char, pos);
-	if (trimPos !== -1) {
-		return _.trimEnd(str.substring(0, trimPos), char);
-	}
+    
 
-	return _.trimEnd(str, char);
-}
+    
 
-const numberLocaleCache = {};
-function _getNumberLocale(options) {
-	const {locale = 'en', currency = undefined, decimals = 0} = options;
-	const localeKey = `${locale}${currency}${decimals}`;
-	if (!(localeKey in numberLocaleCache)) {
-		numberLocaleCache[localeKey] = new Intl.NumberFormat(locale, {
-			style: currency ? 'currency' : 'decimal',
-			currency,
-			minimumFractionDigits: decimals,
-			maximumFractionDigits: decimals,
-		});
-	}
+    
 
-	return numberLocaleCache[localeKey];
-}
+    
 
-/**
- * @typedef {object} numberFormatOpts
- * @property {string} locale like 'en-IN'
- * @property {string} currency like 'INR'
- * @property {number} decimals number of decimal places to return
- */
+    
 
-/**
- * Format a number according to a particular locale
- * Similar to Number.toLocaleFormat, except being significantly faster
- *
- * @memberof Str
- * @param {number} number the number to format
- * @param {numberFormatOpts|string} [options={}]
- * 	string of locale or options object {locale: 'en', decimals: 0}
- * @return {string} formatted number
- */
-function numberFormat(number, options = {}) {
-	if (typeof options === 'string') {
-		options = {locale: options};
-	}
+    
 
-	return _getNumberLocale(options).format(number);
-}
+    
 
-/**
- * Space clean a string
- * Converts consecutive multiple spaces / tabs / newlines in the string into a single space
- * @memberof Str
- * @param {string} str
- * @return {string}
- */
-function spaceClean(str) {
-	if (!str) return '';
-	return str.replace(/(?:\s|&amp;nbsp;|&amp;#32;)+/ig, ' ').trim();
-}
+    
 
-/**
- * Rotate a string by 13 characters
- *
- * @memberof Str
- * @param {string} str the string to be rotated
- * @return {string} rotated string
- */
-function rot13(str) {
-	const s = [];
-	for (let i = 0; i &lt; str.length; i++) {
-		const j = str.charCodeAt(i);
-		if (((j >= 65) &amp;&amp; (j &lt;= 77)) || ((j >= 97) &amp;&amp; (j &lt;= 109))) {
-			s[i] = String.fromCharCode(j + 13);
-		}
-		else if (((j >= 78) &amp;&amp; (j &lt;= 90)) || ((j >= 110) &amp;&amp; (j &lt;= 122))) {
-			s[i] = String.fromCharCode(j - 13);
-		}
-		else {
-			s[i] = String.fromCharCode(j);
-		}
-	}
+    
 
-	return s.join('');
-}
+    
+</dl>
 
-/**
- * Rotate a string by 47 characters
- *
- * @memberof Str
- * @param {string} str the string to be rotated
- * @return {string} rotated string
- */
-function rot47(str) {
-	const s = [];
-	for (let i = 0; i &lt; str.length; i++) {
-		const j = str.charCodeAt(i);
-		if ((j >= 33) &amp;&amp; (j &lt;= 126)) {
-			s[i] = String.fromCharCode(33 + ((j + 14) % 94));
-		}
-		else {
-			s[i] = String.fromCharCode(j);
-		}
-	}
 
-	return s.join('');
-}
 
-/**
- * Parses a json string, returns null if string is invalid (instead of throwing error)
- * If the input is not a string (already parsed), returns the input itself
- *
- * @memberof Str
- * @param {any} str
- * @return {object|null}
- */
-function tryParseJson(str) {
-	if (str == null) return null;
-	if (typeof str !== 'string') return str;
 
-	try {
-		return JSON.parse(str);
-	}
-	catch (e) {
-		return null;
-	}
-}
 
-/**
- * Stringifies an object only if it is not already a string
- * If it is already a string returns the string itself
- * If it is undefined, returns 'null'
- *
- * @memberof Str
- * @param {any} obj
- * @returns {string}
- */
-function tryStringifyJson(obj) {
-	if (obj == null) return 'null';
-	if (typeof obj === 'string') return obj;
-	return JSON.stringify(obj);
-}
 
-/**
- * Strip html tags from a string
- * @memberof Str
- * @param {string} str the string to remove tags from
- * @param {object} options object containing:
- * 	allowed: array of allowed tags eg. ['p', 'b', 'span'], default: []
- * 	blocked: array of blocked tags eg. ['p'], default: []
- * 	replaceWith: replace the removed tags with this string, default: ''
- *
- * if allowed is not given and blocked is given
- * then by default all tags not mentioned in blocked are allowed
- *
- * @return {string} resulting string by removing all tags mentioned
- */
-function stripTags(str, options = {}) {
-	if (!str) return '';
 
-	const tags = /&lt;\/?([a-z][a-z0-9]*)\b[^>]*>/gi;
-	const commentsAndPhpTags = /&lt;!--[\s\S]*?-->|&lt;\?(?:php)?[\s\S]*?\?>/gi;
 
-	const replaceWith = options.replaceWith || '';
-	const allowed = options.allowed;
-	const blocked = options.blocked;
 
-	const replaceTags = function ($0, $1) {
-		if (blocked) {
-			// tag is blocked
-			if (blocked.includes($1.toLowerCase())) return replaceWith;
-			// allowed is not given and blocked is, that means all tags are allowed
-			if (!allowed) return $0;
-		}
-		// tag is allowed
-		if (allowed &amp;&amp; allowed.includes($1.toLowerCase())) return $0;
-		// by default all tags are blocked
-		return replaceWith;
-	};
 
-	let after = String(str);
-	// eslint-disable-next-line no-constant-condition
-	while (true) {
-		const before = after;
-		after = before
-			.replace(commentsAndPhpTags, replaceWith)
-			.replace(tags, replaceTags);
 
-		// return once no more tags are removed
-		if (before === after) {
-			return after;
-		}
-	}
-}
 
-/**
- * Escape a string for including in regular expressions
- * @memberof Str
- * @param {string} str string to escape
- * @return {string} escaped string
- */
-function escapeRegex(str) {
-	if (!str) return '';
-	return String(str).replace(/[-[\]{}()*+!&lt;=:?./\\^$|#,]/g, '\\$&amp;');
-}
 
-/**
- * replace special characters within a string
- * NOTE: it replaces multiple special characters with single replaceWith character
- * @param {string} str
- * @param {string} replaceWith
- * @returns {string}
- */
-function replaceSpecialChars(str, replaceWith = '') {
-	const result = str.replace(/[!@#$%^&amp;*()_+\-=[\]{};':"\\|,.&lt;>/\s]+/g, replaceWith);
-	if (replaceWith) {
-		return _.trim(result, replaceWith);
-	}
-	return result;
-}
+    <h5>Example</h5>
+    
+    <pre class="prettyprint"><code>const lru = new LRU({maxItems: 1000});
+lru.set('hello', 'world');
+lru.get('hello');
+lru.delete('hello');</code></pre>
 
-export default {
-	invertCase,
-	isVowel,
-	isConsonant,
-	plural,
-	pluralize,
-	transform,
-	trimToNext,
-	numberFormat,
-	numberToWords,
-	spaceClean,
-	rot13,
-	rot47,
-	tryParseJson,
-	tryStringifyJson,
-	stripTags,
-	escapeRegex,
-	replaceSpecialChars,
-};
-</code></pre>
-        </article>
-    </section>
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    <code>{}</code>
+                
+                </td>
+            
+
+            <td class="description last">
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>maxItems</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>max items in the lru map</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+        </div>
+    
+
+    
+
+    
+
+    
+
+     
+
+    
+
+    
+        <h3 class="subsection-title">Members</h3>
+
+        
+            
+<h4 class="name" id="size"><span class="type-signature"></span>size<span class="type-signature"></span></h4>
+
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="LRU.js.html">LRU.js</a>, <a href="LRU.js.html#line160">line 160</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>returns the size of the lru map (number of items in the map)</p>
+</div>
+
+
+
+
+
+
+
+
+        
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        
+            
+
+    
+
+    <h4 class="name" id="clear"><span class="type-signature"></span>clear<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="LRU.js.html">LRU.js</a>, <a href="LRU.js.html#line116">line 116</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>removes all values from the lru map</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="delete"><span class="type-signature"></span>delete<span class="signature">(key)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="LRU.js.html">LRU.js</a>, <a href="LRU.js.html#line102">line 102</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>deletes a value from the lru map</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>key</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">any</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>whether any key was deleted</p>
+</div>
+
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">boolean</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="get"><span class="type-signature"></span>get<span class="signature">(key)</span><span class="type-signature"> &rarr; {any}</span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="LRU.js.html">LRU.js</a>, <a href="LRU.js.html#line43">line 43</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>gets a value from the lru map</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>key</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">any</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">any</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="has"><span class="type-signature"></span>has<span class="signature">(key)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="LRU.js.html">LRU.js</a>, <a href="LRU.js.html#line78">line 78</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>returns whether a value exists in the lru map</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>key</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">any</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">boolean</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="keys"><span class="type-signature">(generator) </span>keys<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="LRU.js.html">LRU.js</a>, <a href="LRU.js.html#line125">line 125</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>return an iterator over the keys of the lru map</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="peek"><span class="type-signature"></span>peek<span class="signature">(key)</span><span class="type-signature"> &rarr; {any}</span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="LRU.js.html">LRU.js</a>, <a href="LRU.js.html#line87">line 87</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>gets a value from the lru map without touching the lru sequence</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>key</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">any</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+
+
+<dl class="param-type">
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">any</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="set"><span class="type-signature"></span>set<span class="signature">(key, value)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="LRU.js.html">LRU.js</a>, <a href="LRU.js.html#line61">line 61</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>sets a value in the lru map</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>key</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">any</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>value</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">any</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="values"><span class="type-signature">(generator) </span>values<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+
+<dl class="details">
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="LRU.js.html">LRU.js</a>, <a href="LRU.js.html#line134">line 134</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+<div class="description">
+    <p>return an iterator over the values of the lru map</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+    
+
+    
+
+    
+</article>
+
+</section>
 
 
 
