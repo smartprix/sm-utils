@@ -40,6 +40,8 @@ function tick() {
  * Local cache with dogpile prevention, lru, ttl and other goodies
  */
 class Cache {
+	static logger = console;
+
 	constructor(options = {}) {
 		if (options.maxItems) {
 			// LRU
@@ -50,6 +52,7 @@ class Cache {
 		}
 
 		this.fetching = new Map();
+		this.logger = options.logger || this.constructor.logger;
 	}
 
 	_get(key, defaultValue = undefined) {
@@ -66,7 +69,7 @@ class Cache {
 					this.gc().then(
 						() => {},
 						(err) => {
-							console.error('[Cache] Error while gc', err);
+							this.logger.error('[Cache] Error while gc', err);
 						},
 					);
 				}
@@ -236,6 +239,7 @@ class Cache {
 			}
 			if (value === undefined) {
 				// don't set undefined value
+				this.logger.error(`[Cache] attempt to set ${key}=undefined`);
 				return false;
 			}
 
@@ -245,6 +249,7 @@ class Cache {
 			return true;
 		}
 		catch (error) {
+			this.logger.error(`[Cache] error while setting key ${key}`, error);
 			this._del(key);
 			this.fetching.delete(key);
 			return false;
@@ -268,7 +273,8 @@ class Cache {
 		if (value === undefined) return undefined;
 
 		this.setSync(key, value, options);
-		return this.data.get(key).v;
+		const result = this.data.get(key);
+		return result && result.v;
 	}
 
 	/**
@@ -296,7 +302,8 @@ class Cache {
 		if (value === undefined) return undefined;
 
 		await this.set(key, value, options);
-		return this.data.get(key).v;
+		const result = this.data.get(key);
+		return result && result.v;
 	}
 
 	/**

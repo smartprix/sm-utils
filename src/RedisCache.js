@@ -717,6 +717,11 @@ class RedisCache {
 				// call it and set the result
 				return this.set(key, value(key), ttl, ctx);
 			}
+			if (value === undefined) {
+				// don't set undefined value
+				this.logger.error(`[RedisCache] [${this.prefix}] attempt to set ${key}=undefined`);
+				return false;
+			}
 
 			// value is normal
 			// just set it in the store
@@ -728,7 +733,7 @@ class RedisCache {
 			return true;
 		}
 		catch (error) {
-			this.logger.error(`[RedisCache] error while setting key ${key}`, error);
+			this.logger.error(`[RedisCache] [${this.prefix}] error while setting key ${key}`, error);
 			await this._del(key);
 			this._setting(key, DELETE);
 			return false;
