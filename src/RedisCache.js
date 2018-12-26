@@ -9,6 +9,7 @@ import Cache from './Cache';
 const DELETE = Symbol('DELETE');
 const DEL_CONTAINS = Symbol('DEL_CONTAINS');
 const CLEAR = Symbol('CLEAR');
+const DIRTY = Symbol('DIRTY');
 const redisMap = {};
 const globalLocalCache = new Map();
 globalLocalCache.set('*', new Map());
@@ -277,6 +278,9 @@ class RedisCache {
 		else if (command === 'del_contains') {
 			this._localCache(prefix, key, DEL_CONTAINS);
 		}
+		else if (command === 'dirty') {
+			this._localCache(prefix, key, DIRTY);
+		}
 		else if (command === 'set') {
 			// NOTE: set command is not being used currently
 			try {
@@ -453,6 +457,14 @@ class RedisCache {
 			return localCacheDelContains(cache, key, prefix);
 		}
 
+		// mark key as dirty
+		if (value === DIRTY) {
+			const existing = cache.get(key);
+			if (existing) {
+				existing.c = 0;
+			}
+		}
+
 		return undefined;
 	}
 
@@ -496,6 +508,12 @@ class RedisCache {
 		if (value === DEL_CONTAINS) {
 			if (publish) this._localCachePublish('del_contains', key);
 			localCacheDelContains(this.localCache, key, this.prefix);
+			return undefined;
+		}
+
+		// mark key as dirty
+		if (value === DIRTY) {
+			if (publish) this._localCachePublish('dirty', key);
 			return undefined;
 		}
 
@@ -1058,6 +1076,22 @@ class RedisCache {
 			this._localCache(key, DELETE);
 		}
 		return this._del(key);
+	}
+
+	/**
+	 * set the key as dirty (will cause staleTTL to recompute in background)
+	 * @param {string} key
+	 */
+	async setDirty(key) {
+		let existing = this._localCache(key);
+		if (!existing) {
+			existing = await this._get(key);
+			if (!existing) return;
+		}
+
+		existing.c = 0;
+		this._localCache(key, DIRTY);
+		await this._set(key, existing, existing.t || 0);
 	}
 
 	/**
