@@ -782,9 +782,10 @@ class RedisCache {
 	 *  set this if you want stale values to be returned and generation in the background
 	 *  values will be considered stale after this time period
 	 * @property {boolean} [requireResult=true]
+	 *  require result to be calculated if the key does not exist
 	 *  only valid if stale ttl is given
-	 *  it true, this will return undefined and generate value in background if the key does not exist
-	 *  if false, this will generate value in foreground if the key does not exist
+	 *  it true, this will generate value in foreground if the key does not exist
+	 *  if false, this will return undefined and generate value in background if the key does not exist
 	 * @property {boolean} [freshResult=false]
 	 *  always return fresh value
 	 *  only valid if stale ttl is given
