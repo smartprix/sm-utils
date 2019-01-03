@@ -877,6 +877,11 @@ class RedisCache {
 		}
 
 		if (generateInBg === false) {
+			const settingPromise = this._setting(key);
+			if (settingPromise) {
+				return settingPromise;
+			}
+
 			// regenerate value in the foreground
 			const setCtx = {};
 			await this.set(key, value, options, setCtx);
