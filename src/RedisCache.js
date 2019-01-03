@@ -785,7 +785,8 @@ class RedisCache {
 	 *  require result to be calculated if the key does not exist
 	 *  only valid if stale ttl is given
 	 *  it true, this will generate value in foreground if the key does not exist
-	 *  if false, this will return undefined and generate value in background if the key does not exist
+	 *  if false, this will return undefined and
+	 *    generate value in background if the key does not exist
 	 * @property {boolean} [freshResult=false]
 	 *  always return fresh value
 	 *  only valid if stale ttl is given
@@ -1088,7 +1089,7 @@ class RedisCache {
 	 * set the key as dirty (will cause staleTTL to recompute in background)
 	 * @param {string} key
 	 */
-	async setDirty(key) {
+	async markDirty(key) {
 		let existing = this._localCache(key);
 		if (!existing) {
 			existing = await this._get(key);
