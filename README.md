@@ -2,6 +2,8 @@
 <a href="https://www.npmjs.com/package/sm-utils"><img src="https://img.shields.io/npm/v/sm-utils.svg" alt="Version"></a>
 <a href="https://www.npmjs.com/package/sm-utils"><img src="https://img.shields.io/npm/dm/sm-utils.svg" alt="Downloads"></a>
 <a href="https://www.npmjs.com/package/sm-utils"><img src="https://img.shields.io/npm/l/sm-utils.svg" alt="License"></a>
+<a href="https://david-dm.org/smartprix/sm-utils"><img src="https://david-dm.org/smartprix/sm-utils/status.svg" alt="Dependencies"></a>
+<a href="https://david-dm.org/smartprix/sm-utils?type=dev"><img src="https://david-dm.org/smartprix/sm-utils/dev-status.svg" alt="Dev Dependencies"></a>
 
 # sm-utils
 Utilities For NodeJS
