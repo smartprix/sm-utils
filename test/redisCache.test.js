@@ -115,7 +115,7 @@ describe('redis cache library @rediscache', () => {
 		expect(counter).to.equal(1);
 	});
 
-	it('should correctly getOrSet', async () => {
+	it('should correctly dogpile getOrSet', async () => {
 		let key = 'e';
 		let val = 'man';
 		let value = val;
@@ -134,6 +134,33 @@ describe('redis cache library @rediscache', () => {
 		const promise2 = cache.getOrSet(key, value);
 		const promise3 = cache.getOrSet(key, value);
 		expect(await cache.getOrSet(key, value)).to.equal(val);
+		expect(await promise1).to.equal(val);
+		expect(await promise2).to.equal(val);
+		expect(await promise3).to.equal(val);
+		expect(counter).to.equal(1);
+	});
+
+	it('should correctly dogpile getOrSet staleTTL', async () => {
+		const aCache = getCache('getOrSet_staleTTL_dogpile');
+
+		let key = 'e';
+		let val = 'man';
+		let value = val;
+		expect(await aCache.getOrSet(key, value, {staleTTL: '1d'})).to.equal(val);
+		expect(await aCache.getOrSet(key, 'anything', {staleTTL: '1d'})).to.equal(val);
+
+		key = 'f';
+		val = 'do';
+		let counter = 0;
+		value = () => {
+			counter++;
+			return sleep(val);
+		};
+
+		const promise1 = aCache.getOrSet(key, value, {staleTTL: '1d'});
+		const promise2 = aCache.getOrSet(key, value, {staleTTL: '1d'});
+		const promise3 = aCache.getOrSet(key, value, {staleTTL: '1d'});
+		expect(await aCache.getOrSet(key, value, {staleTTL: '1d'})).to.equal(val);
 		expect(await promise1).to.equal(val);
 		expect(await promise2).to.equal(val);
 		expect(await promise3).to.equal(val);
