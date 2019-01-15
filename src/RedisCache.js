@@ -792,6 +792,8 @@ class RedisCache {
 	 *  only valid if stale ttl is given
 	 *  if true, this will generate value in foreground if value is stale
 	 *  if false, this will generate value in background (and return stale value) if value is stale
+	 * @property {boolean} [forceUpdate=false]
+	 *  get fresh results (ignoring ttl & staleTTL) and update cache
 	 * @property {(val: any) => Promise<any> | any} parse function to parse value fetched from redis
 	 */
 
@@ -823,6 +825,11 @@ class RedisCache {
 			return value;
 		}
 
+		if (options.forceUpdate) {
+			// regenerate value in the foreground
+			return this._setWithCheck(key, value, options);
+		}
+
 		// try to get the value from local cache first
 		if (this.useLocalCache) {
 			const localValue = this._localCache(key);
@@ -849,11 +856,28 @@ class RedisCache {
 		});
 	}
 
+	async _setWithCheck(key, value, options) {
+		const settingPromise = this._setting(key);
+		if (settingPromise) {
+			return settingPromise;
+		}
+
+		// regenerate value in the foreground
+		const setCtx = {};
+		await this.set(key, value, options, setCtx);
+		return setCtx.result;
+	}
+
 	async _getOrSetStale(key, value, options = {}) {
 		// cache is bypassed, return value directly
 		if (this.isBypassed()) {
 			if (typeof value === 'function') return value(key);
 			return value;
+		}
+
+		if (options.forceUpdate) {
+			// regenerate value in the foreground
+			return this._setWithCheck(key, value, options);
 		}
 
 		// try to get the value from local cache first
@@ -879,15 +903,8 @@ class RedisCache {
 		}
 
 		if (generateInBg === false) {
-			const settingPromise = this._setting(key);
-			if (settingPromise) {
-				return settingPromise;
-			}
-
 			// regenerate value in the foreground
-			const setCtx = {};
-			await this.set(key, value, options, setCtx);
-			return setCtx.result;
+			return this._setWithCheck(key, value, options);
 		}
 
 		if (generateInBg === true) {
