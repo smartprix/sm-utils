@@ -767,16 +767,27 @@ class Connect {
 		return this;
 	}
 
+	/**
+	 * clone this instance
+	 * @returns {Connect} cloned instance
+	 */
+	clone() {
+		const cloned = new Connect();
+		cloned.options = _.cloneDeep(this.options);
+		return cloned;
+	}
+
 	_parseUrl() {
-		if (this.options.url.includes('@')) {
+		this._url = this.options.url;
+		if (this._url.includes('@')) {
 			// parse url and extract http auth
 			// got does not accept auth in urls
-			const url = new URL(this.options.url);
+			const url = new URL(this._url);
 			if (url.username) {
 				this.httpAuth(url.username, url.password || '');
 				url.username = '';
 				url.password = '';
-				this.options.url = url.toString();
+				this._url = url.toString();
 			}
 		}
 	}
@@ -792,14 +803,9 @@ class Connect {
 	 */
 	_addProxy() {
 		const proxy = this.options.proxy;
-		if (!proxy) return;
-		if (typeof proxy === 'string') return;
-
-		this.options.proxy = null;
-		if (!proxy.address) return;
+		if (!proxy || !proxy.address) return;
 
 		const proxyType = proxy.type || 'http';
-
 		const proxyOpts = {};
 		const address = proxy.address.replace('http://', '');
 		proxyOpts.host = address.split(':')[0];
@@ -824,21 +830,22 @@ class Connect {
 	 * @private
 	 */
 	_addFields() {
+		let body = this.options.body;
 		const hasBody = ['POST', 'PUT', 'PATCH'].includes(this.options.method);
 
-		if (!this.options.body) {
+		if (!body) {
 			if (_.isEmpty(this.options.fields)) {
 				return;
 			}
 
-			this.options.body = this.options.fields;
+			body = this.options.fields;
 			if (hasBody && !this.options.headers['content-type']) {
 				this.contentType('form');
 			}
 		}
-		else if (typeof this.options.body === 'object') {
+		else if (typeof body === 'object') {
 			if (!_.isEmpty(this.options.fields)) {
-				Object.assign(this.options.body, this.options.fields);
+				Object.assign(body, this.options.fields);
 			}
 			if (hasBody && !this.options.headers['content-type']) {
 				this.contentType('json');
@@ -847,30 +854,32 @@ class Connect {
 
 		if (hasBody) {
 			if (this.isJSON()) {
-				if (typeof this.options.body === 'object') {
-					this.options.body = JSON.stringify(this.options.body);
+				if (typeof body === 'object') {
+					body = JSON.stringify(body);
 				}
 			}
 			else if (this.isForm()) {
-				if (typeof this.options.body === 'object') {
-					this.options.body = (new URLSearchParams(this.options.body)).toString();
+				if (typeof body === 'object') {
+					body = (new URLSearchParams(body)).toString();
 				}
 			}
 		}
 		else {
 			this.options.query = this.options.query || {};
-			if (this.options.body && (typeof this.options.body === 'object')) {
-				Object.assign(this.options.body, this.options.query);
-				this.options.query = this.options.body;
-				this.options.body = '';
+			if (body && (typeof body === 'object')) {
+				Object.assign(body, this.options.query);
+				this.options.query = body;
+				body = '';
 			}
 		}
 
 		if (!_.isEmpty(this.options.query)) {
 			const qs = (new URLSearchParams(this.options.query)).toString();
-			const joiner = this.options.url.includes('?') ? '&' : '?';
-			this.options.url += (joiner + qs);
+			const joiner = this._url.includes('?') ? '&' : '?';
+			this._url += (joiner + qs);
 		}
+
+		this._body = body;
 	}
 
 	/**
@@ -889,7 +898,7 @@ class Connect {
 
 		const jar = this.options.readCookieJar || this.options.cookieJar;
 		if (jar) {
-			const jarCookies = await jar.getCookiesAsync(this.options.url, {});
+			const jarCookies = await jar.getCookiesAsync(this._url, {});
 			if (jarCookies) {
 				jarCookies.forEach((cookie) => {
 					if (!cookieMap[cookie.key]) {
@@ -961,7 +970,7 @@ class Connect {
 			decompress: this.options.compress,
 			timeout: this.options.timeout,
 			encoding: this.options.encoding,
-			body: this.options.body,
+			body: this._body,
 			headers: this.options.headers,
 			method: this.options.method,
 			rejectUnauthorized: this.options.strictSSL,
@@ -970,6 +979,7 @@ class Connect {
 			followRedirect: false,
 			// max redirects is handled by us internally
 			// cookieJar is handled by us internally
+			// proxy is handled by us internally
 		};
 
 		return options;
@@ -1034,9 +1044,9 @@ class Connect {
 			}
 
 			// already supported by got
-			// response.url = response.request.uri.href || this.options.url;
+			// response.url = response.request.uri.href || url;
 			// already supported by got
-			// response.requestUrl = this.options.url;
+			// response.requestUrl = url;
 			// already supported by got
 			// response.headers
 			response.status = status;
@@ -1053,7 +1063,10 @@ class Connect {
 			}
 
 			const message = e.message.toLowerCase();
-			if (message.includes('authentication') && message.includes('socks')) {
+			if (
+				message.includes('statusCode=407') ||
+				(message.includes('authentication') && message.includes('socks'))
+			) {
 				const err = new Error('407 Proxy Authentication Failed');
 				err.code = 'EPROXYAUTH';
 				throw err;
@@ -1081,7 +1094,7 @@ class Connect {
 		};
 
 		try {
-			const response = await this._request(this.options.url, ctx);
+			const response = await this._request(this._url, ctx);
 			response.redirectUrls = ctx.redirectUrls;
 			response.startTime = startTime;
 			response.timeTaken = Date.now() - startTime;
@@ -1112,8 +1125,12 @@ class Connect {
 	 * @return {Promise<response>} a promise that resolves to response
 	 */
 	async fetch() {
+		return this._readCache();
+	}
+
+	async _fetchCached() {
 		if (!this.promise) {
-			this.promise = this._readCache();
+			this.promise = this.fetch();
 		}
 		return this.promise;
 	}
@@ -1127,7 +1144,7 @@ class Connect {
 	 * @return {Promise<T>} a Promise in pending state
 	 */
 	async then(successCallback, errorCallback) {
-		return this.fetch().then(successCallback, errorCallback);
+		return this._fetchCached().then(successCallback, errorCallback);
 	}
 
 	/**
@@ -1138,7 +1155,7 @@ class Connect {
 	 * @return {Promise<T>} a Promise in pending state
 	 */
 	async catch(errorCallback) {
-		return this.fetch().catch(errorCallback);
+		return this._fetchCached().catch(errorCallback);
 	}
 
 	/**
@@ -1147,7 +1164,7 @@ class Connect {
 	 * @return {Promise<T>} a Promise in pending state
 	 */
 	async finally(callback) {
-		return this.fetch().finally(callback);
+		return this._fetchCached().finally(callback);
 	}
 }
 
