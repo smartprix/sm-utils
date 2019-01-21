@@ -5310,12 +5310,10 @@ slice-ansi@1.0.0:
   dependencies:
     is-fullwidth-code-point "^2.0.0"
 
-sm-tunnel-agent@^0.6.3:
-  version "0.6.3"
-  resolved "https://registry.yarnpkg.com/sm-tunnel-agent/-/sm-tunnel-agent-0.6.3.tgz#da267977f7f0dc0c50816333a1ab34d4a9ae1c3e"
-  integrity sha512-0zqI9MhsCSGm+8WwjV/4ylDSEqZiskBftcePAWfjbFQKsDI+awkl0Ta/XOjbwqhcoNHPUjk+79bep6GT3YF62w==
-  dependencies:
-    safe-buffer "^5.1.2"
+sm-tunnel-agent@^0.6.4:
+  version "0.6.4"
+  resolved "https://registry.yarnpkg.com/sm-tunnel-agent/-/sm-tunnel-agent-0.6.4.tgz#2290a650c0e0594ae4ab9b8755080087ae066e35"
+  integrity sha512-0Ldxcv6x8U/j0uzwOCbCBTgN9JIDmCWCrOE/jYQAGLhliC5wvKHlCSjfcnr3KdEH89N/hbJ03T42tA3RuQahwQ==
 
 snapdragon-node@^2.0.1:
   version "2.1.1"
