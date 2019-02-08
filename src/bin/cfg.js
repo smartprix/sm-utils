@@ -46,6 +46,7 @@ commander
 		else {
 			process.stdout.write(String(value));
 		}
+		process.stdout.write('\n');
 	});
 
 handleUnknownCommands();
