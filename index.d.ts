@@ -2364,6 +2364,12 @@ declare module 'sm-utils' {
 		function get(key: string, defaultValue: any): any;
 
 		/**
+		 * Get the whole config object
+		 * Is not immutable, so don't write anything to it
+		 */
+		function _getConfig(): any;
+
+		/**
 		 * set values in global config
 		 * you can also give key as an object to assign all key values from it
 		 */
