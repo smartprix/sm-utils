@@ -88,6 +88,14 @@ cfg.get = function (key, defaultValue) {
 	return cfg(key, defaultValue);
 };
 
+/**
+ * @memberof config
+ * @return {any}
+ */
+cfg._getConfig = function () {
+	return config;
+};
+
 /** set values in global config
  * you can also give key as an object to assign all key values from it
  * @memberof config
