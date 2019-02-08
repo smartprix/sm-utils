@@ -37,7 +37,7 @@ commander
 		}
 		else if (typeof value === 'object') {
 			// stringify value in case of object
-			process.stdout.write(JSON.stringify(value));
+			process.stdout.write(JSON.stringify(value, null, 4));
 		}
 		else {
 			process.stdout.write(String(value));
