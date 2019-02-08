@@ -27,21 +27,26 @@ const description = [
 
 commander
 	.version(version, '-v, --version')
-	.command('get <key>')
+	.command('get [key]')
 	.description(description.join('\n'))
 	.action((key) => {
-		const value = cfg(key);
+		let value;
+		if (key === undefined) {
+			value = cfg._getConfig();
+		}
+		else value = cfg(key);
 		if (value == null) {
 			// write empty string in case of null and undefined
 			process.stdout.write('');
 		}
 		else if (typeof value === 'object') {
 			// stringify value in case of object
-			process.stdout.write(JSON.stringify(value));
+			process.stdout.write(JSON.stringify(value, null, 4));
 		}
 		else {
 			process.stdout.write(String(value));
 		}
+		process.stdout.write('\n');
 	});
 
 handleUnknownCommands();

@@ -37,4 +37,10 @@ describe('cfg', () => {
 		process.env.NODE_ENV = 'test';
 		expect(cfg.isProd()).to.equal(false);
 	});
+
+	it('should get whole config object', async () => {
+		expect(cfg._getConfig()).to.deep.equal({
+			test: 'data',
+		});
+	});
 });
