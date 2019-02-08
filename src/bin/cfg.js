@@ -27,10 +27,14 @@ const description = [
 
 commander
 	.version(version, '-v, --version')
-	.command('get <key>')
+	.command('get [key]')
 	.description(description.join('\n'))
 	.action((key) => {
-		const value = cfg(key);
+		let value;
+		if (key === undefined) {
+			value = cfg._getConfig();
+		}
+		else value = cfg(key);
 		if (value == null) {
 			// write empty string in case of null and undefined
 			process.stdout.write('');
