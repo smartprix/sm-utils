@@ -2227,6 +2227,10 @@ declare module 'sm-utils' {
 		timeout?: number;
 	}
 
+	interface vachanOptions {
+		silent?: boolean;
+	}
+
 	/**
 	 * Promise utility functions
 	 */
@@ -2251,14 +2255,14 @@ declare module 'sm-utils' {
 		 * @param promise
 		 * @param options
 		 */
-		static exit(promise: Promise<any> | Function, options: object): never;
+		static exit(promise: Promise<any> | Function, options?: vachanOptions): never;
 
 		/**
 		 * Execute a promise / function, without caring about its results
 		 * @param promise
 		 * @param options
 		 */
-		static exec(promise: Promise<any> | Function, options: object): void;
+		static exec(promise: Promise<any> | Function, options: vachanOptions): void;
 
 		/**
 		 * create a lazy promise from an executor function ((resolve, reject) => {})
@@ -2296,7 +2300,7 @@ declare module 'sm-utils' {
 		 * @param options can be {timeout} or a number
 		 *	timeout: Milliseconds before timing out
 		*/
-		static timeout<T>(promise: T | Promise<T> | (() => T | Promise<T>), options?: {timeout?: number} | number): Promise<T>;
+		static timeout<T>(promise: T | Promise<T> | (() => T | Promise<T>), options: {timeout?: number} | number): Promise<T>;
 
 		/**
 		 * Returns a Promise that resolves when condition returns true.
