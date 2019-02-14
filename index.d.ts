@@ -2365,37 +2365,41 @@ declare module 'sm-utils' {
 		 * @param key
 		 * @param defaultValue
 		 */
-		function get(key: string, defaultValue: any): any;
+		function get<T = any>(key: string, defaultValue: T): Readonly<T>;
 
 		/**
 		 * Get the whole config object
 		 * Is not immutable, so don't write anything to it
 		 */
-		function _getConfig(): any;
+		function _getConfig(): Readonly<any>;
 
 		/**
 		 * set values in global config
-		 * you can also give key as an object to assign all key values from it
+		 * return previous value
 		 */
-		function set(): null;
+		function set(key: string, value: any): any;
 
+		/**
+		 * @param key an object to assign all key values from it
+		 * @param value 
+		 */
+		function set(key: {[key: string]: any}): null;
 		/**
 		 * set values in global config with an object to assign all key values from it
 		 * if a key already exists then it is merged with new value
 		 * if obj is not an Object then nothing happens
 		 */
-		function merge(): null;
+		function merge(obj: {[key: string]: any}): null;
 
 		/**
 		 * set values in global config with an object to assign all key values from it
 		 * if a key already exists then it is assigned with new value
 		 * if obj is not an Object then nothing happens
 		 */
-		function assign(): null;
+		function assign(obj: {[key: string]: any}): null;
 
-		/* Illegal function name 'delete' can't be used here
-		delete: (key: string) => void;
-		*/
+		// FIXME: Illegal function name 'delete' can't be used here
+		// delete: (key: string) => void;
 
 		/**
 		 * read config from a file, and merge with existing config
@@ -2405,7 +2409,7 @@ declare module 'sm-utils' {
 		 * @param options.ignoreNotFound ignore if file not found
 		 * @param options.overwrite Overwrite config not merge
 		 */
-		function file(file: string, options: {ignoreErrors?: boolean, ignoreNotFound?: boolean, overwrite?: boolean}): void;
+		function file(file: string, options?: {ignoreErrors?: boolean, ignoreNotFound?: boolean, overwrite?: boolean}): void;
 
 		/**
 		 * read the file specified by the key, and then cache it
@@ -2448,7 +2452,7 @@ declare module 'sm-utils' {
 	 * @param key key to read, can be nested like `a.b.c`
 	 * @param defaultValue value to return if key is not found
 	 */
-	function cfg(key: string, defaultValue?: any): any
+	function cfg<T = any>(key: string, defaultValue?: T): Readonly<T>
 
 	const crypt: typeof Crypt;
 
