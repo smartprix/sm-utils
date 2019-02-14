@@ -925,7 +925,7 @@ declare module 'sm-utils' {
 		 * @param baseIn input base
 		 * @param baseOut output base
 		 */
-		function baseConvert(str: string | number, baseIn?: number, baseOut?: number): void;
+		function baseConvert(str: string | number, baseIn?: number, baseOut?: number): string;
 
 	}
 
@@ -2026,7 +2026,7 @@ declare module 'sm-utils' {
 		 * If the input is not a string (already parsed), returns the input itself
 		 * @param str
 		 */
-		function tryParseJson(str: any): object | null;
+		function tryParseJson(str: string): any | null;
 
 		/**
 		 * Stringifies an object only if it is not already a string
