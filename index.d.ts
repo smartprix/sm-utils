@@ -2405,7 +2405,7 @@ declare module 'sm-utils' {
 		 * @param options.ignoreNotFound ignore if file not found
 		 * @param options.overwrite Overwrite config not merge
 		 */
-		function file(file: string, options: {ignoreErrors: boolean, ignoreNotFound: boolean, overwrite: boolean}): void;
+		function file(file: string, options: {ignoreErrors?: boolean, ignoreNotFound?: boolean, overwrite?: boolean}): void;
 
 		/**
 		 * read the file specified by the key, and then cache it
