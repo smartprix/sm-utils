@@ -782,6 +782,7 @@ describe('redis cache library @rediscache', () => {
 			'_has',
 			'_size',
 			'_delPattern',
+			'_clear',
 		];
 
 		// mock redis call functions
@@ -834,6 +835,10 @@ describe('redis cache library @rediscache', () => {
 		expect(await redisCache.get('a')).to.be.undefined;
 		expect(await redisCache.get('a1')).to.be.undefined;
 		expect(await redisCache.get('a2')).to.be.undefined;
+
+		expect(await redisCache.get('b')).to.equal('b1');
+		await redisCache.clear();
+		expect(await redisCache.get('b')).to.be.undefined;
 
 		// test sync
 		const result = [];
