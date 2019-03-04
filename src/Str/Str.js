@@ -156,8 +156,9 @@ function trimToNext(str, pos, char = ' ') {
 
 const numberLocaleCache = {};
 function _getNumberLocale(options) {
-	const {locale = 'en', currency = undefined, decimals = 0} = options;
+	const {currency = undefined, decimals = 0} = options;
 	const localeKey = `${locale}${currency}${decimals}`;
+	const locale = (currency === 'INR' ? 'HIN' : options.locale ) || 'en';
 	if (!(localeKey in numberLocaleCache)) {
 		numberLocaleCache[localeKey] = new Intl.NumberFormat(locale, {
 			style: currency ? 'currency' : 'decimal',
