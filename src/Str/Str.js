@@ -158,7 +158,7 @@ const numberLocaleCache = {};
 function _getNumberLocale(options) {
 	const {currency = undefined, decimals = 0} = options;
 	// If currency is INR, there should not be space between currency symbol and number
-	const locale = (currency === 'INR' ? 'HI-IN' : options.locale) || 'EN';
+	const locale = (currency === 'INR' ? 'hi-IN' : options.locale) || 'en';
 	const localeKey = `${locale}${currency}${decimals}`;
 	if (!(localeKey in numberLocaleCache)) {
 		numberLocaleCache[localeKey] = new Intl.NumberFormat(locale, {
