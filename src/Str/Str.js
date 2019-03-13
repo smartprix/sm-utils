@@ -189,12 +189,12 @@ const indianNumberSystem = [
  * Key should have suffix 'in' if using indian number system
  */
 const abbreviateUnits = {
-	fullin: {
+	longin: {
 		' Arab': 1e9,
 		' Crore': 1e7,
 		' Lacs': 1e5,
 	},
-	full: {
+	long: {
 		' Trillion': 1e12,
 		' Billion': 1e9,
 		' Million': 1e6,
@@ -215,9 +215,9 @@ const abbreviateUnits = {
 		' Lacs': 1e5,
 	},
 	auto: {
-		T: 1e12,
-		B: 1e9,
-		M: 1e6,
+		' Tn': 1e12,
+		' Bn': 1e9,
+		' Mn': 1e6,
 	},
 };
 /**
