@@ -731,11 +731,12 @@
   resolved "https://registry.yarnpkg.com/@sindresorhus/is/-/is-0.14.0.tgz#9fb3a3cf3132328151f353de4632e01e52102bea"
   integrity sha512-9NET910DNaIPngYnLLPeg+Ogzqsi9uM4mSboU5y6p8S5DzMTVEsJZrawi+BoDNUVBa2DhJqQYUFvMDfgU062LQ==
 
-"@smpx/cfg@^1.1.2":
-  version "1.1.2"
-  resolved "https://registry.yarnpkg.com/@smpx/cfg/-/cfg-1.1.2.tgz#2b1d170161a4cefd1c34787b51a925c510836fae"
-  integrity sha512-wlXGZSVvJgcz4OqDzZrXQia4wMURqAufe4GG3I7LQWJWDvcQrSyzyNs+w4gcB9PI8Fe7KbnXZn+FCvZqP9FNzw==
+"@smpx/cfg@^1.1.4":
+  version "1.1.4"
+  resolved "https://registry.yarnpkg.com/@smpx/cfg/-/cfg-1.1.4.tgz#de4a009fa1f42a6a51dff44d6e98bcf108c95513"
+  integrity sha512-I+b8btO0aCwAM6Omt2z4D2qXcoz7Ai9ZcqElU7QM8a+U3MChP4ZoyCkEJT1RygnSzYjKtBEyMYnPr0EfoQusoQ==
   dependencies:
+    commander "^2.19.0"
     lodash "^4.17.11"
 
 "@szmarczak/http-timer@^1.1.0":
