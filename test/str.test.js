@@ -23,7 +23,20 @@ describe('@str library', () => {
 		expect(Str.numberFormat(1000)).to.equal('1,000');
 		expect(Str.numberFormat(1234452.534)).to.equal('1,234,453');
 		expect(Str.numberFormat(123456.3443, {decimals: 2})).to.equal('123,456.34');
+		expect(Str.numberFormat(10000000, {decimals: 2, abbr: 'short'})).to.equal('10.00M');
+		expect(Str.numberFormat(10000000, {abbr: 'auto'})).to.equal('10 Mn');
+		expect(Str.numberFormat(11233000, {abbr: 'long'})).to.equal('11.23 Million');
+		expect(Str.numberFormat(11233000, {abbr: 'full'})).to.equal('11,233,000');
+	});
+
+	it('should correctly format currency', () => {
 		expect(Str.numberFormat(123456.3443, {decimals: 2, currency: 'USD'})).to.equal('$123,456.34');
+		expect(Str.numberFormat(123456.789, {currency: 'INR', locale: 'en-IN'})).to.equal('₹1,23,457');
+		expect(Str.numberFormat(123456.789, {currency: 'INR', locale: 'en-IN', abbr: 'short'})).to.equal('₹1.23 L');
+		expect(Str.numberFormat(12999999, {currency: 'INR', locale: 'en-IN', abbr: 'long'})).to.equal('₹1.30 Crore');
+		expect(Str.numberFormat(1000000, {currency: 'INR', locale: 'en-IN', abbr: 'auto'})).to.equal('₹10 Lacs');
+		expect(Str.numberFormat(10000000, {decimals: 2, currency: 'USD', abbr: 'auto'})).to.equal('$10.00 Mn');
+		expect(Str.numberFormat(122333444, {decimals: 2, currency: 'USD', abbr: 'short'})).to.equal('$122.33M');
 	});
 
 	it('should correctly convert number to words', () => {

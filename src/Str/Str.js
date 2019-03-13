@@ -157,9 +157,11 @@ function trimToNext(str, pos, char = ' ') {
 const numberLocaleCache = {};
 function _getNumberLocale(options) {
 	const {currency = undefined, decimals = 0} = options;
+
 	// If currency is INR, there should not be space between currency symbol and number
 	const locale = (currency === 'INR' ? 'hi-IN' : options.locale) || 'en';
 	const localeKey = `${locale}${currency}${decimals}`;
+
 	if (!(localeKey in numberLocaleCache)) {
 		numberLocaleCache[localeKey] = new Intl.NumberFormat(locale, {
 			style: currency ? 'currency' : 'decimal',
@@ -172,11 +174,84 @@ function _getNumberLocale(options) {
 	return numberLocaleCache[localeKey];
 }
 
+// Countries where Indian Numbering System is used
+const indianNumberSystem = [
+	'in',	// India
+	'mm', 	// Myanmar
+	'lk', 	// Sri Lanka
+	'bd', 	// Bangladesh
+	'np', 	// Nepal
+	'pk', 	// Pakistan
+];
+
+/**
+ * Units should be in desc order of values
+ * Key should have suffix 'in' if using indian number system
+ */
+const abbreviateUnits = {
+	longin: {
+		' Arab': 1e9,
+		' Crore': 1e7,
+		' Lacs': 1e5,
+	},
+	long: {
+		' Trillion': 1e12,
+		' Billion': 1e9,
+		' Million': 1e6,
+	},
+	shortin: {
+		' Arab': 1e9,
+		' Cr': 1e7,
+		' L': 1e5,
+	},
+	short: {
+		T: 1e12,
+		B: 1e9,
+		M: 1e6,
+	},
+	autoin: {
+		' Arab': 1e9,
+		' Cr': 1e7,
+		' Lacs': 1e5,
+	},
+	auto: {
+		' Tn': 1e12,
+		' Bn': 1e9,
+		' Mn': 1e6,
+	},
+};
+/**
+ * Abbreviate number
+ * @private
+ * @param {number} number
+ * @returns {{number: number, unit?: string, decimals?: number}}
+ */
+function _abbreviateNumber(number, options) {
+	const {locale = 'en', abbr = 'none'} = options;
+	const result = {number};
+	if (!['long', 'short', 'auto'].includes(abbr)) return result;
+
+	const countryCode = (locale.split('-')[1] || '').toLowerCase();
+	const numberSystem = (indianNumberSystem.includes(countryCode)) ? 'in' : '';
+	const abbrKey = `${abbr}${numberSystem}`;
+
+	for (const unit of Object.keys(abbreviateUnits[abbrKey])) {
+		if (abbreviateUnits[abbrKey][unit] <= number) {
+			result.number = number / abbreviateUnits[abbrKey][unit];
+			result.unit = unit;
+			result.decimals = result.number % 1 ? 2 : 0;
+			break;
+		}
+	}
+	return result;
+}
+
 /**
  * @typedef {object} numberFormatOpts
  * @property {string} locale like 'en-IN'
  * @property {string} currency like 'INR'
  * @property {number} decimals number of decimal places to return
+ * @property {number} abbr option to abbreviate number: ['none', 'auto', 'long', 'short']
  */
 
 /**
@@ -186,15 +261,24 @@ function _getNumberLocale(options) {
  * @memberof Str
  * @param {number} number the number to format
  * @param {numberFormatOpts|string} [options={}]
- * 	string of locale or options object {locale: 'en', decimals: 0}
+ * 	string of locale or options object {locale: 'en', decimals: 0, currency: 'INR', abbr: 'auto'}
  * @return {string} formatted number
  */
 function numberFormat(number, options = {}) {
 	if (typeof options === 'string') {
 		options = {locale: options};
 	}
-
-	return _getNumberLocale(options).format(number);
+	const abbreviatedNumber = _abbreviateNumber(number, options);
+	number = abbreviatedNumber.number;
+	options.decimals = abbreviatedNumber.decimals || options.decimals;
+	number = _getNumberLocale(options).format(number);
+	if (abbreviatedNumber.unit) {
+		number = number.replace(
+			/[0-9,]+\.?[0-9]*/,
+			value => `${value}${abbreviatedNumber.unit}`
+		);
+	}
+	return number;
 }
 
 /**

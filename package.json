@@ -25,7 +25,7 @@
     "docs": "rm -rf docs && jsdoc -c jsdoc.json",
     "lint": "eslint src test",
     "compile": "tsc",
-    "test-only": "NODE_ENV=test mocha --slow 0 --exit --require @babel/register test/*.test.js",
+    "test-only": "NODE_ENV=test mocha --slow 0 --exit --require @babel/register test/*.test.js --icu-data-dir=node_modules/full-icu",
     "-precommit": "npm run build && npm test && npm run check-coverage",
     "prepublishOnly": "npm run build"
   },
@@ -66,6 +66,7 @@
     "docdash": "^1.0.1",
     "eslint": "^5.10.0",
     "eslint-config-smartprix": "^3.5.4",
+    "full-icu": "^1.2.1",
     "get-port": "^4.1.0",
     "isparta": "^4.1.1",
     "jsdoc": "^3.5.5",
