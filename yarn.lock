@@ -731,6 +731,13 @@
   resolved "https://registry.yarnpkg.com/@sindresorhus/is/-/is-0.14.0.tgz#9fb3a3cf3132328151f353de4632e01e52102bea"
   integrity sha512-9NET910DNaIPngYnLLPeg+Ogzqsi9uM4mSboU5y6p8S5DzMTVEsJZrawi+BoDNUVBa2DhJqQYUFvMDfgU062LQ==
 
+"@smpx/cfg@^1.1.2":
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/@smpx/cfg/-/cfg-1.1.2.tgz#2b1d170161a4cefd1c34787b51a925c510836fae"
+  integrity sha512-wlXGZSVvJgcz4OqDzZrXQia4wMURqAufe4GG3I7LQWJWDvcQrSyzyNs+w4gcB9PI8Fe7KbnXZn+FCvZqP9FNzw==
+  dependencies:
+    lodash "^4.17.11"
+
 "@szmarczak/http-timer@^1.1.0":
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/@szmarczak/http-timer/-/http-timer-1.1.1.tgz#6402258dfe467532b26649ef076b4d11f74fb612"
