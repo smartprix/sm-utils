@@ -7,9 +7,6 @@
   "engines": {
     "node": ">=8.0.0"
   },
-  "bin": {
-    "cfg": "dist/bin/cfg.js"
-  },
   "repository": {
     "type": "git",
     "url": "https://github.com/smartprix/sm-utils"
