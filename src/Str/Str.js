@@ -229,7 +229,7 @@ const abbreviateUnits = {
 function _abbreviateNumber(number, options) {
 	const {locale = 'en', abbr = 'none'} = options;
 	const result = {number};
-	if (abbr === 'none') return result;
+	if (!['long', 'short', 'auto'].includes(abbr)) return result;
 
 	const countryCode = (locale.split('-')[1] || '').toLowerCase();
 	const numberSystem = (indianNumberSystem.includes(countryCode)) ? 'in' : '';
