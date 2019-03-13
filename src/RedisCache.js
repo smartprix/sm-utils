@@ -110,6 +110,12 @@ async function _withDefault(promise, defaultValue) {
 	return value;
 }
 
+async function _withDefaultOpts(promise, opts) {
+	const value = await promise;
+	if (value === undefined) return opts.default;
+	return value;
+}
+
 function parseTTL(ttl) {
 	if (typeof ttl === 'string') return timestring(ttl, 'ms');
 	return ttl;
@@ -805,12 +811,12 @@ class RedisCache {
 
 		// no value given, return undefined
 		if (value === undefined) {
-			return undefined;
+			return options.default;
 		}
 
 		const ctx = {};
 		await this.set(key, value, options, ctx);
-		return ctx.result;
+		return (ctx.result === undefined) ? options.default : ctx.result;
 	}
 
 	/**
@@ -833,6 +839,7 @@ class RedisCache {
 	 * @property {boolean} [forceUpdate=false]
 	 *  get fresh results (ignoring ttl & staleTTL) and update cache
 	 * @property {(val: any) => Promise<any> | any} parse function to parse value fetched from redis
+	 * @property {any} default default value to return in case if value is undefined
 	 */
 
 	/**
@@ -854,13 +861,13 @@ class RedisCache {
 			// Some other process is still fetching the value
 			// Don't dogpile shit, wait for the other process
 			// to finish it
-			return settingPromise;
+			return _withDefaultOpts(settingPromise, options);
 		}
 
 		// cache is bypassed, return value directly
 		if (this.isBypassed()) {
-			if (typeof value === 'function') return value(key);
-			return value;
+			if (typeof value === 'function') return _withDefaultOpts(value(key), options);
+			return _withDefaultOpts(value, options);
 		}
 
 		if (options.forceUpdate) {
@@ -897,20 +904,20 @@ class RedisCache {
 	async _setWithCheck(key, value, options) {
 		const settingPromise = this._setting(key);
 		if (settingPromise) {
-			return settingPromise;
+			return _withDefaultOpts(settingPromise, options);
 		}
 
 		// regenerate value in the foreground
 		const setCtx = {};
 		await this.set(key, value, options, setCtx);
-		return setCtx.result;
+		return (setCtx.result === undefined) ? options.default : setCtx.result;
 	}
 
 	async _getOrSetStale(key, value, options = {}) {
 		// cache is bypassed, return value directly
 		if (this.isBypassed()) {
-			if (typeof value === 'function') return value(key);
-			return value;
+			if (typeof value === 'function') return _withDefaultOpts(value(key), options);
+			return _withDefaultOpts(value, options);
 		}
 
 		if (options.forceUpdate) {
@@ -950,7 +957,7 @@ class RedisCache {
 			this._setBackground(key, value, options);
 		}
 
-		return existingValue;
+		return (existingValue === undefined) ? options.default : existingValue;
 	}
 
 	_getLocalAttachedMap(key) {
