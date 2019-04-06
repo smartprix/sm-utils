@@ -86,6 +86,8 @@ class Connect {
 	 * @constructor
 	 */
 	constructor() {
+		this.id = Math.random().toString(36).substring(2);
+
 		/**
 		 * Various options (or parameters) defining the Connection
 		 * @private
@@ -97,11 +99,8 @@ class Connect {
 			method: 'GET',
 			// headers to set
 			headers: {
-				'user-agent': userAgents.chrome,
 				accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-				'accept-language': 'en-US,en;q=0.8',
-				// some sites expect an accept-encoding header
-				'accept-encoding': '',
+				'accept-language': 'en-US,en;q=0.9',
 				// set empty cookie header if no cookies exist
 				// this is because some sites expect cookie header to be there
 				cookie: '',
@@ -136,6 +135,12 @@ class Connect {
 			// custom http & https agent (should be {http: agent, https: agent})
 			agent: null,
 		};
+
+		// ask for compressed response by default
+		this.compress(true);
+
+		// default user-agent is chrome
+		this.userAgent('chrome');
 	}
 
 	/**
@@ -314,7 +319,14 @@ class Connect {
 	 * @return {Connect} self
 	 */
 	userAgent(userAgent) {
-		this.header('user-agent', userAgents[userAgent] || userAgent);
+		const existing = userAgents[userAgent];
+		if (existing) {
+			this.header('user-agent', `${existing} R/${this.id}`);
+		}
+		else {
+			this.header('user-agent', userAgent);
+		}
+
 		return this;
 	}
 
@@ -540,6 +552,13 @@ class Connect {
 	 */
 	compress(askForCompression = true) {
 		this.options.compress = askForCompression;
+		if (askForCompression) {
+			// some sites expect an accept-encoding header
+			this.header('accept-encoding', '');
+		}
+		else {
+			this.header('accept-encoding', `gzip, deflate, ${this.id}`);
+		}
 		return this;
 	}
 
@@ -834,13 +853,11 @@ class Connect {
 		const hasBody = ['POST', 'PUT', 'PATCH'].includes(this.options.method);
 
 		if (!body) {
-			if (_.isEmpty(this.options.fields)) {
-				return;
-			}
-
-			body = this.options.fields;
-			if (hasBody && !this.options.headers['content-type']) {
-				this.contentType('form');
+			if (!_.isEmpty(this.options.fields)) {
+				body = this.options.fields;
+				if (hasBody && !this.options.headers['content-type']) {
+					this.contentType('form');
+				}
 			}
 		}
 		else if (typeof body === 'object') {
