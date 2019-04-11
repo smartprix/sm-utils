@@ -5,14 +5,25 @@ import {Redis} from 'ioredis';
 import Cfg from '@smpx/cfg';
 
 declare module 'sm-utils' {
+	interface setOptsObject {
 	/**
-	 * Local cache with dogpile prevention
+		 * in ms / timestring ('1d 3h') default: 0
+	 */
+		ttl: number | string;
+	}
+
+	type setOpts = string | number | setOptsObject;
+
+	/**
+	 * Local cache with dogpile prevention, lru, ttl and other goodies
 	 */
 	class Cache {
+		static logger: Console;
+
 		/**
 		 * Local cache with dogpile prevention
 		 */
-		constructor();
+		constructor(options?: {maxItems?: number; logger?: Console});
 
 		/**
 		 * gets a value from the cache
@@ -20,28 +31,28 @@ declare module 'sm-utils' {
 		 * @param key
 		 * @param defaultValue
 		 */
-		getSync(key: string, defaultValue: any):  any;
+		getSync<T = any>(key: string, defaultValue?: T):  T;
 
 		/**
 		 * gets a value from the cache
 		 * @param key
 		 * @param defaultValue
 		 */
-		get(key: string, defaultValue: any): Promise<any>;
+		get<T = any>(key: string, defaultValue?: T): Promise<T>;
 
 		/**
 		 * gets a value from the cache immediately without waiting
 		 * @param key
 		 * @param defaultValue
 		 */
-		getStaleSync(key: string, defaultValue: any): any;
+		getStaleSync<T = any>(key: string, defaultValue?: T): T;
 
 		/**
 		 * gets a value from the cache immediately without waiting
 		 * @param key
 		 * @param defaultValue
 		 */
-		getStale(key: string, defaultValue: any): any;
+		getStale<T = any>(key: string, defaultValue?: T): T;
 
 		/**
 		 * checks if a key exists in the cache
@@ -53,7 +64,7 @@ declare module 'sm-utils' {
 		 * checks if a key exists in the cache
 		 * @param key
 		 */
-		has(key: string): boolean;
+		has(key: string): Promise<boolean>;
 
 		/**
 		 * sets a value in the cache
@@ -109,7 +120,7 @@ declare module 'sm-utils' {
 		 * deletes a value from the cache
 		 * @param key
 		 */
-		del(key: string): void;
+		del(key: string): Promise<void>;
 
 		/**
 		 * returns the size of the cache (no. of keys)
@@ -130,6 +141,18 @@ declare module 'sm-utils' {
 		 * clears the cache (deletes all keys)
 		 */
 		clear(): Promise<void>;
+
+		/**
+		 * delete expired items
+		 * NOTE: this method needs to loop over all the items (expensive)
+		 */
+		gc(): Promise<void>;
+
+		/**
+		 * delete expired items
+		 * NOTE: this method needs to loop over all the items (expensive)
+		 */
+		gcSync(): void;
 
 		/**
 		 * memoizes a function (caches the return value of the function)
@@ -159,7 +182,7 @@ declare module 'sm-utils' {
 		/**
 		 * returns a global cache instance
 		 */
-		static globalCache(): Cache;
+		static globalCache<U extends Cache>(this: Constructor<U>): U;
 
 		/**
 		 * gets a value from the global cache
@@ -167,28 +190,28 @@ declare module 'sm-utils' {
 		 * @param key
 		 * @param defaultValue
 		 */
-		static getSync(key: string, defaultValue: any): any;
+		static getSync<T = any>(key: string, defaultValue?: T): T;
 
 		/**
 		 * get a value from the global cache
 		 * @param key
 		 * @param defaultValue
 		 */
-		static get(key: string, defaultValue: any): Promise<any>;
+		static get<T = any>(key: string, defaultValue?: T): Promise<T>;
 
 		/**
 		 * gets a value from the global cache immediately without waiting
 		 * @param key
 		 * @param defaultValue
 		 */
-		static getStaleSync(key: string, defaultValue: any): any;
+		static getStaleSync<T = any>(key: string, defaultValue?: T): T;
 
 		/**
 		 * gets a value from the global cache immediately without waiting
 		 * @param key
 		 * @param defaultValue
 		 */
-		static getStale(key: string, defaultValue: any): any;
+		static getStale<T = any>(key: string, defaultValue?: T): Promise<T>;
 
 		/**
 		 * checks if a key exists in the global cache
@@ -200,7 +223,7 @@ declare module 'sm-utils' {
 		 * checks if value exists in the global cache
 		 * @param key
 		 */
-		static has(key: string): boolean;
+		static has(key: string): Promise<boolean>;
 
 		/**
 		 * sets a value in the global cache
@@ -254,7 +277,7 @@ declare module 'sm-utils' {
 		 * deletes a value from the global cache
 		 * @param key
 		 */
-		static del(key: string): void;
+		static del(key: string): Promise<void>;
 
 		static sizeSync(): number;
 
@@ -281,7 +304,7 @@ declare module 'sm-utils' {
 		 * @param fn function to memoize
 		 * @param options ttl in ms/timestring('1d 3h') or opts (default: 0)
 		 */
-		static memoize<T, U extends any[]>(key: string, fn: ((...args: U) => T), options?: setOpts): (...args: U) => T;
+		static memoizeSync<T, U extends any[]>(key: string, fn: ((...args: U) => T), options?: setOpts): (...args: U) => T;
 
 		/**
 		 * memoizes a function (caches the return value of the function)
@@ -290,17 +313,7 @@ declare module 'sm-utils' {
 		 * @param options ttl in ms/timestring('1d 3h') or opts (default: 0)
 		 */
 		static memoize<T, U extends any[]>(key: string, fn: ((...args: U) => T | Promise<T>), options?: setOpts): (...args: U) => Promise<T>;
-
 	}
-
-	interface setOptsObject {
-		/**
-		 * in ms / timestring ('1d 3h') default: 0
-		 */
-		ttl: number | string;
-	}
-
-	type setOpts = string | number | setOptsObject;
 
 	interface Constructor<M> {
 		new (...args: any[]): M
