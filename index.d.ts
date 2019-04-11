@@ -1,14 +1,34 @@
-import {CookieJar} from 'request';
+import {CookieJar} from 'tough-cookie';
 import {Stats} from 'fs';
 import {ChildProcess} from 'child_process';
 import {Redis} from 'ioredis';
 import Cfg from '@smpx/cfg';
 
+interface Constructor<M> {
+	new (...args: any[]): M
+}
+
+/**
+ * @see https://stackoverflow.com/a/53673642/9485498
+ */
+type ConstructorArgsType<T> = T extends new (...args: infer U) => any ? U : never
+
+/**
+ * @see https://stackoverflow.com/a/53039092/9485498
+ */
+type ArgumentsType<T> = T extends (...args: infer A) => any ? A : ConstructorArgsType<T>;
+
+
+interface PlainObject {
+	[key: string]: any;
+};
+
+
 declare module 'sm-utils' {
 	interface setOptsObject {
-	/**
+		/**
 		 * in ms / timestring ('1d 3h') default: 0
-	 */
+		 */
 		ttl: number | string;
 	}
 
@@ -315,9 +335,6 @@ declare module 'sm-utils' {
 		static memoize<T, U extends any[]>(key: string, fn: ((...args: U) => T | Promise<T>), options?: setOpts): (...args: U) => Promise<T>;
 	}
 
-	interface Constructor<M> {
-		new (...args: any[]): M
-	}
 	/**
 	 * Simple & Powerful HTTP request client.
 	 */
@@ -329,27 +346,40 @@ declare module 'sm-utils' {
 
 		/**
 		 * Set the url for the connection.
-		 * @param url
 		 */
 		url(url: string): this;
 
 		/**
-		 *
-		 * @param url
+		 * Creates and returns a new Connect object with the given url.
 		 */
 		static url<U extends Connect>(this: Constructor<U>, url: string): U;
 
 		/**
-		 *
+		 * Creates and returns a new Connect object (with get method) with the given url.
+		 */
+		static get<U extends Connect>(this: Constructor<U>, url: string): U;
+
+		/**
+		 * Creates and returns a new Connect object (with post method) with the given url.
+		 */
+		static post<U extends Connect>(this: Constructor<U>, url: string): U;
+
+		/**
+		 * Creates and returns a new Connect object (with put method) with the given url.
+		 */
+		static put<U extends Connect>(this: Constructor<U>, url: string): U;
+
+
+		/**
 		 * @param args
 		 */
-		static newCookieJar(...args: any[]): CookieJar;
+		static newCookieJar(...args: ArgumentsType<typeof CookieJar>): CookieJar;
 
 		/**
 		 * Set or unset the followRedirect option for the connection.
-		 * @param shouldFollowRedirect boolean representing whether to follow redirect or not
+		 * @param shouldFollowRedirect boolean representing whether to follow redirect or not (default `true`)
 		 */
-		followRedirect(shouldFollowRedirect: boolean): this;
+		followRedirect(shouldFollowRedirect?: boolean): this;
 
 		/**
 		 * Set the number of maximum redirects to follow
@@ -368,7 +398,13 @@ declare module 'sm-utils' {
 		 * Set value of the headers for the connection.
 		 * @param headers object representing the headers for the connection
 		 */
-		headers(headers: object): this;
+		header(headers: PlainObject): this;
+
+		/**
+		 * Set value of the headers for the connection.
+		 * @param headers object representing the headers for the connection
+		 */
+		headers(headers: PlainObject): this;
 
 		/**
 		 * Set the body of the connection object.
@@ -391,7 +427,8 @@ declare module 'sm-utils' {
 
 		/**
 		 * Set the 'Content-Type' field in the headers.
-		 * @param contentType value for content-type
+		 * Can handle 'form' or 'json' else provide custom
+		 * @param contentType value for content-type 
 		 */
 		contentType(contentType: string): this;
 
@@ -401,36 +438,41 @@ declare module 'sm-utils' {
 		isJSON(): boolean;
 
 		/**
+		 * Returns whether the content-type is Form or not
+		 */
+		isForm(): boolean;
+
+		/**
 		 * Sets the value of a cookie.
 		 * Set multiple cookies by passing in an object
 		 * representing the cookies and their values as key:value pairs.
 		 * @param cookies cookie object
 		 */
-		cookie(cookies: object): this;
+		cookie(cookies: PlainObject): this;
+
 		/**
  		 * @param cookieName represents the name of the
 		 * cookie to be set
 		 * @param cookieValue cookie value to be set
-
 		 */
 		cookie(cookieName: string, cookieValue: any): this;
+
 		/**
 		 * Can be used to enable global cookies, if cookieName is set to true
-		 * @param cookieName
 		 */
-		cookie(cookieName: true): this;
+		cookie(useGlobalCookies: true): this;
 
 		/**
 		 * Sets multiple cookies.
 		 * @param cookies object representing the cookies
 		 *	and their values as key:value pairs.
 		 */
-		cookies(cookies: object): this;
+		cookies(cookies: PlainObject): this;
 		/**
 		 * Enable global cookies, if cookies is set to true.
 		 * @param cookies
 		 */
-		cookies(cookies: true): this;
+		cookies(useGlobalCookies: true): this;
 
 		/**
 		 * Enable global cookies.
@@ -442,13 +484,13 @@ declare module 'sm-utils' {
 		 * Set the value of cookie jar based on a file (cookie store).
 		 * @param fileName name of (or path to) the file
 		 */
-		cookieFile(fileName: string): this;
+		cookieFile(fileName: string, options?: {readOnly?: boolean}): this;
 
 		/**
 		 * Set the value of cookie jar.
 		 * @param cookieJar value to be set
 		 */
-		cookieJar(cookieJar: CookieJar): this;
+		cookieJar(cookieJar: CookieJar, options?: {readOnly?: boolean}): this;
 
 		/**
 		 * Set request timeout.
@@ -476,14 +518,33 @@ declare module 'sm-utils' {
 		 * @param fieldValue value to be set
 		 */
 		field(fieldName: string, fieldValue: any): this;
-		field(fieldName: object): this;
+		field(fields: PlainObject): this;
 
 		/**
 		 * Set multiple fields.
 		 * @param fields object representing the field-names and their
 		 *	values as key:value pairs
 		 */
-		fields(fields: object): this;
+		fields(fields: PlainObject): this;
+
+
+		/**
+		 * Set value of a query parameter
+		 */
+		query(name: string, value: any): this;
+
+		/**
+		 * Set multiple query params by passing in an object
+	 	 * representing the param-names and their values as key:value pairs.
+		 */
+		query(obj: PlainObject): this;
+
+
+		/**
+		 * set whether to ask for compressed response (handles decompression automatically)
+		 * @param askForCompression whether to ask for compressed response
+		 */
+		compress(askForCompression?: boolean): this;
 
 		/**
 		 * Set the request method for the connection.
@@ -497,6 +558,27 @@ declare module 'sm-utils' {
 		 * @param password
 		 */
 		httpAuth(username: string, password: string): this;
+
+		/**
+		 * Set username and password for authentication
+		 * @param auth of the format username:password
+		 */
+		httpAuth(auth: string): this;
+
+		/**
+		 * Set username and password for authentication
+		 */
+		httpAuth(authObj: auth): this;
+
+		/**
+		 * Set bearer token for authorization
+		 */
+		bearerToken(token: string): this;
+
+		/**
+		 * Set api token using x-api-token header
+		 */
+		apiToken(token: string): this;
 
 		/**
 		 * Set proxy address (or options).
@@ -548,7 +630,7 @@ declare module 'sm-utils' {
 
 		/**
 		 * Set if the body is to be returned as a buffer
-		 * @param returnAsBuffer
+		 * @param returnAsBuffer default true
 		 */
 		asBuffer(returnAsBuffer?: boolean): this;
 
@@ -557,6 +639,11 @@ declare module 'sm-utils' {
 		 * @param filePath
 		 */
 		save(filePath: string): this;
+
+		/**
+		 * clone this instance
+		 */
+		clone(): this;
 
 		/**
 		 * It creates and returns a promise based on the information
@@ -580,7 +667,12 @@ declare module 'sm-utils' {
 		 * It is also used for method chaining, but handles rejected cases only.
 		 * @param errorCallback function to be called if the Promise is rejected
 		 */
-		catch<T>(errorCallback: (err: Error) => T): Promise<any>;
+		catch<T>(errorCallback: (err: Error) => T): Promise<T>;
+
+		/**
+		 * finally method of promise returned
+		 */
+		finally<T>(cb: () => T): Promise<T>;
 
 	}
 
@@ -595,6 +687,8 @@ declare module 'sm-utils' {
 		 * the final url downloaded after following all redirects
 		 */
 		url: string;
+		redirectUrls?: string[];
+		startTime: number;
 		/**
 		 * time taken (in ms) for the request
 		 */
@@ -604,6 +698,7 @@ declare module 'sm-utils' {
 		 */
 		cached: boolean;
 		statusCode: number;
+		status: number;
 	}
 
 	/**
