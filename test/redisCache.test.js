@@ -98,6 +98,24 @@ describe('redis cache library @rediscache', () => {
 		expect(await cache.get(key)).to.equal(value);
 	});
 
+	it('should delete values', async () => {
+		await cache.set('k1', 'v1');
+		expect(await cache.get('k1')).to.equal('v1');
+		await cache.del('k1');
+		expect(await cache.get('k1')).to.be.undefined;
+		await cache.set('k1', 'v1');
+		await cache.set('k2', 'v2');
+		await cache.set('k3', 'v3');
+		expect(await cache.get('k2')).to.equal('v2');
+		expect(await cache.get('k3')).to.equal('v3');
+		await cache.del(['k2', 'k3']);
+		expect(await cache.get('k2')).to.be.undefined;
+		expect(await cache.get('k3')).to.be.undefined;
+		expect(await cache.get('k1')).to.equal('v1');
+		await cache.del(['k1']);
+		expect(await cache.get('k1')).to.be.undefined;
+	});
+
 	it('should correctly resolve promises', async () => {
 		const key = 'b';
 		const val = 'is';

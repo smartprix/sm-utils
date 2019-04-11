@@ -304,7 +304,19 @@ class RedisCache {
 		}
 
 		if (command === 'delete' || command === 'setdel') {
-			this._localCache(prefix, key, DELETE);
+			if (key.startsWith('[')) {
+				// Key is array
+				try {
+					this._localCache(prefix, JSON.parse(key), DELETE);
+				}
+				catch (e) {
+					// error in parsing key
+					this.logger.error(`[RedisCache] key is malformed json ${key}`);
+				}
+			}
+			else {
+				this._localCache(prefix, key, DELETE);
+			}
 		}
 		else if (command === 'clear') {
 			this._localCache(prefix, '', CLEAR);
@@ -400,12 +412,13 @@ class RedisCache {
 	}
 
 	_del(key) {
+		const keys = _.castArray(key).map(k => this._key(k));
 		if (this.isPika) {
 			// pika does not support unlink command
-			return this.redis.del(this._key(key));
+			return this.redis.del(...keys);
 		}
 
-		return this.redis.unlink(this._key(key));
+		return this.redis.unlink(...keys);
 	}
 
 	_delPattern(pattern) {
@@ -413,10 +426,8 @@ class RedisCache {
 			return this._delPatternPika(pattern);
 		}
 
-		return this.redis.eval(
-			`local j=0; for i, name in ipairs(redis.call('KEYS', '${pattern}')) do redis.call('UNLINK', name); j=i end return j`,
-			0,
-		);
+		// We're not using lua, because scanning doesn't block redis while lua does
+		return this._delPatternRedis(pattern);
 	}
 
 	_actionPattern(pattern, action) {
@@ -447,6 +458,12 @@ class RedisCache {
 		// Pika does not support lua
 		// We have to use scan for deleting keys
 		return this._actionPattern(pattern, keys => (keys.length && this.redis.del(...keys)));
+	}
+
+	_delPatternRedis(pattern) {
+		// Pika does not support lua
+		// We have to use scan for deleting keys
+		return this._actionPattern(pattern, keys => (keys.length && this.redis.unlink(...keys)));
 	}
 
 	_countPattern(pattern) {
@@ -480,6 +497,9 @@ class RedisCache {
 
 		// delete key
 		if (value === DELETE) {
+			if (Array.isArray(key)) {
+				return key.forEach(k => cache.delete(k));
+			}
 			return cache.delete(key);
 		}
 
@@ -528,8 +548,14 @@ class RedisCache {
 
 		// delete key
 		if (value === DELETE) {
-			if (publish) this._localCachePublish('delete', key);
-			this.localCache.delete(key);
+			if (Array.isArray(key)) {
+				if (publish) this._localCachePublish('delete', JSON.stringify(key));
+				key.forEach(k => this.localCache.delete(k));
+			}
+			else {
+				if (publish) this._localCachePublish('delete', key);
+				this.localCache.delete(key);
+			}
 			return undefined;
 		}
 
@@ -1138,7 +1164,7 @@ class RedisCache {
 
 	/**
 	 * deletes a value from the cache
-	 * @param {string} key
+	 * @param {string|Array<string>} key
 	 */
 	async del(key) {
 		if (this.useLocalCache) {
