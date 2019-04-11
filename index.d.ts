@@ -2,6 +2,7 @@ import {CookieJar} from 'request';
 import {Stats} from 'fs';
 import {ChildProcess} from 'child_process';
 import {Redis} from 'ioredis';
+import Cfg from '@smpx/cfg';
 
 declare module 'sm-utils' {
 	/**
@@ -2359,100 +2360,27 @@ declare module 'sm-utils' {
 		static mapValues<T, U>(iterable: {[key: string]: T}, mapper: (value?: T, key?: string, iterable?: {[key: string]: T}) => U, options?: {concurrency: number}): Promise<{[key: string]: U}>;
 	}
 
-	namespace cfg {
-		/**
-		 *
-		 * @param key
-		 * @param defaultValue
+	
+	// Add deprecated cfg functions
+	const cfg: typeof Cfg & {
+		/** 
+		 * **DEPRECATED** 
 		 */
-		function get<T = any>(key: string, defaultValue: T): Readonly<T>;
-
-		/**
-		 * Get the whole config object
-		 * Is not immutable, so don't write anything to it
+		is_prod(): boolean;
+		/** 
+		 * **DEPRECATED** 
 		 */
-		function _getConfig(): Readonly<any>;
-
-		/**
-		 * set values in global config
-		 * return previous value
+		is_staging(): boolean;
+		/** 
+		 * **DEPRECATED** 
 		 */
-		function set(key: string, value: any): any;
-
+		is_test(): boolean;
 		/**
-		 * @param key an object to assign all key values from it
-		 * @param value 
-		 */
-		function set(key: {[key: string]: any}): null;
-		/**
-		 * set values in global config with an object to assign all key values from it
-		 * if a key already exists then it is merged with new value
-		 * if obj is not an Object then nothing happens
-		 */
-		function merge(obj: {[key: string]: any}): null;
-
-		/**
-		 * set values in global config with an object to assign all key values from it
-		 * if a key already exists then it is assigned with new value
-		 * if obj is not an Object then nothing happens
-		 */
-		function assign(obj: {[key: string]: any}): null;
-
-		// FIXME: Illegal function name 'delete' can't be used here
-		// delete: (key: string) => void;
-
-		/**
-		 * read config from a file, and merge with existing config
-		 * @param file path of the file to read (only absolute paths)
-		 * @param options
-		 * @param options.ignoreErrors ignore all errors
-		 * @param options.ignoreNotFound ignore if file not found
-		 * @param options.overwrite Overwrite config not merge
-		 */
-		function file(file: string, options?: {ignoreErrors?: boolean, ignoreNotFound?: boolean, overwrite?: boolean}): void;
-
-		/**
-		 * read the file specified by the key, and then cache it
-		 * @param key
-		 */
-		function read(key: string): any;
-
-		function getEnv(): string;
-
-		function env(): string;
-
-		function isProduction(): boolean;
-		function is_production(): boolean;
-		function isProd(): boolean;
-		function is_prod(): boolean;
-
-		function isStaging(): boolean;
-		function is_staging(): boolean;
-
-		/**
-		 * Returns true if env is production or staging
-		 */
-		function isProductionLike(): boolean;
-		function isProdLike(): boolean;
-
-		function isTest(): boolean;
-		function is_test(): boolean;
-
-		/**
+		 * **DEPRECATED**
 		 * returns true in environments not 'staging' or 'production'
 		 */
-		function isDev(): boolean;
-		function isDevelopment(): boolean;
-		function is_dev(): boolean;
-
-	}
-
-	/**
-	 * Reads a config value
-	 * @param key key to read, can be nested like `a.b.c`
-	 * @param defaultValue value to return if key is not found
-	 */
-	function cfg<T = any>(key: string, defaultValue?: T): Readonly<T>
+		is_dev(): boolean;
+	};
 
 	const crypt: typeof Crypt;
 

@@ -1,5 +1,5 @@
 /* eslint-disable global-require */
-const cfg = require('./../cfg');
+const cfg = require('@smpx/cfg');
 
 // noop all the functions in production
 if (cfg.isProductionLike()) {

@@ -1,3 +1,5 @@
+import cfg from '@smpx/cfg';
+
 import File from './File';
 import Crypt from './Crypt';
 import Connect from './Connect';
@@ -8,7 +10,6 @@ import RedisCache from './RedisCache';
 import System from './System';
 import Lock from './Lock';
 import Str from './Str';
-import cfg from './cfg';
 import Vachan from './Vachan';
 import DeQueue from './DeQueue';
 import Require from './Require';
@@ -23,6 +24,13 @@ const system = System;
 
 /** @type {Crypt.baseConvert} */
 const baseConvert = Crypt.baseConvert;
+
+// include some deprecated cfg items
+cfg.is_production = cfg.isProduction;
+cfg.is_prod = cfg.isProduction;
+cfg.is_dev = cfg.isDev;
+cfg.is_test = cfg.isTest;
+cfg.is_staging = cfg.isStaging;
 
 export {
 	file,

@@ -183,7 +183,17 @@ describe('@connect class', () => {
 		expect(response.url).to.not.contain('?a=b&C=d&e-H=f&X-Token=h');
 	});
 
-	it('should correctly send query', async () => {
+	it('should correct send query in get', async () => {
+		const response = await connect('all')
+			.query('a', 'b')
+			.query('C', 'd');
+		const body = JSON.parse(response.body);
+		expect(body.contentType).to.equal('');
+		expect(body.body).to.equal('');
+		expect(response.url).to.contain('?a=b&C=d');
+	});
+
+	it('should correctly send query in post', async () => {
 		const response = await connect('all')
 			.query('a', 'b')
 			.query('C', 'd')
