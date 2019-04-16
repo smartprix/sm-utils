@@ -160,6 +160,14 @@ class LRU {
 	get size() {
 		return this._size;
 	}
+
+	/**
+	 * Total size (including old + new) of the LRU cache
+	 * @returns {number}
+	 */
+	totalSize() {
+		return this.cache.size + this.oldCache.size;
+	}
 }
 
 module.exports = LRU;

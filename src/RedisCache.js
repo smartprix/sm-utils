@@ -1245,6 +1245,25 @@ class RedisCache {
 	}
 
 	/**
+	 * return local cache stats of all caches
+	 * @returns {array}
+	 */
+	static async getLocalCacheStats() {
+		const stats = [];
+		globalLocalCache.forEach((cache, prefix) => {
+			stats.push({
+				prefix,
+				type: cache.constructor.name,
+				maxItems: cache.maxItems || 0,
+				items: cache.size,
+				totalItems: cache.totalSize ? cache.totalSize() : cache.size,
+			});
+		});
+
+		return _.orderBy(stats, 'items', 'desc');
+	}
+
+	/**
 	 * delete everything from cache if the key includes a particular string
 	 * to delete everything from cache, use `_all_` as string
 	 * @param {string} str
