@@ -701,6 +701,21 @@ declare module 'sm-utils' {
 		status: number;
 	}
 
+	interface charSets {
+		NUMERIC: string;
+		LOWER: string;
+		UPPER: string;
+		missing: string;
+		SYMBOLS: string;
+		HEX: string;
+		BASE_36: string;
+		ALPHA: string;
+		ALPHA_NUMERIC: string;
+		BASE_62: string;
+		BASE_64: string;
+		PRINTABLE: string;
+	}
+
 	/**
 	 * Cryptographic utilities
 	 */
@@ -708,7 +723,7 @@ declare module 'sm-utils' {
 		/**
 		 * different charsets available
 		 */
-		const chars: object;
+		const chars: charSets;
 
 		/**
 		 * Return a random number between 0 and 1
@@ -717,10 +732,13 @@ declare module 'sm-utils' {
 
 		/**
 		 * Return a random integer between min and max (both inclusive)
-		 * @param num If max is not passed, num is max and min is 0
-		 * @param max max value of int, num will be min
 		 */
-		function randomInt(num: number, max?: number): number;
+		function randomInt(min: number, max: number): number;
+		/**
+		 * Return a random integer between 0 and max (both inclusive)
+		 * @param max max value of int
+		 */
+		function randomInt(max: number): number;
 
 		/**
 		 * Generate a random string based on the options passed.
@@ -732,6 +750,30 @@ declare module 'sm-utils' {
 		 * @param options length of the id or options object
 		 */
 		function randomString(options: number | randomStringOpts): string;
+		function randomID(options: number | randomStringOpts): string;
+		function randomId(options: number | randomStringOpts): string;
+
+		/**
+		 * Generate a sequential id based on current time in millisecond and some randomness.
+		 * It can be treated as a Sequential UUID. Ideal for use as a DB primary key.
+		 *
+		 * NOTE: For best results use atleast 15 characters in base62 and 18 characters in base36 encoding
+		 * @param options length of the id or object of {length: int, base36: bool}
+		 */
+		function sequentialID(options: number | {length?: number, base36?: boolean, lowercase?: boolean}): string;
+		function sequentialId(options: number | {length?: number, base36?: boolean, lowercase?: boolean}): string;
+		/**
+		 * Get sequential ID in v4 UUID format.
+		 */
+		function sequentialUUID(): void;
+		/**
+		 * Get random ID in v4 UUID format.
+		 */
+		function randomUUID(): void;
+		/**
+		 * Get random ID in v4 UUID format.
+		 */
+		function uuid(): void;
 
 		/**
 		 * Shuffle an array or a string.
@@ -740,8 +782,8 @@ declare module 'sm-utils' {
 		 * @param options.randomFunc Use this random function instead of default
 		 * @param options.seed optionally give a seed to do a constant shuffle
 		 */
-		function shuffle<T>(itemToShuffle: T[], options: shuffle_options): T[];
-		function shuffle(itemToShuffle: string, options: shuffle_options): string;
+		function shuffle<T>(itemToShuffle: T[], options: shuffleOptions): T[];
+		function shuffle(itemToShuffle: string, options: shuffleOptions): string;
 
 		/**
 		 *
@@ -754,49 +796,6 @@ declare module 'sm-utils' {
 		 * @param base36 use base36 format or not
 		 */
 		function nanoSecondsAlpha(base36?: boolean): string;
-
-		/**
-		 * Generate a sequential id based on current time in millisecond and some randomness.
-		 * It can be treated as a Sequential UUID. Ideal for use as a DB primary key.
-		 *
-		 * NOTE: For best results use atleast 15 characters in base62 and 18 characters in base36 encoding
-		 * @param options length of the id or object of {length: int, base36: bool}
-		 */
-		function sequentialID(options: number | object): string;
-
-		/**
-		 * Get sequential ID in v4 UUID format.
-		 */
-		function sequentialUUID(): void;
-
-		/**
-		 * Get random ID in v4 UUID format.
-		 */
-		function randomUUID(): void;
-
-		/**
-		 * Encode the string/buffer using a given encoding.
-		 * Supported Encodings:
-		 * 'hex', 'binary' ('latin1'), 'ascii', 'base64', 'base64url',
-		 * 'utf8', 'buffer', 'utf16le' ('ucs2')
-		 * @param string item to be encoded
-		 * @param opts object or string specifying the encoding(s)
-		 */
-		function baseEncode(string: string | Buffer, opts: encodingConversion | string): string | Buffer;
-
-		/**
-		 * Decode a string encoded using a given encoding.
-		 * @param string item to be decoded
-		 * @param opts object or string specifying the encoding(s)
-		 */
-		function baseDecode(string: string | Buffer, opts: encodingConversion | string): string;
-
-		/**
-		 * Decode a string encoded using a given encoding to a buffer.
-		 * @param string item to be decoded
-		 * @param fromEncoding encoding used to encode the string
-		 */
-		function baseDecodeToBuffer(string: string | Buffer, fromEncoding: string): Buffer;
 
 		/**
 		 * Compute hash of a string using given algorithm
@@ -954,7 +953,7 @@ declare module 'sm-utils' {
 		 * @param opts
 		 * @param opts.salt
 		 */
-		function hashPassword(password: string, opts: hashPassword_opts): string;
+		function hashPassword(password: string, opts: hashPasswordOpts): string;
 
 		/**
 		 * Verify that given password and hashed password are same or not
@@ -962,6 +961,30 @@ declare module 'sm-utils' {
 		 * @param hashed
 		 */
 		function verifyPassword(password: string, hashed: string): boolean;
+
+		/**
+		 * Encode the string/buffer using a given encoding.
+		 * Supported Encodings:
+		 * 'hex', 'binary' ('latin1'), 'ascii', 'base64', 'base64url',
+		 * 'utf8', 'buffer', 'utf16le' ('ucs2')
+		 * @param string item to be encoded
+		 * @param opts object or string specifying the encoding(s)
+		 */
+		function baseEncode(string: string | Buffer, opts: encodingConversion | string): string | Buffer;
+
+		/**
+		 * Decode a string encoded using a given encoding.
+		 * @param string item to be decoded
+		 * @param opts object or string specifying the encoding(s)
+		 */
+		function baseDecode(string: string | Buffer, opts: encodingConversion | string): string;
+
+		/**
+		 * Decode a string encoded using a given encoding to a buffer.
+		 * @param string item to be decoded
+		 * @param fromEncoding encoding used to encode the string
+		 */
+		function baseDecodeToBuffer(string: string | Buffer, fromEncoding: string): Buffer;
 
 		/**
 		 * Base64 Encode
@@ -995,13 +1018,13 @@ declare module 'sm-utils' {
 		 * Pack many numbers into a single string
 		 * @param numbers array of numbers to be packed
 		 */
-		function packNumbers(numbers: any[]): string;
+		function packNumbers(numbers: number[]): string;
 
 		/**
 		 * Unpack a string packed with packNumbers
 		 * @param str string to be unpacked
 		 */
-		function unpackNumbers(str: string): any[];
+		function unpackNumbers(str: string): number[];
 
 		/**
 		 * Generate a random encrypted string that contains a timestamp.
@@ -1009,7 +1032,7 @@ declare module 'sm-utils' {
 		 * @param options.length
 		 * @param options.time epoch time / 1000
 		 */
-		function encryptedTimestampedId(options: encryptedTimestampedId_options): string;
+		function encryptedTimestampedId(options: encryptedTimestampedIdOptions, key: string): string;
 
 		/**
 		 * Legacy obfuscation method
@@ -1031,8 +1054,8 @@ declare module 'sm-utils' {
 		 * convert arbitary long integer from one base to another
 		 * Taken from decimal.js
 		 * @param str number in base 'baseIn'
-		 * @param baseIn input base
-		 * @param baseOut output base
+		 * @param baseIn input base (default 10)
+		 * @param baseOut output base (default 62)
 		 */
 		function baseConvert(str: string | number, baseIn?: number, baseOut?: number): string;
 
@@ -1053,7 +1076,7 @@ declare module 'sm-utils' {
 		charset?: string;
 	}
 
-	interface shuffle_options {
+	interface shuffleOptions {
 		/**
 		 * Use this random function instead of default
 		 */
@@ -1114,11 +1137,11 @@ declare module 'sm-utils' {
 		encoding?: string;
 	}
 
-	interface hashPassword_opts {
+	interface hashPasswordOpts {
 		salt: string | Buffer;
 	}
 
-	interface encryptedTimestampedId_options {
+	interface encryptedTimestampedIdOptions {
 		length: number;
 		/**
 		 * epoch time / 1000
