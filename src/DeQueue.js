@@ -195,8 +195,8 @@ class DeQueue {
 	/**
 	 * Alias for push()
 	 */
-	enqueue() {
-		return this.push();
+	enqueue(item) {
+		return this.push(item);
 	}
 
 	/**
