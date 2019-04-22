@@ -4,6 +4,7 @@ import {Stats} from 'fs';
 import {ChildProcess} from 'child_process';
 import {Redis} from 'ioredis';
 import Cfg from '@smpx/cfg';
+import { Server } from 'http';
 
 interface Constructor<M> {
 	new (...args: any[]): M
@@ -2115,7 +2116,7 @@ declare module 'sm-utils' {
 		 * @param options
 		 * @param options.useNative Use local module if available
 		 */
-		function resolve(moduleName: string, options?: resolve_options): string;
+		function resolve(moduleName: string, options?: resolveOptions): string;
 
 		/**
 		 * Require a module from local or global
@@ -2123,7 +2124,7 @@ declare module 'sm-utils' {
 		 * @param options
 		 * @param options.useNative Use local module if available
 		 */
-		function requireModule(moduleName: string, options?: resolve_options): any;
+		function require(moduleName: string, options?: resolveOptions): any;
 
 		/**
 		 * Require a global module
@@ -2132,12 +2133,9 @@ declare module 'sm-utils' {
 		function requireGlobal(moduleName: string): any;
 
 		const global: typeof requireGlobal;
-
-		const require: typeof requireModule;
-
 	}
 
-	interface resolve_options {
+	interface resolveOptions {
 		/**
 		 * Use local module if available
 		 */
@@ -2248,7 +2246,11 @@ declare module 'sm-utils' {
 		 *	if allowed is not given and blocked is given
 		 *	then by default all tags not mentioned in blocked are allowed
 		 */
-		function stripTags(str: string, options: object): string;
+		function stripTags(str: string, options?: {
+			replaceWith?: string;
+			allowed?: string,
+			blocked?: string,
+		}): string;
 
 		/**
 		 * Escape a string for including in regular expressions
@@ -2261,6 +2263,14 @@ declare module 'sm-utils' {
 		 * @param number
 		 */
 		function numberToWords(number: number): string;
+
+		/**
+		 * replace special characters within a string
+		 * NOTE: it replaces multiple special characters with single replaceWith character
+		 * @param str
+		 * @param replaceWith default ''
+		 */
+		function replaceSpecialChars(str: string, replaceWith?: string): string
 	}
 
 	interface numberFormatOpts {
@@ -2276,6 +2286,8 @@ declare module 'sm-utils' {
 		 * number of decimal places to return
 		 */
 		decimals?: number;
+
+		abbr?: 'long' | 'short' | 'auto';
 	}
 
 	/**
@@ -2360,7 +2372,8 @@ declare module 'sm-utils' {
 		 * Sleep for a specified time (in milliseconds)
 		 * Example: await System.sleep(2000);
 		 */
-		function sleep(): Promise<void>;
+		function sleep(ms: number): Promise<void>;
+		function sleep<T>(ms: number, val: T): Promise<T>;
 
 		/**
 		 * wait till the next event loop cycle
@@ -2368,6 +2381,7 @@ declare module 'sm-utils' {
 		 * and need to make sure that other callbacks can complete.
 		 */
 		function tick(): Promise<void>;
+		function tick<T>(val: T): Promise<T>;
 
 		/**
 		 * exit and kill the process gracefully (after completing all onExit handlers)
@@ -2400,7 +2414,7 @@ declare module 'sm-utils' {
 		 * @param server
 		 * @param options
 		 */
-		function gracefulServerExit(server: any, options?: number | timeoutOpts): void;
+		function gracefulServerExit(server: Server, options?: number | timeoutOpts): void;
 
 		/**
 		 * set the max memory that the current node process can use
@@ -2463,7 +2477,7 @@ declare module 'sm-utils' {
 		 * @param promise
 		 * @param options
 		 */
-		static exec(promise: Promise<any> | Function, options: vachanOptions): void;
+		static exec(promise: Promise<any> | Function, options?: vachanOptions): void;
 
 		/**
 		 * create a lazy promise from an executor function ((resolve, reject) => {})
@@ -2568,11 +2582,11 @@ declare module 'sm-utils' {
 		 */
 		is_prod(): boolean;
 		/** 
-		 * **DEPRECATED** 
+		 * **DEPRECATED**
 		 */
 		is_staging(): boolean;
 		/** 
-		 * **DEPRECATED** 
+		 * **DEPRECATED**
 		 */
 		is_test(): boolean;
 		/**
