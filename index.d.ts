@@ -1,3 +1,4 @@
+import {EventEmitter} from 'events';
 import {CookieJar} from 'tough-cookie';
 import {Stats} from 'fs';
 import {ChildProcess} from 'child_process';
@@ -1516,8 +1517,8 @@ declare module 'sm-utils' {
 	 */
 	function file(path: string): File;
 
-	class Lock {
-		constructor();
+	class Lock extends EventEmitter {
+		constructor(redis?: Redis);
 
 		/**
 		 *
@@ -1798,6 +1799,68 @@ declare module 'sm-utils' {
 		 * Attempts Object
 		 */
 		attempts: object;
+	}
+
+	/**
+	 * A Simple LRU Map
+	 * This maintains 2 maps internally and swaps them when one becomes full
+	 * NOTE: At any time size of the map will be from 0 to 2 * maxItems
+	 *
+	 * @example
+	 * const lru = new LRU({maxItems: 1000});
+	 * lru.set('hello', 'world');
+	 * lru.get('hello');
+	 * lru.delete('hello');
+	 */
+	class LRU<K = string | number, V = any> {
+		constructor(options: {maxItems: number});
+
+		/**
+		 * gets a value from the lru map
+		 */
+		get(key: K): V | undefined;
+		/**
+		 * sets a value in the lru map
+		 */
+		set(key: K, value: V): this;
+		/**
+		 * returns whether a value exists in the lru map
+		 */
+		has(key: K): boolean;
+		/**
+		 * gets a value from the lru map without touching the lru sequence
+		 */
+		peek(key: K): V | undefined;
+		/**
+		 * deletes a value from the lru map
+		 * @param key
+		 * @returns whether any key was deleted
+		 */
+		delete(key: K): boolean;
+		
+		/**
+		 * removes all values from the lru map
+		 */
+		clear(): void;
+		/**
+	 	 * returns the size of the lru map (number of items in the map)
+		 */
+		size: number;
+
+		/**
+		 * return an iterator over the entries (key, value) of the lru map
+		 */
+		[Symbol.iterator](): IterableIterator<[K, V]>;
+
+		/**
+		 * return an iterator over the keys of the lru map
+		 */
+		keys(): IterableIterator<K>;
+	
+		/**
+		 * return an iterator over the values of the lru map
+		 */
+		values(): IterableIterator<V>;
 	}
 
 	/**
