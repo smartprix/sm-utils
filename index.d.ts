@@ -1870,8 +1870,20 @@ declare module 'sm-utils' {
 	class RedisCache {
 		static globalPrefix: string;
 		static useLocalCache: boolean;
+		static useRedisCache: boolean;
 		static logger: Partial<Console>;
 		static defaultRedisConf: {
+			host: string;
+			port: number;
+			password?: string;
+			type?: 'pika' | 'redis';
+		};
+		/**
+		 * which server to use for pub / sub (sync of local cache)
+		 * we need to use a different server because main server might
+		 * have bad pubsub performance (eg. pika)
+		 */
+		static pubSubRedisConf: null | {
 			host: string;
 			port: number;
 			password?: string;
@@ -1880,10 +1892,14 @@ declare module 'sm-utils' {
 		 * this causes performace issues, use only when debugging
 		 */
 		static logOnLocalWrite: boolean;
+
 		/**
 		 * Cache backed by Redis
 		 */
 		constructor(prefix: string, redisConf?: redisConf|Redis, options?: redisCacheOpts);
+
+		// static getRedis(redisConf: redisConf): [Redis, Redis];
+		// static subscribe(redisConf: redisConf): Redis;
 
 		/**
 		 * bypass the cache and compute value directly (useful for debugging / testing)
@@ -1919,7 +1935,7 @@ declare module 'sm-utils' {
 		 * @param defaultValue
 		 * @param options
 		 */
-		getStale(key: string, defaultValue?: any, options?: getRedisOpts): Promise<any>;
+		getStale<T = any>(key: string, defaultValue?: T, options?: getRedisOpts): Promise<T>;
 
 		/**
 		 * gets a value from the cache
@@ -1927,7 +1943,7 @@ declare module 'sm-utils' {
 		 * @param defaultValue
 		 * @param options
 		 */
-		get(key: string, defaultValue?: any, options?: getRedisOpts): Promise<any>;
+		get<T = any>(key: string, defaultValue?: T, options?: getRedisOpts): Promise<T>;
 
 		/**
 		 * checks if a key exists in the cache
@@ -1952,7 +1968,23 @@ declare module 'sm-utils' {
 		 * @param options ttl in ms/timestring('1d 3h') (default: 0)
 		 *	or opts with parse and ttl
 		 */
-		getOrSet<T>(key: string, value: T | Promise<T> | ((...args: any[]) => T | Promise<T>), options?: number | string | setRedisOpts): Promise<T>;
+		getOrSet<T>(key: string, value: T | Promise<T> | ((...args: any[]) => T | Promise<T>), options?: number | string | setRedisOpts | setStaleRedisOpts): Promise<T>;
+
+		/**
+		 * attach and return a local map to the redis cache key
+		 * the local map would be deleted if redis cache key gets deleted
+		 */
+		attachMap(key: string, mapKey: string): Map<any, any>;
+		attachSet(key: string, mapKey: string): Set<any>;
+		attachArray(key: string, mapKey: string): Array<any>;
+		attachObject(key: string, mapKey: string): PlainObject;
+		attachLRU(key: string, mapKey: string, opts?: {maxItems?: number}): LRU;
+		attachCache(key: string, mapKey: string, opts?: ConstructorArgsType<Cache>): Cache;
+		attachCustom<T>(key: string, mapKey: string, fn: () => T): T;
+
+
+		deleteAttached(key: string, mapKey: string): void;
+		deleteAllAttached(key: string): void;
 
 		/**
 		 * alias for getOrSet
@@ -1968,6 +2000,11 @@ declare module 'sm-utils' {
 		 * @param key
 		 */
 		del(key: string): Promise<void>;
+
+		/**
+		 * set the key as dirty (will cause staleTTL to recompute in background)
+		 */
+		markDirty(key: string): Promise<void>;
 
 		/**
 		 * NOTE: this method is expensive, so don't use it unless absolutely necessary
@@ -1995,82 +2032,6 @@ declare module 'sm-utils' {
 		 * @param str
 		 */
 		delContains(str: string): Promise<number>;
-
-		/**
-		 * Return a global instance of Redis cache
-		 * @param redis redis redisConf
-		 */
-		static globalCache<T extends RedisCache>(this: Constructor<T>, redis: object): T;
-
-		/**
-		 * gets a value from the cache immediately without waiting
-		 * @param key
-		 * @param defaultValue
-		 */
-		static getStale(key: string, defaultValue: any): Promise<any>;
-
-		/**
-		 * gets a value from the global cache
-		 * @param key
-		 * @param defaultValue
-		 */
-		static get(key: string, defaultValue: any): Promise<any>;
-
-		/**
-		 * checks if a key exists in the global cache
-		 * @param key
-		 */
-		static has(key: string): Promise<boolean>;
-
-		/**
-		 * sets a value in the global cache
-		 * @param key
-		 * @param value
-		 * @param options ttl in ms/timestring('1d 3h') (default: 0)
-		 *	or opts with parse and ttl
-		 */
-		static set(key: string, value: any, options?: number | string | setRedisOpts): Promise<boolean>;
-
-		/**
-		 * gets a value from the global cache, or sets it if it doesn't exist
-		 * @param key key to get
-		 * @param value value to set if the key does not exist
-		 * @param options ttl in ms/timestring('1d 3h') (default: 0)
-		 *	or opts with parse and ttl
-		 */
-		static getOrSet<T>(key: string, value: T | Promise<T> | ((...args: any[]) => T | Promise<T>), options?: number | string | setRedisOpts): Promise<T>;
-
-		/**
-		 * alias for getOrSet
-		 * @param key key to get
-		 * @param value value to set if the key does not exist
-		 * @param options ttl in ms/timestring('1d 3h') (default: 0)
-		 *	or opts with parse and ttl
-		 */
-		static $<T>(key: string, value: T | Promise<T> | ((...args: any[]) => T | Promise<T>), options?: number | string | setRedisOpts): Promise<T>;
-
-		/**
-		 * deletes a value from the global cache
-		 * @param key
-		 */
-		static del(key: string): Promise<void>;
-
-		static size(): Promise<number>;
-
-		/**
-		 * clears the global cache (deletes all keys)
-		 */
-		static clear(): Promise<void>;
-
-		/**
-		 * memoizes a function (caches the return value of the function)
-		 * @param key
-		 * @param fn
-		 * @param options ttl in ms/timestring('1d 3h') (default: 0)
-		 *	or opts with parse and ttl
-		 */
-		static memoize<T, U extends any[]>(key: string, fn: ((...args: U) => T | Promise<T>), options?: number | string | setRedisOpts): (...args: U) => Promise<T>;
-
 	}
 
 	interface redisConf {
@@ -2078,10 +2039,13 @@ declare module 'sm-utils' {
 		port: number;
 		auth?: string;
 		password?: string;
+		type?: 'pika' | 'redis';
 	}
 
 	interface redisCacheOpts {
 		useLocalCache?: boolean;
+		useRedisCache?: boolean;
+		maxLocalItems?: number;
 		logOnLocalWrite?: boolean;
 		logger?: Partial<Console>;
 	}
@@ -2093,11 +2057,55 @@ declare module 'sm-utils' {
 		parse?: (val: any) => Promise<any> | any;
 	}
 
-	interface setRedisOpts extends getRedisOpts{
+	interface setRedisOpts extends getRedisOpts {
 		/**
 		 * in ms / timestring ('1d 3h') default: 0
 		 */
 		ttl?: number | string;
+		/**
+		 * get fresh results (ignoring ttl & staleTTL) and update cache
+		 */
+		forceUpdate?: boolean;
+		/**
+		 * default value to return in case if value is undefined
+		 */
+		default?: any;
+	}
+
+	interface setStaleRedisOpts extends getRedisOpts {
+		/**
+		 * in ms / timestring ('1d 3h') default: 0
+		 */
+		ttl?: number | string;
+		/**
+		 * in ms / timestring ('1d 3h')
+		 * set this if you want stale values to be returned and generation in the background
+		 * values will be considered stale after this time period
+		 */
+		staleTTL: number | string;
+		/**
+		 * require result to be calculated if the key does not exist
+		 * only valid if stale ttl is given
+		 * it true, this will generate value in foreground if the key does not exist
+		 * if false, this will return undefined and
+		 * generate value in background if the key does not exist
+		 */
+		requireResult?: boolean;
+		/**
+		 * always return fresh value
+		 * only valid if stale ttl is given
+		 * if true, this will generate value in foreground if value is stale
+		 * if false, this will generate value in background (and return stale value) if value is stale
+		 */
+		freshResult?: boolean;
+		/**
+		 * get fresh results (ignoring ttl & staleTTL) and update cache
+		 */
+		forceUpdate?: boolean;
+		/**
+		 * default value to return in case if value is undefined
+		 */
+		default?: any;
 	}
 
 	/**
