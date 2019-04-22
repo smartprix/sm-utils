@@ -262,7 +262,7 @@ class DeQueue {
 	 */
 	remove(index, count) {
 		if (count === 1 || !count) {
-			return this.removeOne(index);
+			return [this.removeOne(index)];
 		}
 
 		let i = index;
