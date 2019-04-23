@@ -1849,6 +1849,11 @@ declare module 'sm-utils' {
 		size: number;
 
 		/**
+		 * Total size (including old + new) of the LRU cache
+		 */
+		totalSize(): number;
+
+		/**
 		 * return an iterator over the entries (key, value) of the lru map
 		 */
 		[Symbol.iterator](): IterableIterator<[K, V]>;
@@ -1892,11 +1897,19 @@ declare module 'sm-utils' {
 		 * this causes performace issues, use only when debugging
 		 */
 		static logOnLocalWrite: boolean;
-
 		/**
 		 * Cache backed by Redis
 		 */
-		constructor(prefix: string, redisConf?: redisConf|Redis, options?: redisCacheOpts);
+		constructor(prefix: string, options?: redisCacheOpts & {redis: redisConf})
+		/**
+		 * Cache backed by Redis
+		 */
+		constructor(prefix: string, options?: redisCacheOpts & {redis: Redis})
+
+		/**
+		 * @deprecated Options is now the second param with `redis` being a key in it
+		 */
+		constructor(prefix: string, redis?: redisConf|Redis, legacyOptions?: redisCacheOpts);
 
 		// static getRedis(redisConf: redisConf): [Redis, Redis];
 		// static subscribe(redisConf: redisConf): Redis;
@@ -2032,6 +2045,19 @@ declare module 'sm-utils' {
 		 * @param str
 		 */
 		delContains(str: string): Promise<number>;
+
+		/**
+		 * return local cache stats of all caches sorted by number of items (DESC)
+		 */
+		static getLocalCacheStats(): Promise<cacheStats>;
+	}
+
+	interface cacheStats {
+		prefix: string;
+		type: string;
+		maxItems: number;
+		items: number;
+		totalItems: number;
 	}
 
 	interface redisConf {
@@ -2583,22 +2609,22 @@ declare module 'sm-utils' {
 	}
 
 	
-	// Add deprecated cfg functions
+	// Adding deprecated cfg functions
 	const cfg: typeof Cfg & {
 		/** 
-		 * **DEPRECATED** 
+		 * @deprecated 
 		 */
 		is_prod(): boolean;
 		/** 
-		 * **DEPRECATED**
+		 * @deprecated
 		 */
 		is_staging(): boolean;
 		/** 
-		 * **DEPRECATED**
+		 * @deprecated
 		 */
 		is_test(): boolean;
 		/**
-		 * **DEPRECATED**
+		 * @deprecated
 		 * returns true in environments not 'staging' or 'production'
 		 */
 		is_dev(): boolean;
