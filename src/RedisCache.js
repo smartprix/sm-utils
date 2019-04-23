@@ -154,7 +154,7 @@ class RedisCache {
 
 	/**
 	 * @ignore
-	 * @typedef {object} redisConf
+	 * @typedef {object} RedisConf
 	 * @property {string} host
 	 * @property {number} port
 	 * @property {string} [auth]
@@ -163,61 +163,57 @@ class RedisCache {
 	 */
 
 	/**
-	 * @param {string} prefix
-	 * @param {Redis|redisConf} redisConf
-	 * @param {object} [options={}] These options can also be set on a global level
-	 * @param {boolean} [options.useLocalCache=true]
+	 * @typedef {object} RedisCacheOptions
+	 * @param {boolean} [useLocalCache=true]
 	 *   Use local cache to speed up gets
-	 * @param {boolean} [options.useRedisCache=true]
+	 * @param {boolean} [useRedisCache=true]
 	 *   Save data in redis (if this is false, only local cache will be used)
-	 * @param {boolean} [options.logOnLocalWrite=false]
+	 * @param {boolean} [logOnLocalWrite=false]
 	 *   Enable/disable logs on writes to local cache object
-	 * @param {object} [options.logger]
+	 * @param {object} [logger]
 	 *   Custom logger to use instead of console
+	 * @param {Redis|RedisConf} [redis]
+	 *   Redis configuration
 	 */
-	constructor(prefix, redisConf = {}, options = {}) {
+
+	/**
+	 * @param {string} prefix
+	 * @param {Redis|RedisCacheOptions} [options={}] Cache Options
+	 * 	NOTE: These options can also be set on a global level
+	 */
+	constructor(prefix, options = {}, legacyOptions = {}) { // eslint-disable-line complexity
+		const cls = this.constructor;
+
+		let opts = options;
+		if (options.redis instanceof Redis || options instanceof Redis) {
+			const redis = options.redis || options;
+			this.redis = redis;
+			this.isPika = false;
+			this.pubRedis = this.subscribe(redis.options);
+		}
+		else {
+			opts = Object.assign({}, legacyOptions, options);
+
+			const redis = options.redis || {};
+			const defaultRedis = this.constructor.defaultRedisConf;
+			redis.host = redis.host || options.host || defaultRedis.host;
+			redis.port = redis.port || options.port || defaultRedis.port;
+			redis.password = redis.password || redis.auth || options.password || options.auth;
+
+			// whether we are using pika
+			const type = redis.type || options.type || defaultRedis.type;
+			this.isPika = (type === 'pika');
+
+			/** @type [{Redis}, {Redis}] */
+			[this.redis, this.pubRedis] = this.constructor.getRedis(redis);
+		}
+
 		this.prefix = prefix;
-		this.logger = options.logger || this.constructor.logger;
-		this.logOnLocalWrite = options.logOnLocalWrite || this.constructor.logOnLocalWrite;
+		this.logger = opts.logger || cls.logger;
+		this.logOnLocalWrite = ('logOnLocalWrite' in opts) ? opts.logOnLocalWrite : cls.logOnLocalWrite;
+		this.useLocalCache = ('useLocalCache' in opts) ? opts.useLocalCache : cls.useLocalCache;
+		this.useRedisCache = ('useRedisCache' in opts) ? opts.useRedisCache : cls.useRedisCache;
 
-		if (redisConf instanceof Redis) {
-			this.redis = redisConf;
-			return;
-		}
-
-		// Use merge because it ignores undefined values unlike Object.assign
-		const redis = _.merge({}, this.constructor.defaultRedisConf, {
-			host: redisConf.host,
-			port: redisConf.port,
-			password: redisConf.password || redisConf.auth,
-		});
-
-		// whether we are using pika
-		const type = redisConf.type || this.constructor.defaultRedisConf.type;
-		this.isPika = (type === 'pika');
-
-		/** @type [{Redis}, {Redis}] */
-		[this.redis, this.pubRedis] = this.constructor.getRedis(redis);
-
-		if ('useLocalCache' in redisConf) {
-			this.useLocalCache = redisConf.useLocalCache;
-		}
-		else if ('useLocalCache' in options) {
-			this.useLocalCache = options.useLocalCache;
-		}
-		else {
-			this.useLocalCache = this.constructor.useLocalCache;
-		}
-
-		if ('useRedisCache' in redisConf) {
-			this.useRedisCache = redisConf.useRedisCache;
-		}
-		else if ('useRedisCache' in options) {
-			this.useRedisCache = options.useRedisCache;
-		}
-		else {
-			this.useRedisCache = this.constructor.useRedisCache;
-		}
 
 		if (!this.useRedisCache && !this.useLocalCache) {
 			throw new Error('At least one of useRedisCache & useLocalCache must be true');
@@ -225,9 +221,9 @@ class RedisCache {
 
 		this.localCache = globalLocalCache.get(this.prefix);
 		if (!this.localCache) {
-			if (options.maxLocalItems) {
+			if (opts.maxLocalItems) {
 				// LRU
-				this.localCache = new LRU({maxItems: options.maxLocalItems});
+				this.localCache = new LRU({maxItems: opts.maxLocalItems});
 			}
 			else {
 				this.localCache = new Map();
@@ -1242,6 +1238,25 @@ class RedisCache {
 
 			return this.getOrSet(cacheKey, () => fn(...args), options);
 		};
+	}
+
+	/**
+	 * return local cache stats of all caches
+	 * @returns {array}
+	 */
+	static async getLocalCacheStats() {
+		const stats = [];
+		globalLocalCache.forEach((cache, prefix) => {
+			stats.push({
+				prefix,
+				type: cache.constructor.name,
+				maxItems: cache.maxItems || 0,
+				items: cache.size,
+				totalItems: cache.totalSize ? cache.totalSize() : cache.size,
+			});
+		});
+
+		return _.orderBy(stats, 'items', 'desc');
 	}
 
 	/**

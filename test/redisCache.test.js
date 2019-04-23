@@ -403,6 +403,26 @@ describe('redis cache library @rediscache', () => {
 		RedisCache.redisGetCount = 0;
 	});
 
+	it('should correctly getLocalCacheStats', async () => {
+		const stats = await RedisCache.getLocalCacheStats();
+		expect(stats.slice(0, 2)).to.deep.equal([
+			{
+				prefix: 'test',
+				type: 'Map',
+				maxItems: 0,
+				items: 7,
+				totalItems: 7,
+			},
+			{
+				prefix: 'getOrSet_localLRU',
+				type: 'LRU',
+				maxItems: 3,
+				items: 3,
+				totalItems: 3,
+			},
+		]);
+	});
+
 	// NOTE: below test are only for attachMap, rest of attach* functions should work similarly
 	it('should correctly attach local values', async () => {
 		const aCache = getCache('localAttach', {maxLocalItems: 2});
