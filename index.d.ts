@@ -1999,7 +1999,7 @@ declare module 'sm-utils' {
 		 * deletes a value from the cache
 		 * @param key
 		 */
-		del(key: string): Promise<void>;
+		del(key: string | string[]): Promise<void>;
 
 		/**
 		 * set the key as dirty (will cause staleTTL to recompute in background)
