@@ -45,7 +45,7 @@ declare module 'sm-utils' {
 		/**
 		 * Local cache with dogpile prevention
 		 */
-		constructor(options?: {maxItems?: number; logger?: Console});
+		constructor(options?: { maxItems?: number; logger?: Console });
 
 		/**
 		 * gets a value from the cache
@@ -53,7 +53,7 @@ declare module 'sm-utils' {
 		 * @param key
 		 * @param defaultValue
 		 */
-		getSync<T = any>(key: string, defaultValue?: T):  T;
+		getSync<T = any>(key: string, defaultValue?: T): T;
 
 		/**
 		 * gets a value from the cache
@@ -430,7 +430,7 @@ declare module 'sm-utils' {
 		/**
 		 * Set the 'Content-Type' field in the headers.
 		 * Can handle 'form' or 'json' else provide custom
-		 * @param contentType value for content-type 
+		 * @param contentType value for content-type
 		 */
 		contentType(contentType: string): this;
 
@@ -486,13 +486,13 @@ declare module 'sm-utils' {
 		 * Set the value of cookie jar based on a file (cookie store).
 		 * @param fileName name of (or path to) the file
 		 */
-		cookieFile(fileName: string, options?: {readOnly?: boolean}): this;
+		cookieFile(fileName: string, options?: { readOnly?: boolean }): this;
 
 		/**
 		 * Set the value of cookie jar.
 		 * @param cookieJar value to be set
 		 */
-		cookieJar(cookieJar: CookieJar, options?: {readOnly?: boolean}): this;
+		cookieJar(cookieJar: CookieJar, options?: { readOnly?: boolean }): this;
 
 		/**
 		 * Set request timeout.
@@ -587,7 +587,7 @@ declare module 'sm-utils' {
 		 * @param proxy proxy address, or object representing proxy options
 		 */
 		proxy(proxy: string): this;
-		proxy(proxy: {address: string, port?: number, type?: 'http' | 'https' | 'socks' | 'socks5', auth?: auth}): this;
+		proxy(proxy: { address: string, port?: number, type?: 'http' | 'https' | 'socks' | 'socks5', auth?: auth }): this;
 
 		/**
 		 * Set address and port for an http proxy.
@@ -678,7 +678,10 @@ declare module 'sm-utils' {
 
 	}
 
-	interface auth {username: string, password: string}
+	interface auth {
+		username: string;
+		password: string;
+	}
 
 	interface response {
 		/**
@@ -754,7 +757,7 @@ declare module 'sm-utils' {
 		function randomString(options: number | randomStringOpts): string;
 		function randomID(options: number | randomStringOpts): string;
 		function randomId(options: number | randomStringOpts): string;
-		
+
 		/**
 		 * Generate a sequential id based on current time in millisecond and some randomness.
 		 * It can be treated as a Sequential UUID. Ideal for use as a DB primary key.
@@ -762,8 +765,8 @@ declare module 'sm-utils' {
 		 * NOTE: For best results use atleast 15 characters in base62 and 18 characters in base36 encoding
 		 * @param options length of the id or object of {length: int, base36: bool}
 		 */
-		function sequentialID(options: number | {length?: number, base36?: boolean, lowercase?: boolean}): string;
-		function sequentialId(options: number | {length?: number, base36?: boolean, lowercase?: boolean}): string;
+		function sequentialID(options: number | { length?: number, base36?: boolean, lowercase?: boolean }): string;
+		function sequentialId(options: number | { length?: number, base36?: boolean, lowercase?: boolean }): string;
 		/**
 		 * Get sequential ID in v4 UUID format.
 		 */
@@ -864,7 +867,7 @@ declare module 'sm-utils' {
 		 * @param options object of {encoding}
 		 */
 		function sha256Hmac(string: string, options?: encodingOpts): string;
-		
+
 		/**
 		 * Sign a message using a private key.
 		 *
@@ -894,7 +897,7 @@ declare module 'sm-utils' {
 		 * @param opts opts can have {encoding (default 'hex')}
 		 */
 		function verify(message: string, signature: string, publicKey: string | object, opts?: encodingOpts): boolean;
-		
+
 		/**
 		 * Encrypt the given string with the given key using AES 256
 		 * Calling encrypt on the same string multiple times will return different encrypted strings
@@ -912,7 +915,7 @@ declare module 'sm-utils' {
 		 * @param options object of {encoding} (default: 'base64url')
 		 */
 		function decrypt(string: string, key: string, options?: encodingOpts): string;
-		
+
 		/**
 		 * Encrypt the given string with the given key using AES 256
 		 * Calling EncryptStatic on the same string multiple times will return same encrypted strings
@@ -923,7 +926,7 @@ declare module 'sm-utils' {
 		 * @param options object of {encoding} (default: 'base64url')
 		 */
 		function encryptStatic(string: string, key: string, options?: encodingOpts): string;
-		
+
 		/**
 		 * Decrypt the given string with the given key encrypted using encryptStatic
 		 * @param string string to be decrypted
@@ -931,7 +934,7 @@ declare module 'sm-utils' {
 		 * @param options object of {encoding} (default: 'base64url')
 		 */
 		function decryptStatic(string: string, key: string, options?: encodingOpts): string;
-		
+
 		/**
 		 * Convert a message into an encrypted token by:
 		 * signing it with privateKey + encrypting it with publicKey
@@ -941,14 +944,14 @@ declare module 'sm-utils' {
 		 * @param publicKey
 		 */
 		function signAndEncrypt(message: any, privateKey: string | object, publicKey: string): string;
-		
+
 		/**
 		 * Convert an encrypted token (generated by signAndEncrypt) into a message
 		 * @param token generated by signAndEncrypt
 		 * @param publicKey
 		 */
 		function verifyAndDecrypt(token: string, publicKey: string): void;
-		
+
 		/**
 		 * Hash a given password using cryptographically strong hash function
 		 * @param password
@@ -1492,7 +1495,7 @@ declare module 'sm-utils' {
 		 * will the function not attempt to overwrite the file if it (already)
 		 * exists at the destination.
 		 */
-		copy(destination: string, options?: {overwrite?: boolean}): Promise<void>;
+		copy(destination: string, options?: { overwrite?: boolean }): Promise<void>;
 
 		/**
 		 * Return the canonicalized absolute pathname
@@ -1750,7 +1753,7 @@ declare module 'sm-utils' {
 	 * An async function which will be called to process the job data
 	 * @param jobData The information saved in the job during adding of job
 	 */
-	type processorCallback = (jobData: any)=>any;
+	type processorCallback = (jobData: any) => any;
 
 	/**
 	 * Internal data object
@@ -1814,7 +1817,7 @@ declare module 'sm-utils' {
 	 * lru.delete('hello');
 	 */
 	class LRU<K = string | number, V = any> {
-		constructor(options: {maxItems: number});
+		constructor(options: { maxItems: number });
 
 		/**
 		 * gets a value from the lru map
@@ -1838,7 +1841,7 @@ declare module 'sm-utils' {
 		 * @returns whether any key was deleted
 		 */
 		delete(key: K): boolean;
-		
+
 		/**
 		 * removes all values from the lru map
 		 */
@@ -1862,7 +1865,7 @@ declare module 'sm-utils' {
 		 * return an iterator over the keys of the lru map
 		 */
 		keys(): IterableIterator<K>;
-	
+
 		/**
 		 * return an iterator over the values of the lru map
 		 */
@@ -1900,16 +1903,16 @@ declare module 'sm-utils' {
 		/**
 		 * Cache backed by Redis
 		 */
-		constructor(prefix: string, options?: redisCacheOpts & {redis: redisConf})
+		constructor(prefix: string, options?: redisCacheOpts & { redis: redisConf })
 		/**
 		 * Cache backed by Redis
 		 */
-		constructor(prefix: string, options?: redisCacheOpts & {redis: Redis})
+		constructor(prefix: string, options?: redisCacheOpts & { redis: Redis })
 
 		/**
 		 * @deprecated Options is now the second param with `redis` being a key in it
 		 */
-		constructor(prefix: string, redis?: redisConf|Redis, legacyOptions?: redisCacheOpts);
+		constructor(prefix: string, redis?: redisConf | Redis, legacyOptions?: redisCacheOpts);
 
 		// static getRedis(redisConf: redisConf): [Redis, Redis];
 		// static subscribe(redisConf: redisConf): Redis;
@@ -1991,7 +1994,7 @@ declare module 'sm-utils' {
 		attachSet(key: string, mapKey: string): Set<any>;
 		attachArray(key: string, mapKey: string): Array<any>;
 		attachObject(key: string, mapKey: string): PlainObject;
-		attachLRU(key: string, mapKey: string, opts?: {maxItems?: number}): LRU;
+		attachLRU(key: string, mapKey: string, opts?: { maxItems?: number }): LRU;
 		attachCache(key: string, mapKey: string, opts?: ConstructorArgsType<Cache>): Cache;
 		attachCustom<T>(key: string, mapKey: string, fn: () => T): T;
 
@@ -2380,7 +2383,7 @@ declare module 'sm-utils' {
 		 * get all users in the system
 		 * currently gets user info from /etc/passwd
 		 */
-		function getAllUsers(): Promise<{[username: string]: object}>;
+		function getAllUsers(): Promise<{ [username: string]: object }>;
 
 		/**
 		 * get current time in seconds
@@ -2549,7 +2552,7 @@ declare module 'sm-utils' {
 		 * @param options can be {timeout} or a number
 		 *	timeout: Milliseconds before timing out
 		*/
-		static timeout<T>(promise: T | Promise<T> | (() => T | Promise<T>), options: {timeout?: number} | number): Promise<T>;
+		static timeout<T>(promise: T | Promise<T> | (() => T | Promise<T>), options: { timeout?: number } | number): Promise<T>;
 
 		/**
 		 * Returns a Promise that resolves when condition returns true.
@@ -2560,7 +2563,7 @@ declare module 'sm-utils' {
 		 * @param options.interval: Number of milliseconds to wait before retrying condition (default 50)
 		 * @param options.timeout: will reject the promise on timeout (in ms)
 		 */
-		static waitFor(conditionFn: () => boolean | Promise<boolean>, options?: {interval?: number, timeout?: number} | number): Promise<void>;
+		static waitFor(conditionFn: () => boolean | Promise<boolean>, options?: { interval?: number, timeout?: number } | number): Promise<void>;
 
 		/**
 		 * Returns an async function that delays calling fn
@@ -2574,7 +2577,7 @@ declare module 'sm-utils' {
 		*	Meaning immediately, instead of waiting for wait milliseconds.
 		* @param options.fixed: fixed delay, each call won't reset the timer to 0
 		*/
-		static debounce<T, U extends any[]>(fn: (...args: U) => T, delay: number, options?: {leading?: boolean, fixed?: boolean}): (...args: U) => Promise<T>;
+		static debounce<T, U extends any[]>(fn: (...args: U) => T, delay: number, options?: { leading?: boolean, fixed?: boolean }): (...args: U) => Promise<T>;
 
 		/**
 		 * Returns a Promise that is fulfilled when all promises in input
@@ -2587,16 +2590,16 @@ declare module 'sm-utils' {
 		* @param options object of {concurrency}
 		*	concurrency: Number of maximum concurrently running promises, default is Infinity
 		*/
-		static map<T, U>(iterable: Iterable<T>, mapper: (value?: T, index?: number | string, iterable?: Iterable<T>) => U, options?: {concurrency: number}): Promise<U[]>;
-		static map<T, U>(iterable: {[key: string]: T}, mapper: (value?: T, index?: string, iterable?: {[key: string]: T}) => U, options?: {concurrency: number}): Promise<U[]>;
+		static map<T, U>(iterable: Iterable<T>, mapper: (value?: T, index?: number | string, iterable?: Iterable<T>) => U, options?: { concurrency: number }): Promise<U[]>;
+		static map<T, U>(iterable: { [key: string]: T }, mapper: (value?: T, index?: string, iterable?: { [key: string]: T }) => U, options?: { concurrency: number }): Promise<U[]>;
 		/**
 		 * Like promiseMap but for keys
 		 * @param iterable
 		 * @param mapper
 		 * @param options
 		 */
-		static mapKeys<T>(iterable: Iterable<T>, mapper: (value?: T, key?: number | string, iterable?: Iterable<T>) => string, options?: {concurrency: number}): Promise<{[key: string]: T}>;
-		static mapKeys<T>(iterable: {[key: string]: T}, mapper: (value?: T, key?: number | string, iterable?: {[key: string]: T}) => string, options?: {concurrency: number}): Promise<{[key: string]: T}>;
+		static mapKeys<T>(iterable: Iterable<T>, mapper: (value?: T, key?: number | string, iterable?: Iterable<T>) => string, options?: { concurrency: number }): Promise<{ [key: string]: T }>;
+		static mapKeys<T>(iterable: { [key: string]: T }, mapper: (value?: T, key?: number | string, iterable?: { [key: string]: T }) => string, options?: { concurrency: number }): Promise<{ [key: string]: T }>;
 
 		/**
 		 * Like promiseMap but for values
@@ -2604,22 +2607,22 @@ declare module 'sm-utils' {
 		 * @param mapper
 		 * @param options
 		 */
-		static mapValues<T, U>(iterable: Iterable<T>, mapper: (value?: T, key?: number | string, iterable?: Iterable<T>) => U, options?: {concurrency: number}): Promise<{[key: string]: U}>;
-		static mapValues<T, U>(iterable: {[key: string]: T}, mapper: (value?: T, key?: string, iterable?: {[key: string]: T}) => U, options?: {concurrency: number}): Promise<{[key: string]: U}>;
+		static mapValues<T, U>(iterable: Iterable<T>, mapper: (value?: T, key?: number | string, iterable?: Iterable<T>) => U, options?: { concurrency: number }): Promise<{ [key: string]: U }>;
+		static mapValues<T, U>(iterable: { [key: string]: T }, mapper: (value?: T, key?: string, iterable?: { [key: string]: T }) => U, options?: { concurrency: number }): Promise<{ [key: string]: U }>;
 	}
 
-	
+
 	// Adding deprecated cfg functions
 	const cfg: typeof Cfg & {
-		/** 
-		 * @deprecated 
+		/**
+		 * @deprecated
 		 */
 		is_prod(): boolean;
-		/** 
+		/**
 		 * @deprecated
 		 */
 		is_staging(): boolean;
-		/** 
+		/**
 		 * @deprecated
 		 */
 		is_test(): boolean;
