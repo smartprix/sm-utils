@@ -514,7 +514,7 @@ class RedisCache {
 
 		// delete keys containing a pattern
 		if (value === DEL_CONTAINS) {
-			return localCacheDelContains(cache, key, prefix);
+			return localCacheDelContains(cache, key, {prefix});
 		}
 
 		// mark key as dirty
@@ -573,7 +573,7 @@ class RedisCache {
 		// delete keys containing a pattern
 		if (value === DEL_CONTAINS) {
 			if (publish) this._localCachePublish('del_contains', key);
-			return localCacheDelContains(this.localCache, key, this.prefix);
+			return localCacheDelContains(this.localCache, key, {prefix: this.prefix});
 		}
 
 		// mark key as dirty
