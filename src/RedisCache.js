@@ -60,7 +60,7 @@ function localCacheDelContains(cache, pattern, {
 		// delete for all caches
 		let deleted = 0;
 		globalLocalCache.forEach((lCache, lCacheName) => {
-			if (cacheName.includes(pattern)) {
+			if (lCacheName.includes(pattern)) {
 				deleted += lCache.size;
 				lCache.clear();
 			}
