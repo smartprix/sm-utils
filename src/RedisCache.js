@@ -52,37 +52,45 @@ function gcLocalCache() {
 }
 
 // delete all keys containing a pattern
-function localCacheDelContains(cache, pattern, prefix) {
+function localCacheDelContains(cache, pattern, {
+	prefix = '',
+	cacheName = '',
+} = {}) {
 	if (prefix === '*') {
 		// delete for all caches
 		let deleted = 0;
-		globalLocalCache.forEach((lCache) => {
-			deleted += localCacheDelContains(lCache, pattern);
+		globalLocalCache.forEach((lCache, lCacheName) => {
+			if (cacheName.includes(pattern)) {
+				deleted += lCache.size;
+				lCache.clear();
+			}
+			else {
+				deleted += localCacheDelContains(lCache, pattern, {cacheName: lCacheName});
+			}
 		});
 
 		return deleted;
 	}
 
-	if (pattern === '_all_') {
+	if (pattern === '_all_' || pattern === '*') {
 		// clear the cache
 		const deleted = cache.size;
 		cache.clear();
 		return deleted;
 	}
 
+	let getNormalizedKey = key => key;
+	if (cacheName) {
+		getNormalizedKey = key => `${cacheName}:${key}`;
+	}
+
 	if (pattern.includes('*')) {
 		let deleted = 0;
-		let keyRegex;
-		if (pattern === '*') {
-			keyRegex = new RegExp(pattern.replace('*', '.*'));
-		}
-		else {
-			keyRegex = new RegExp(`^${this.prefix}:.*${pattern.replace('*', '.*')}`);
-		}
+		const keyRegex = new RegExp(pattern.replace('*', '.*'));
 
 		// use for loop because LRU doesn't support forEach yet
 		for (const [, key] of cache) {
-			if (keyRegex.test(key)) {
+			if (keyRegex.test(getNormalizedKey(key))) {
 				cache.delete(key);
 				deleted++;
 			}
@@ -95,7 +103,7 @@ function localCacheDelContains(cache, pattern, prefix) {
 	// use for loop because LRU doesn't support forEach yet
 	let deleted = 0;
 	for (const [key] of cache) {
-		if (key.includes(pattern)) {
+		if (getNormalizedKey(key).includes(pattern)) {
 			cache.delete(key);
 			deleted++;
 		}
