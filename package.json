@@ -32,7 +32,7 @@
     "@smpx/cfg": "^1.1.5",
     "@types/ioredis": "^4.0.10",
     "@types/node": "^11.13.0",
-    "@types/request": "^2.48.1",
+    "@types/tough-cookie": "^2.3.5",
     "chalk": "^2.4.2",
     "chmodr": "^1.2.0",
     "chownr": "^1.1.1",

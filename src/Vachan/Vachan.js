@@ -47,7 +47,7 @@ class Vachan {
 	/**
 	 * Execute a promise / function, and exit when it completes
 	 * @param {Promise<*>|function} promise
-	 * @param {object} options
+	 * @param {object} [options]
 	 */
 	static exit(promise, options = {}) {
 		this.identity(promise).then(() => {
@@ -63,7 +63,7 @@ class Vachan {
 	/**
 	 * Execute a promise / function, without caring about its results
 	 * @param {Promise<*>|function} promise
-	 * @param {object} options
+	 * @param {object} [options]
 	 */
 	static exec(promise, options = {}) {
 		this.identity(promise).then(() => {}).catch((err) => {
