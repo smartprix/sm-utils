@@ -195,8 +195,8 @@ class DeQueue {
 	/**
 	 * Alias for push()
 	 */
-	enqueue() {
-		return this.push();
+	enqueue(item) {
+		return this.push(item);
 	}
 
 	/**
@@ -262,7 +262,7 @@ class DeQueue {
 	 */
 	remove(index, count) {
 		if (count === 1 || !count) {
-			return this.removeOne(index);
+			return [this.removeOne(index)];
 		}
 
 		let i = index;

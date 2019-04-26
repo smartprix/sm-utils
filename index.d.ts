@@ -1,18 +1,51 @@
-import {CookieJar} from 'request';
+import {EventEmitter} from 'events';
+import {CookieJar} from 'tough-cookie';
 import {Stats} from 'fs';
 import {ChildProcess} from 'child_process';
 import {Redis} from 'ioredis';
 import Cfg from '@smpx/cfg';
+import { Server } from 'http';
+
+interface Constructor<M> {
+	new (...args: any[]): M
+}
+
+/**
+ * @see https://stackoverflow.com/a/53673642/9485498
+ */
+type ConstructorArgsType<T> = T extends new (...args: infer U) => any ? U : never
+
+/**
+ * @see https://stackoverflow.com/a/53039092/9485498
+ */
+type ArgumentsType<T> = T extends (...args: infer A) => any ? A : ConstructorArgsType<T>;
+
+
+interface PlainObject {
+	[key: string]: any;
+}
+
 
 declare module 'sm-utils' {
+	interface setOptsObject {
+		/**
+		 * in ms / timestring ('1d 3h') default: 0
+		 */
+		ttl: number | string;
+	}
+
+	type setOpts = string | number | setOptsObject;
+
 	/**
-	 * Local cache with dogpile prevention
+	 * Local cache with dogpile prevention, lru, ttl and other goodies
 	 */
 	class Cache {
+		static logger: Console;
+
 		/**
 		 * Local cache with dogpile prevention
 		 */
-		constructor();
+		constructor(options?: { maxItems?: number; logger?: Console });
 
 		/**
 		 * gets a value from the cache
@@ -20,28 +53,28 @@ declare module 'sm-utils' {
 		 * @param key
 		 * @param defaultValue
 		 */
-		getSync(key: string, defaultValue: any):  any;
+		getSync<T = any>(key: string, defaultValue?: T): T;
 
 		/**
 		 * gets a value from the cache
 		 * @param key
 		 * @param defaultValue
 		 */
-		get(key: string, defaultValue: any): Promise<any>;
+		get<T = any>(key: string, defaultValue?: T): Promise<T>;
 
 		/**
 		 * gets a value from the cache immediately without waiting
 		 * @param key
 		 * @param defaultValue
 		 */
-		getStaleSync(key: string, defaultValue: any): any;
+		getStaleSync<T = any>(key: string, defaultValue?: T): T;
 
 		/**
 		 * gets a value from the cache immediately without waiting
 		 * @param key
 		 * @param defaultValue
 		 */
-		getStale(key: string, defaultValue: any): any;
+		getStale<T = any>(key: string, defaultValue?: T): T;
 
 		/**
 		 * checks if a key exists in the cache
@@ -53,7 +86,7 @@ declare module 'sm-utils' {
 		 * checks if a key exists in the cache
 		 * @param key
 		 */
-		has(key: string): boolean;
+		has(key: string): Promise<boolean>;
 
 		/**
 		 * sets a value in the cache
@@ -109,7 +142,7 @@ declare module 'sm-utils' {
 		 * deletes a value from the cache
 		 * @param key
 		 */
-		del(key: string): void;
+		del(key: string): Promise<void>;
 
 		/**
 		 * returns the size of the cache (no. of keys)
@@ -130,6 +163,18 @@ declare module 'sm-utils' {
 		 * clears the cache (deletes all keys)
 		 */
 		clear(): Promise<void>;
+
+		/**
+		 * delete expired items
+		 * NOTE: this method needs to loop over all the items (expensive)
+		 */
+		gc(): Promise<void>;
+
+		/**
+		 * delete expired items
+		 * NOTE: this method needs to loop over all the items (expensive)
+		 */
+		gcSync(): void;
 
 		/**
 		 * memoizes a function (caches the return value of the function)
@@ -159,7 +204,7 @@ declare module 'sm-utils' {
 		/**
 		 * returns a global cache instance
 		 */
-		static globalCache(): Cache;
+		static globalCache<U extends Cache>(this: Constructor<U>): U;
 
 		/**
 		 * gets a value from the global cache
@@ -167,28 +212,28 @@ declare module 'sm-utils' {
 		 * @param key
 		 * @param defaultValue
 		 */
-		static getSync(key: string, defaultValue: any): any;
+		static getSync<T = any>(key: string, defaultValue?: T): T;
 
 		/**
 		 * get a value from the global cache
 		 * @param key
 		 * @param defaultValue
 		 */
-		static get(key: string, defaultValue: any): Promise<any>;
+		static get<T = any>(key: string, defaultValue?: T): Promise<T>;
 
 		/**
 		 * gets a value from the global cache immediately without waiting
 		 * @param key
 		 * @param defaultValue
 		 */
-		static getStaleSync(key: string, defaultValue: any): any;
+		static getStaleSync<T = any>(key: string, defaultValue?: T): T;
 
 		/**
 		 * gets a value from the global cache immediately without waiting
 		 * @param key
 		 * @param defaultValue
 		 */
-		static getStale(key: string, defaultValue: any): any;
+		static getStale<T = any>(key: string, defaultValue?: T): Promise<T>;
 
 		/**
 		 * checks if a key exists in the global cache
@@ -200,7 +245,7 @@ declare module 'sm-utils' {
 		 * checks if value exists in the global cache
 		 * @param key
 		 */
-		static has(key: string): boolean;
+		static has(key: string): Promise<boolean>;
 
 		/**
 		 * sets a value in the global cache
@@ -254,7 +299,7 @@ declare module 'sm-utils' {
 		 * deletes a value from the global cache
 		 * @param key
 		 */
-		static del(key: string): void;
+		static del(key: string): Promise<void>;
 
 		static sizeSync(): number;
 
@@ -281,7 +326,7 @@ declare module 'sm-utils' {
 		 * @param fn function to memoize
 		 * @param options ttl in ms/timestring('1d 3h') or opts (default: 0)
 		 */
-		static memoize<T, U extends any[]>(key: string, fn: ((...args: U) => T), options?: setOpts): (...args: U) => T;
+		static memoizeSync<T, U extends any[]>(key: string, fn: ((...args: U) => T), options?: setOpts): (...args: U) => T;
 
 		/**
 		 * memoizes a function (caches the return value of the function)
@@ -290,21 +335,8 @@ declare module 'sm-utils' {
 		 * @param options ttl in ms/timestring('1d 3h') or opts (default: 0)
 		 */
 		static memoize<T, U extends any[]>(key: string, fn: ((...args: U) => T | Promise<T>), options?: setOpts): (...args: U) => Promise<T>;
-
 	}
 
-	interface setOptsObject {
-		/**
-		 * in ms / timestring ('1d 3h') default: 0
-		 */
-		ttl: number | string;
-	}
-
-	type setOpts = string | number | setOptsObject;
-
-	interface Constructor<M> {
-		new (...args: any[]): M
-	}
 	/**
 	 * Simple & Powerful HTTP request client.
 	 */
@@ -316,27 +348,40 @@ declare module 'sm-utils' {
 
 		/**
 		 * Set the url for the connection.
-		 * @param url
 		 */
 		url(url: string): this;
 
 		/**
-		 *
-		 * @param url
+		 * Creates and returns a new Connect object with the given url.
 		 */
 		static url<U extends Connect>(this: Constructor<U>, url: string): U;
 
 		/**
-		 *
+		 * Creates and returns a new Connect object (with get method) with the given url.
+		 */
+		static get<U extends Connect>(this: Constructor<U>, url: string): U;
+
+		/**
+		 * Creates and returns a new Connect object (with post method) with the given url.
+		 */
+		static post<U extends Connect>(this: Constructor<U>, url: string): U;
+
+		/**
+		 * Creates and returns a new Connect object (with put method) with the given url.
+		 */
+		static put<U extends Connect>(this: Constructor<U>, url: string): U;
+
+
+		/**
 		 * @param args
 		 */
-		static newCookieJar(...args: any[]): CookieJar;
+		static newCookieJar(...args: ArgumentsType<typeof CookieJar>): CookieJar;
 
 		/**
 		 * Set or unset the followRedirect option for the connection.
-		 * @param shouldFollowRedirect boolean representing whether to follow redirect or not
+		 * @param shouldFollowRedirect boolean representing whether to follow redirect or not (default `true`)
 		 */
-		followRedirect(shouldFollowRedirect: boolean): this;
+		followRedirect(shouldFollowRedirect?: boolean): this;
 
 		/**
 		 * Set the number of maximum redirects to follow
@@ -355,7 +400,13 @@ declare module 'sm-utils' {
 		 * Set value of the headers for the connection.
 		 * @param headers object representing the headers for the connection
 		 */
-		headers(headers: object): this;
+		header(headers: PlainObject): this;
+
+		/**
+		 * Set value of the headers for the connection.
+		 * @param headers object representing the headers for the connection
+		 */
+		headers(headers: PlainObject): this;
 
 		/**
 		 * Set the body of the connection object.
@@ -378,6 +429,7 @@ declare module 'sm-utils' {
 
 		/**
 		 * Set the 'Content-Type' field in the headers.
+		 * Can handle 'form' or 'json' else provide custom
 		 * @param contentType value for content-type
 		 */
 		contentType(contentType: string): this;
@@ -388,36 +440,41 @@ declare module 'sm-utils' {
 		isJSON(): boolean;
 
 		/**
+		 * Returns whether the content-type is Form or not
+		 */
+		isForm(): boolean;
+
+		/**
 		 * Sets the value of a cookie.
 		 * Set multiple cookies by passing in an object
 		 * representing the cookies and their values as key:value pairs.
 		 * @param cookies cookie object
 		 */
-		cookie(cookies: object): this;
+		cookie(cookies: PlainObject): this;
+
 		/**
  		 * @param cookieName represents the name of the
 		 * cookie to be set
 		 * @param cookieValue cookie value to be set
-
 		 */
 		cookie(cookieName: string, cookieValue: any): this;
+
 		/**
 		 * Can be used to enable global cookies, if cookieName is set to true
-		 * @param cookieName
 		 */
-		cookie(cookieName: true): this;
+		cookie(useGlobalCookies: true): this;
 
 		/**
 		 * Sets multiple cookies.
 		 * @param cookies object representing the cookies
 		 *	and their values as key:value pairs.
 		 */
-		cookies(cookies: object): this;
+		cookies(cookies: PlainObject): this;
 		/**
 		 * Enable global cookies, if cookies is set to true.
 		 * @param cookies
 		 */
-		cookies(cookies: true): this;
+		cookies(useGlobalCookies: true): this;
 
 		/**
 		 * Enable global cookies.
@@ -429,13 +486,13 @@ declare module 'sm-utils' {
 		 * Set the value of cookie jar based on a file (cookie store).
 		 * @param fileName name of (or path to) the file
 		 */
-		cookieFile(fileName: string): this;
+		cookieFile(fileName: string, options?: { readOnly?: boolean }): this;
 
 		/**
 		 * Set the value of cookie jar.
 		 * @param cookieJar value to be set
 		 */
-		cookieJar(cookieJar: CookieJar): this;
+		cookieJar(cookieJar: CookieJar, options?: { readOnly?: boolean }): this;
 
 		/**
 		 * Set request timeout.
@@ -463,14 +520,33 @@ declare module 'sm-utils' {
 		 * @param fieldValue value to be set
 		 */
 		field(fieldName: string, fieldValue: any): this;
-		field(fieldName: object): this;
+		field(fields: PlainObject): this;
 
 		/**
 		 * Set multiple fields.
 		 * @param fields object representing the field-names and their
 		 *	values as key:value pairs
 		 */
-		fields(fields: object): this;
+		fields(fields: PlainObject): this;
+
+
+		/**
+		 * Set value of a query parameter
+		 */
+		query(name: string, value: any): this;
+
+		/**
+		 * Set multiple query params by passing in an object
+	 	 * representing the param-names and their values as key:value pairs.
+		 */
+		query(obj: PlainObject): this;
+
+
+		/**
+		 * set whether to ask for compressed response (handles decompression automatically)
+		 * @param askForCompression whether to ask for compressed response
+		 */
+		compress(askForCompression?: boolean): this;
 
 		/**
 		 * Set the request method for the connection.
@@ -486,11 +562,32 @@ declare module 'sm-utils' {
 		httpAuth(username: string, password: string): this;
 
 		/**
+		 * Set username and password for authentication
+		 * @param auth of the format username:password
+		 */
+		httpAuth(auth: string): this;
+
+		/**
+		 * Set username and password for authentication
+		 */
+		httpAuth(authObj: auth): this;
+
+		/**
+		 * Set bearer token for authorization
+		 */
+		bearerToken(token: string): this;
+
+		/**
+		 * Set api token using x-api-token header
+		 */
+		apiToken(token: string): this;
+
+		/**
 		 * Set proxy address (or options).
 		 * @param proxy proxy address, or object representing proxy options
 		 */
 		proxy(proxy: string): this;
-		proxy(proxy: {address: string, port?: number, type?: 'http' | 'https' | 'socks' | 'socks5', auth?: auth}): this;
+		proxy(proxy: { address: string, port?: number, type?: 'http' | 'https' | 'socks' | 'socks5', auth?: auth }): this;
 
 		/**
 		 * Set address and port for an http proxy.
@@ -535,7 +632,7 @@ declare module 'sm-utils' {
 
 		/**
 		 * Set if the body is to be returned as a buffer
-		 * @param returnAsBuffer
+		 * @param returnAsBuffer default true
 		 */
 		asBuffer(returnAsBuffer?: boolean): this;
 
@@ -544,6 +641,11 @@ declare module 'sm-utils' {
 		 * @param filePath
 		 */
 		save(filePath: string): this;
+
+		/**
+		 * clone this instance
+		 */
+		clone(): this;
 
 		/**
 		 * It creates and returns a promise based on the information
@@ -567,11 +669,19 @@ declare module 'sm-utils' {
 		 * It is also used for method chaining, but handles rejected cases only.
 		 * @param errorCallback function to be called if the Promise is rejected
 		 */
-		catch<T>(errorCallback: (err: Error) => T): Promise<any>;
+		catch<T>(errorCallback: (err: Error) => T): Promise<T>;
+
+		/**
+		 * finally method of promise returned
+		 */
+		finally<T>(cb: () => T): Promise<T>;
 
 	}
 
-	interface auth {username: string, password: string}
+	interface auth {
+		username: string;
+		password: string;
+	}
 
 	interface response {
 		/**
@@ -582,6 +692,8 @@ declare module 'sm-utils' {
 		 * the final url downloaded after following all redirects
 		 */
 		url: string;
+		redirectUrls?: string[];
+		startTime: number;
 		/**
 		 * time taken (in ms) for the request
 		 */
@@ -591,6 +703,22 @@ declare module 'sm-utils' {
 		 */
 		cached: boolean;
 		statusCode: number;
+		status: number;
+	}
+
+	interface charSets {
+		NUMERIC: string;
+		LOWER: string;
+		UPPER: string;
+		missing: string;
+		SYMBOLS: string;
+		HEX: string;
+		BASE_36: string;
+		ALPHA: string;
+		ALPHA_NUMERIC: string;
+		BASE_62: string;
+		BASE_64: string;
+		PRINTABLE: string;
 	}
 
 	/**
@@ -600,7 +728,7 @@ declare module 'sm-utils' {
 		/**
 		 * different charsets available
 		 */
-		const chars: object;
+		const chars: charSets;
 
 		/**
 		 * Return a random number between 0 and 1
@@ -609,10 +737,13 @@ declare module 'sm-utils' {
 
 		/**
 		 * Return a random integer between min and max (both inclusive)
-		 * @param num If max is not passed, num is max and min is 0
-		 * @param max max value of int, num will be min
 		 */
-		function randomInt(num: number, max?: number): number;
+		function randomInt(min: number, max: number): number;
+		/**
+		 * Return a random integer between 0 and max (both inclusive)
+		 * @param max max value of int
+		 */
+		function randomInt(max: number): number;
 
 		/**
 		 * Generate a random string based on the options passed.
@@ -624,6 +755,30 @@ declare module 'sm-utils' {
 		 * @param options length of the id or options object
 		 */
 		function randomString(options: number | randomStringOpts): string;
+		function randomID(options: number | randomStringOpts): string;
+		function randomId(options: number | randomStringOpts): string;
+
+		/**
+		 * Generate a sequential id based on current time in millisecond and some randomness.
+		 * It can be treated as a Sequential UUID. Ideal for use as a DB primary key.
+		 *
+		 * NOTE: For best results use atleast 15 characters in base62 and 18 characters in base36 encoding
+		 * @param options length of the id or object of {length: int, base36: bool}
+		 */
+		function sequentialID(options: number | { length?: number, base36?: boolean, lowercase?: boolean }): string;
+		function sequentialId(options: number | { length?: number, base36?: boolean, lowercase?: boolean }): string;
+		/**
+		 * Get sequential ID in v4 UUID format.
+		 */
+		function sequentialUUID(): void;
+		/**
+		 * Get random ID in v4 UUID format.
+		 */
+		function randomUUID(): void;
+		/**
+		 * Get random ID in v4 UUID format.
+		 */
+		function uuid(): void;
 
 		/**
 		 * Shuffle an array or a string.
@@ -632,8 +787,8 @@ declare module 'sm-utils' {
 		 * @param options.randomFunc Use this random function instead of default
 		 * @param options.seed optionally give a seed to do a constant shuffle
 		 */
-		function shuffle<T>(itemToShuffle: T[], options: shuffle_options): T[];
-		function shuffle(itemToShuffle: string, options: shuffle_options): string;
+		function shuffle<T>(itemToShuffle: T[], options: shuffleOptions): T[];
+		function shuffle(itemToShuffle: string, options: shuffleOptions): string;
 
 		/**
 		 *
@@ -646,49 +801,6 @@ declare module 'sm-utils' {
 		 * @param base36 use base36 format or not
 		 */
 		function nanoSecondsAlpha(base36?: boolean): string;
-
-		/**
-		 * Generate a sequential id based on current time in millisecond and some randomness.
-		 * It can be treated as a Sequential UUID. Ideal for use as a DB primary key.
-		 *
-		 * NOTE: For best results use atleast 15 characters in base62 and 18 characters in base36 encoding
-		 * @param options length of the id or object of {length: int, base36: bool}
-		 */
-		function sequentialID(options: number | object): string;
-
-		/**
-		 * Get sequential ID in v4 UUID format.
-		 */
-		function sequentialUUID(): void;
-
-		/**
-		 * Get random ID in v4 UUID format.
-		 */
-		function randomUUID(): void;
-
-		/**
-		 * Encode the string/buffer using a given encoding.
-		 * Supported Encodings:
-		 * 'hex', 'binary' ('latin1'), 'ascii', 'base64', 'base64url',
-		 * 'utf8', 'buffer', 'utf16le' ('ucs2')
-		 * @param string item to be encoded
-		 * @param opts object or string specifying the encoding(s)
-		 */
-		function baseEncode(string: string | Buffer, opts: encodingConversion | string): string | Buffer;
-
-		/**
-		 * Decode a string encoded using a given encoding.
-		 * @param string item to be decoded
-		 * @param opts object or string specifying the encoding(s)
-		 */
-		function baseDecode(string: string | Buffer, opts: encodingConversion | string): string;
-
-		/**
-		 * Decode a string encoded using a given encoding to a buffer.
-		 * @param string item to be decoded
-		 * @param fromEncoding encoding used to encode the string
-		 */
-		function baseDecodeToBuffer(string: string | Buffer, fromEncoding: string): Buffer;
 
 		/**
 		 * Compute hash of a string using given algorithm
@@ -846,7 +958,7 @@ declare module 'sm-utils' {
 		 * @param opts
 		 * @param opts.salt
 		 */
-		function hashPassword(password: string, opts: hashPassword_opts): string;
+		function hashPassword(password: string, opts: hashPasswordOpts): string;
 
 		/**
 		 * Verify that given password and hashed password are same or not
@@ -854,6 +966,30 @@ declare module 'sm-utils' {
 		 * @param hashed
 		 */
 		function verifyPassword(password: string, hashed: string): boolean;
+
+		/**
+		 * Encode the string/buffer using a given encoding.
+		 * Supported Encodings:
+		 * 'hex', 'binary' ('latin1'), 'ascii', 'base64', 'base64url',
+		 * 'utf8', 'buffer', 'utf16le' ('ucs2')
+		 * @param string item to be encoded
+		 * @param opts object or string specifying the encoding(s)
+		 */
+		function baseEncode(string: string | Buffer, opts: encodingConversion | string): string | Buffer;
+
+		/**
+		 * Decode a string encoded using a given encoding.
+		 * @param string item to be decoded
+		 * @param opts object or string specifying the encoding(s)
+		 */
+		function baseDecode(string: string | Buffer, opts: encodingConversion | string): string;
+
+		/**
+		 * Decode a string encoded using a given encoding to a buffer.
+		 * @param string item to be decoded
+		 * @param fromEncoding encoding used to encode the string
+		 */
+		function baseDecodeToBuffer(string: string | Buffer, fromEncoding: string): Buffer;
 
 		/**
 		 * Base64 Encode
@@ -887,13 +1023,13 @@ declare module 'sm-utils' {
 		 * Pack many numbers into a single string
 		 * @param numbers array of numbers to be packed
 		 */
-		function packNumbers(numbers: any[]): string;
+		function packNumbers(numbers: number[]): string;
 
 		/**
 		 * Unpack a string packed with packNumbers
 		 * @param str string to be unpacked
 		 */
-		function unpackNumbers(str: string): any[];
+		function unpackNumbers(str: string): number[];
 
 		/**
 		 * Generate a random encrypted string that contains a timestamp.
@@ -901,7 +1037,7 @@ declare module 'sm-utils' {
 		 * @param options.length
 		 * @param options.time epoch time / 1000
 		 */
-		function encryptedTimestampedId(options: encryptedTimestampedId_options): string;
+		function encryptedTimestampedId(options: encryptedTimestampedIdOptions, key: string): string;
 
 		/**
 		 * Legacy obfuscation method
@@ -923,10 +1059,10 @@ declare module 'sm-utils' {
 		 * convert arbitary long integer from one base to another
 		 * Taken from decimal.js
 		 * @param str number in base 'baseIn'
-		 * @param baseIn input base
-		 * @param baseOut output base
+		 * @param baseIn input base (default 10)
+		 * @param baseOut output base (default 62)
 		 */
-		function baseConvert(str: string | number, baseIn?: number, baseOut?: number): void;
+		function baseConvert(str: string | number, baseIn?: number, baseOut?: number): string;
 
 	}
 
@@ -945,7 +1081,7 @@ declare module 'sm-utils' {
 		charset?: string;
 	}
 
-	interface shuffle_options {
+	interface shuffleOptions {
 		/**
 		 * Use this random function instead of default
 		 */
@@ -1006,11 +1142,11 @@ declare module 'sm-utils' {
 		encoding?: string;
 	}
 
-	interface hashPassword_opts {
+	interface hashPasswordOpts {
 		salt: string | Buffer;
 	}
 
-	interface encryptedTimestampedId_options {
+	interface encryptedTimestampedIdOptions {
 		length: number;
 		/**
 		 * epoch time / 1000
@@ -1021,11 +1157,11 @@ declare module 'sm-utils' {
 	/**
 	 * Custom implementation of a double ended queue.
 	 */
-	class DeQueue {
+	class DeQueue<T = any> {
 		/**
 		 * Custom implementation of a double ended queue.
 		 */
-		constructor(array: any[]);
+		constructor(array: T[]);
 
 		/**
 		 * Returns the item at the specified index from the list.
@@ -1034,46 +1170,46 @@ declare module 'sm-utils' {
 		 * (the last element), -2 is two before the end (one before last), etc.
 		 * @param index
 		 */
-		peekAt(index: any): any;
+		peekAt(index: number): T | undefined;
 
 		/**
 		 * Alias for peakAt()
 		 * @param i
 		 */
-		get(i: any): any;
+		get(i: number): T | undefined;
 
 		/**
 		 * Sets the queue value at a particular index
 		 * @param index integer
 		 * @param value
 		 */
-		set(index: number, value: any): any;
+		set(index: number, value: T): T | undefined;
 
 		/**
 		 * Returns the first item in the list without removing it.
 		 */
-		peek(): any;
+		peek(): T | undefined;
 
 		/**
 		 * Alias for peek()
 		 */
-		peekFront(): any;
+		peekFront(): T | undefined;
 
 		/**
 		 * Alias for peek()
 		 */
-		head(): any;
+		head(): T | undefined;
 
 		/**
 		 * Returns the item that is at the back of the queue without removing it.
 		 * Uses peekAt(-1)
 		 */
-		peekBack(): void;
+		peekBack(): T | undefined;
 
 		/**
 		 * Alias for peekBack()
 		 */
-		tail(): any;
+		tail(): T | undefined;
 
 		/**
 		 * Return the number of items on the list, or 0 if empty.
@@ -1083,57 +1219,57 @@ declare module 'sm-utils' {
 		/**
 		 * alias for this.size()
 		 */
-		length: any;
+		length: number;
 
 		/**
 		 * Add an item at the beginning of the list.
 		 * @param item
 		 */
-		unshift(item: any): void;
+		unshift(item: T): number;
 
 		/**
 		 * Remove and return the first item on the list
 		 * Returns undefined if the list is empty.
 		 */
-		shift(): any;
+		shift(): T | undefined;
 
 		/**
 		 * Alias for shift()
 		 */
-		dequeue(): void;
+		dequeue(): T | undefined;
 
 		/**
 		 * Add an item to the bottom of the list.
 		 * @param item
 		 */
-		push(item: any): void;
+		push(item: T): number;
 
 		/**
 		 * Alias for push()
 		 */
-		enqueue(): void;
+		enqueue(item: T): number;
 
 		/**
 		 * Remove and return the last item on the list.
 		 * Returns undefined if the list is empty.
 		 */
-		pop(): any;
+		pop(): T | undefined;
 
 		/**
 		 * Remove and return the item at the specified index from the list.
 		 * Returns undefined if the list is empty.
 		 * @param index
 		 */
-		removeOne(index: any): any;
+		removeOne(index: number): T | undefined;
 
 		/**
 		 * Remove number of items from the specified index from the list.
 		 * Returns array of removed items.
 		 * Returns undefined if the list is empty.
 		 * @param index
-		 * @param count
+		 * @param count default is 1
 		 */
-		remove(index: any, count: any): any[];
+		remove(index: number, count?: number): T[] | undefined;
 
 		/**
 		 * Native splice implementation.
@@ -1144,7 +1280,7 @@ declare module 'sm-utils' {
 		 * @param count
 		 * @param args
 		 */
-		splice(index: any, count: any, ...args: any[]): any[];
+		splice(index: number, count?: number, ...args: T[]): T[] | undefined;
 
 		/**
 		 * Soft clear - does not reset capacity.
@@ -1159,7 +1295,13 @@ declare module 'sm-utils' {
 		/**
 		 * Returns an array of all queue items.
 		 */
-		toArray(): any[];
+		toArray(): T[];
+
+		forEach(cb: (val: T, index: number, arr: this) => any): void;
+
+		map<U>(cb: (val: T, index: number, arr: this) => U): U[];
+
+		filter(cb: (val: T, index: number, arr: this) => boolean): T[];
 
 	}
 
@@ -1353,7 +1495,7 @@ declare module 'sm-utils' {
 		 * will the function not attempt to overwrite the file if it (already)
 		 * exists at the destination.
 		 */
-		copy(destination: string, options?: {overwrite?: boolean}): Promise<void>;
+		copy(destination: string, options?: { overwrite?: boolean }): Promise<void>;
 
 		/**
 		 * Return the canonicalized absolute pathname
@@ -1379,8 +1521,8 @@ declare module 'sm-utils' {
 	 */
 	function file(path: string): File;
 
-	class Lock {
-		constructor();
+	class Lock extends EventEmitter {
+		constructor(redis?: Redis);
 
 		/**
 		 *
@@ -1611,7 +1753,7 @@ declare module 'sm-utils' {
 	 * An async function which will be called to process the job data
 	 * @param jobData The information saved in the job during adding of job
 	 */
-	type processorCallback = (jobData: any)=>any;
+	type processorCallback = (jobData: any) => any;
 
 	/**
 	 * Internal data object
@@ -1664,13 +1806,92 @@ declare module 'sm-utils' {
 	}
 
 	/**
+	 * A Simple LRU Map
+	 * This maintains 2 maps internally and swaps them when one becomes full
+	 * NOTE: At any time size of the map will be from 0 to 2 * maxItems
+	 *
+	 * @example
+	 * const lru = new LRU({maxItems: 1000});
+	 * lru.set('hello', 'world');
+	 * lru.get('hello');
+	 * lru.delete('hello');
+	 */
+	class LRU<K = string | number, V = any> {
+		constructor(options: { maxItems: number });
+
+		/**
+		 * gets a value from the lru map
+		 */
+		get(key: K): V | undefined;
+		/**
+		 * sets a value in the lru map
+		 */
+		set(key: K, value: V): this;
+		/**
+		 * returns whether a value exists in the lru map
+		 */
+		has(key: K): boolean;
+		/**
+		 * gets a value from the lru map without touching the lru sequence
+		 */
+		peek(key: K): V | undefined;
+		/**
+		 * deletes a value from the lru map
+		 * @param key
+		 * @returns whether any key was deleted
+		 */
+		delete(key: K): boolean;
+
+		/**
+		 * removes all values from the lru map
+		 */
+		clear(): void;
+		/**
+	 	 * returns the size of the lru map (number of items in the map)
+		 */
+		size: number;
+
+		/**
+		 * Total size (including old + new) of the LRU cache
+		 */
+		totalSize(): number;
+
+		/**
+		 * return an iterator over the entries (key, value) of the lru map
+		 */
+		[Symbol.iterator](): IterableIterator<[K, V]>;
+
+		/**
+		 * return an iterator over the keys of the lru map
+		 */
+		keys(): IterableIterator<K>;
+
+		/**
+		 * return an iterator over the values of the lru map
+		 */
+		values(): IterableIterator<V>;
+	}
+
+	/**
 	 * Cache backed by Redis
 	 */
 	class RedisCache {
 		static globalPrefix: string;
 		static useLocalCache: boolean;
+		static useRedisCache: boolean;
 		static logger: Partial<Console>;
 		static defaultRedisConf: {
+			host: string;
+			port: number;
+			password?: string;
+			type?: 'pika' | 'redis';
+		};
+		/**
+		 * which server to use for pub / sub (sync of local cache)
+		 * we need to use a different server because main server might
+		 * have bad pubsub performance (eg. pika)
+		 */
+		static pubSubRedisConf: null | {
 			host: string;
 			port: number;
 			password?: string;
@@ -1682,7 +1903,19 @@ declare module 'sm-utils' {
 		/**
 		 * Cache backed by Redis
 		 */
-		constructor(prefix: string, redisConf?: redisConf|Redis, options?: redisCacheOpts);
+		constructor(prefix: string, options?: redisCacheOpts & { redis: redisConf })
+		/**
+		 * Cache backed by Redis
+		 */
+		constructor(prefix: string, options?: redisCacheOpts & { redis: Redis })
+
+		/**
+		 * @deprecated Options is now the second param with `redis` being a key in it
+		 */
+		constructor(prefix: string, redis?: redisConf | Redis, legacyOptions?: redisCacheOpts);
+
+		// static getRedis(redisConf: redisConf): [Redis, Redis];
+		// static subscribe(redisConf: redisConf): Redis;
 
 		/**
 		 * bypass the cache and compute value directly (useful for debugging / testing)
@@ -1718,7 +1951,7 @@ declare module 'sm-utils' {
 		 * @param defaultValue
 		 * @param options
 		 */
-		getStale(key: string, defaultValue?: any, options?: getRedisOpts): Promise<any>;
+		getStale<T = any>(key: string, defaultValue?: T, options?: getRedisOpts): Promise<T>;
 
 		/**
 		 * gets a value from the cache
@@ -1726,7 +1959,7 @@ declare module 'sm-utils' {
 		 * @param defaultValue
 		 * @param options
 		 */
-		get(key: string, defaultValue?: any, options?: getRedisOpts): Promise<any>;
+		get<T = any>(key: string, defaultValue?: T, options?: getRedisOpts): Promise<T>;
 
 		/**
 		 * checks if a key exists in the cache
@@ -1751,7 +1984,23 @@ declare module 'sm-utils' {
 		 * @param options ttl in ms/timestring('1d 3h') (default: 0)
 		 *	or opts with parse and ttl
 		 */
-		getOrSet<T>(key: string, value: T | Promise<T> | ((...args: any[]) => T | Promise<T>), options?: number | string | setRedisOpts): Promise<T>;
+		getOrSet<T>(key: string, value: T | Promise<T> | ((...args: any[]) => T | Promise<T>), options?: number | string | setRedisOpts | setStaleRedisOpts): Promise<T>;
+
+		/**
+		 * attach and return a local map to the redis cache key
+		 * the local map would be deleted if redis cache key gets deleted
+		 */
+		attachMap(key: string, mapKey: string): Map<any, any>;
+		attachSet(key: string, mapKey: string): Set<any>;
+		attachArray(key: string, mapKey: string): Array<any>;
+		attachObject(key: string, mapKey: string): PlainObject;
+		attachLRU(key: string, mapKey: string, opts?: { maxItems?: number }): LRU;
+		attachCache(key: string, mapKey: string, opts?: ConstructorArgsType<Cache>): Cache;
+		attachCustom<T>(key: string, mapKey: string, fn: () => T): T;
+
+
+		deleteAttached(key: string, mapKey: string): void;
+		deleteAllAttached(key: string): void;
 
 		/**
 		 * alias for getOrSet
@@ -1766,7 +2015,12 @@ declare module 'sm-utils' {
 		 * deletes a value from the cache
 		 * @param key
 		 */
-		del(key: string): Promise<void>;
+		del(key: string | string[]): Promise<void>;
+
+		/**
+		 * set the key as dirty (will cause staleTTL to recompute in background)
+		 */
+		markDirty(key: string): Promise<void>;
 
 		/**
 		 * NOTE: this method is expensive, so don't use it unless absolutely necessary
@@ -1796,80 +2050,17 @@ declare module 'sm-utils' {
 		delContains(str: string): Promise<number>;
 
 		/**
-		 * Return a global instance of Redis cache
-		 * @param redis redis redisConf
+		 * return local cache stats of all caches sorted by number of items (DESC)
 		 */
-		static globalCache<T extends RedisCache>(this: Constructor<T>, redis: object): T;
+		static getLocalCacheStats(): Promise<cacheStats>;
+	}
 
-		/**
-		 * gets a value from the cache immediately without waiting
-		 * @param key
-		 * @param defaultValue
-		 */
-		static getStale(key: string, defaultValue: any): Promise<any>;
-
-		/**
-		 * gets a value from the global cache
-		 * @param key
-		 * @param defaultValue
-		 */
-		static get(key: string, defaultValue: any): Promise<any>;
-
-		/**
-		 * checks if a key exists in the global cache
-		 * @param key
-		 */
-		static has(key: string): Promise<boolean>;
-
-		/**
-		 * sets a value in the global cache
-		 * @param key
-		 * @param value
-		 * @param options ttl in ms/timestring('1d 3h') (default: 0)
-		 *	or opts with parse and ttl
-		 */
-		static set(key: string, value: any, options?: number | string | setRedisOpts): Promise<boolean>;
-
-		/**
-		 * gets a value from the global cache, or sets it if it doesn't exist
-		 * @param key key to get
-		 * @param value value to set if the key does not exist
-		 * @param options ttl in ms/timestring('1d 3h') (default: 0)
-		 *	or opts with parse and ttl
-		 */
-		static getOrSet<T>(key: string, value: T | Promise<T> | ((...args: any[]) => T | Promise<T>), options?: number | string | setRedisOpts): Promise<T>;
-
-		/**
-		 * alias for getOrSet
-		 * @param key key to get
-		 * @param value value to set if the key does not exist
-		 * @param options ttl in ms/timestring('1d 3h') (default: 0)
-		 *	or opts with parse and ttl
-		 */
-		static $<T>(key: string, value: T | Promise<T> | ((...args: any[]) => T | Promise<T>), options?: number | string | setRedisOpts): Promise<T>;
-
-		/**
-		 * deletes a value from the global cache
-		 * @param key
-		 */
-		static del(key: string): Promise<void>;
-
-		static size(): Promise<number>;
-
-		/**
-		 * clears the global cache (deletes all keys)
-		 */
-		static clear(): Promise<void>;
-
-		/**
-		 * memoizes a function (caches the return value of the function)
-		 * @param key
-		 * @param fn
-		 * @param options ttl in ms/timestring('1d 3h') (default: 0)
-		 *	or opts with parse and ttl
-		 */
-		static memoize<T, U extends any[]>(key: string, fn: ((...args: U) => T | Promise<T>), options?: number | string | setRedisOpts): (...args: U) => Promise<T>;
-
+	interface cacheStats {
+		prefix: string;
+		type: string;
+		maxItems: number;
+		items: number;
+		totalItems: number;
 	}
 
 	interface redisConf {
@@ -1877,10 +2068,13 @@ declare module 'sm-utils' {
 		port: number;
 		auth?: string;
 		password?: string;
+		type?: 'pika' | 'redis';
 	}
 
 	interface redisCacheOpts {
 		useLocalCache?: boolean;
+		useRedisCache?: boolean;
+		maxLocalItems?: number;
 		logOnLocalWrite?: boolean;
 		logger?: Partial<Console>;
 	}
@@ -1892,11 +2086,55 @@ declare module 'sm-utils' {
 		parse?: (val: any) => Promise<any> | any;
 	}
 
-	interface setRedisOpts extends getRedisOpts{
+	interface setRedisOpts extends getRedisOpts {
 		/**
 		 * in ms / timestring ('1d 3h') default: 0
 		 */
 		ttl?: number | string;
+		/**
+		 * get fresh results (ignoring ttl & staleTTL) and update cache
+		 */
+		forceUpdate?: boolean;
+		/**
+		 * default value to return in case if value is undefined
+		 */
+		default?: any;
+	}
+
+	interface setStaleRedisOpts extends getRedisOpts {
+		/**
+		 * in ms / timestring ('1d 3h') default: 0
+		 */
+		ttl?: number | string;
+		/**
+		 * in ms / timestring ('1d 3h')
+		 * set this if you want stale values to be returned and generation in the background
+		 * values will be considered stale after this time period
+		 */
+		staleTTL: number | string;
+		/**
+		 * require result to be calculated if the key does not exist
+		 * only valid if stale ttl is given
+		 * it true, this will generate value in foreground if the key does not exist
+		 * if false, this will return undefined and
+		 * generate value in background if the key does not exist
+		 */
+		requireResult?: boolean;
+		/**
+		 * always return fresh value
+		 * only valid if stale ttl is given
+		 * if true, this will generate value in foreground if value is stale
+		 * if false, this will generate value in background (and return stale value) if value is stale
+		 */
+		freshResult?: boolean;
+		/**
+		 * get fresh results (ignoring ttl & staleTTL) and update cache
+		 */
+		forceUpdate?: boolean;
+		/**
+		 * default value to return in case if value is undefined
+		 */
+		default?: any;
 	}
 
 	/**
@@ -1915,7 +2153,7 @@ declare module 'sm-utils' {
 		 * @param options
 		 * @param options.useNative Use local module if available
 		 */
-		function resolve(moduleName: string, options?: resolve_options): string;
+		function resolve(moduleName: string, options?: resolveOptions): string;
 
 		/**
 		 * Require a module from local or global
@@ -1923,7 +2161,7 @@ declare module 'sm-utils' {
 		 * @param options
 		 * @param options.useNative Use local module if available
 		 */
-		function requireModule(moduleName: string, options?: resolve_options): any;
+		function require(moduleName: string, options?: resolveOptions): any;
 
 		/**
 		 * Require a global module
@@ -1932,12 +2170,9 @@ declare module 'sm-utils' {
 		function requireGlobal(moduleName: string): any;
 
 		const global: typeof requireGlobal;
-
-		const require: typeof requireModule;
-
 	}
 
-	interface resolve_options {
+	interface resolveOptions {
 		/**
 		 * Use local module if available
 		 */
@@ -2027,7 +2262,7 @@ declare module 'sm-utils' {
 		 * If the input is not a string (already parsed), returns the input itself
 		 * @param str
 		 */
-		function tryParseJson(str: any): object | null;
+		function tryParseJson(str: string): any | null;
 
 		/**
 		 * Stringifies an object only if it is not already a string
@@ -2048,7 +2283,11 @@ declare module 'sm-utils' {
 		 *	if allowed is not given and blocked is given
 		 *	then by default all tags not mentioned in blocked are allowed
 		 */
-		function stripTags(str: string, options: object): string;
+		function stripTags(str: string, options?: {
+			replaceWith?: string;
+			allowed?: string,
+			blocked?: string,
+		}): string;
 
 		/**
 		 * Escape a string for including in regular expressions
@@ -2061,6 +2300,14 @@ declare module 'sm-utils' {
 		 * @param number
 		 */
 		function numberToWords(number: number): string;
+
+		/**
+		 * replace special characters within a string
+		 * NOTE: it replaces multiple special characters with single replaceWith character
+		 * @param str
+		 * @param replaceWith default ''
+		 */
+		function replaceSpecialChars(str: string, replaceWith?: string): string
 	}
 
 	interface numberFormatOpts {
@@ -2076,6 +2323,8 @@ declare module 'sm-utils' {
 		 * number of decimal places to return
 		 */
 		decimals?: number;
+
+		abbr?: 'long' | 'short' | 'auto';
 	}
 
 	/**
@@ -2134,7 +2383,7 @@ declare module 'sm-utils' {
 		 * get all users in the system
 		 * currently gets user info from /etc/passwd
 		 */
-		function getAllUsers(): Promise<{[username: string]: object}>;
+		function getAllUsers(): Promise<{ [username: string]: object }>;
 
 		/**
 		 * get current time in seconds
@@ -2160,7 +2409,8 @@ declare module 'sm-utils' {
 		 * Sleep for a specified time (in milliseconds)
 		 * Example: await System.sleep(2000);
 		 */
-		function sleep(): Promise<void>;
+		function sleep(ms: number): Promise<void>;
+		function sleep<T>(ms: number, val: T): Promise<T>;
 
 		/**
 		 * wait till the next event loop cycle
@@ -2168,6 +2418,7 @@ declare module 'sm-utils' {
 		 * and need to make sure that other callbacks can complete.
 		 */
 		function tick(): Promise<void>;
+		function tick<T>(val: T): Promise<T>;
 
 		/**
 		 * exit and kill the process gracefully (after completing all onExit handlers)
@@ -2200,7 +2451,7 @@ declare module 'sm-utils' {
 		 * @param server
 		 * @param options
 		 */
-		function gracefulServerExit(server: any, options?: number | timeoutOpts): void;
+		function gracefulServerExit(server: Server, options?: number | timeoutOpts): void;
 
 		/**
 		 * set the max memory that the current node process can use
@@ -2228,6 +2479,10 @@ declare module 'sm-utils' {
 		timeout?: number;
 	}
 
+	interface vachanOptions {
+		silent?: boolean;
+	}
+
 	/**
 	 * Promise utility functions
 	 */
@@ -2252,14 +2507,14 @@ declare module 'sm-utils' {
 		 * @param promise
 		 * @param options
 		 */
-		static exit(promise: Promise<any> | Function, options: object): never;
+		static exit(promise: Promise<any> | Function, options?: vachanOptions): never;
 
 		/**
 		 * Execute a promise / function, without caring about its results
 		 * @param promise
 		 * @param options
 		 */
-		static exec(promise: Promise<any> | Function, options: object): void;
+		static exec(promise: Promise<any> | Function, options?: vachanOptions): void;
 
 		/**
 		 * create a lazy promise from an executor function ((resolve, reject) => {})
@@ -2297,7 +2552,7 @@ declare module 'sm-utils' {
 		 * @param options can be {timeout} or a number
 		 *	timeout: Milliseconds before timing out
 		*/
-		static timeout<T>(promise: T | Promise<T> | (() => T | Promise<T>), options?: {timeout?: number} | number): Promise<T>;
+		static timeout<T>(promise: T | Promise<T> | (() => T | Promise<T>), options: { timeout?: number } | number): Promise<T>;
 
 		/**
 		 * Returns a Promise that resolves when condition returns true.
@@ -2308,7 +2563,7 @@ declare module 'sm-utils' {
 		 * @param options.interval: Number of milliseconds to wait before retrying condition (default 50)
 		 * @param options.timeout: will reject the promise on timeout (in ms)
 		 */
-		static waitFor(conditionFn: () => boolean | Promise<boolean>, options?: {interval?: number, timeout?: number} | number): Promise<void>;
+		static waitFor(conditionFn: () => boolean | Promise<boolean>, options?: { interval?: number, timeout?: number } | number): Promise<void>;
 
 		/**
 		 * Returns an async function that delays calling fn
@@ -2322,7 +2577,7 @@ declare module 'sm-utils' {
 		*	Meaning immediately, instead of waiting for wait milliseconds.
 		* @param options.fixed: fixed delay, each call won't reset the timer to 0
 		*/
-		static debounce<T, U extends any[]>(fn: (...args: U) => T, delay: number, options?: {leading?: boolean, fixed?: boolean}): (...args: U) => Promise<T>;
+		static debounce<T, U extends any[]>(fn: (...args: U) => T, delay: number, options?: { leading?: boolean, fixed?: boolean }): (...args: U) => Promise<T>;
 
 		/**
 		 * Returns a Promise that is fulfilled when all promises in input
@@ -2335,16 +2590,16 @@ declare module 'sm-utils' {
 		* @param options object of {concurrency}
 		*	concurrency: Number of maximum concurrently running promises, default is Infinity
 		*/
-		static map<T, U>(iterable: Iterable<T>, mapper: (value?: T, index?: number | string, iterable?: Iterable<T>) => U, options?: {concurrency: number}): Promise<U[]>;
-		static map<T, U>(iterable: {[key: string]: T}, mapper: (value?: T, index?: string, iterable?: {[key: string]: T}) => U, options?: {concurrency: number}): Promise<U[]>;
+		static map<T, U>(iterable: Iterable<T>, mapper: (value?: T, index?: number | string, iterable?: Iterable<T>) => U, options?: { concurrency: number }): Promise<U[]>;
+		static map<T, U>(iterable: { [key: string]: T }, mapper: (value?: T, index?: string, iterable?: { [key: string]: T }) => U, options?: { concurrency: number }): Promise<U[]>;
 		/**
 		 * Like promiseMap but for keys
 		 * @param iterable
 		 * @param mapper
 		 * @param options
 		 */
-		static mapKeys<T>(iterable: Iterable<T>, mapper: (value?: T, key?: number | string, iterable?: Iterable<T>) => string, options?: {concurrency: number}): Promise<{[key: string]: T}>;
-		static mapKeys<T>(iterable: {[key: string]: T}, mapper: (value?: T, key?: number | string, iterable?: {[key: string]: T}) => string, options?: {concurrency: number}): Promise<{[key: string]: T}>;
+		static mapKeys<T>(iterable: Iterable<T>, mapper: (value?: T, key?: number | string, iterable?: Iterable<T>) => string, options?: { concurrency: number }): Promise<{ [key: string]: T }>;
+		static mapKeys<T>(iterable: { [key: string]: T }, mapper: (value?: T, key?: number | string, iterable?: { [key: string]: T }) => string, options?: { concurrency: number }): Promise<{ [key: string]: T }>;
 
 		/**
 		 * Like promiseMap but for values
@@ -2352,11 +2607,31 @@ declare module 'sm-utils' {
 		 * @param mapper
 		 * @param options
 		 */
-		static mapValues<T, U>(iterable: Iterable<T>, mapper: (value?: T, key?: number | string, iterable?: Iterable<T>) => U, options?: {concurrency: number}): Promise<{[key: string]: U}>;
-		static mapValues<T, U>(iterable: {[key: string]: T}, mapper: (value?: T, key?: string, iterable?: {[key: string]: T}) => U, options?: {concurrency: number}): Promise<{[key: string]: U}>;
+		static mapValues<T, U>(iterable: Iterable<T>, mapper: (value?: T, key?: number | string, iterable?: Iterable<T>) => U, options?: { concurrency: number }): Promise<{ [key: string]: U }>;
+		static mapValues<T, U>(iterable: { [key: string]: T }, mapper: (value?: T, key?: string, iterable?: { [key: string]: T }) => U, options?: { concurrency: number }): Promise<{ [key: string]: U }>;
 	}
 
-	const cfg: typeof Cfg;
+
+	// Adding deprecated cfg functions
+	const cfg: typeof Cfg & {
+		/**
+		 * @deprecated
+		 */
+		is_prod(): boolean;
+		/**
+		 * @deprecated
+		 */
+		is_staging(): boolean;
+		/**
+		 * @deprecated
+		 */
+		is_test(): boolean;
+		/**
+		 * @deprecated
+		 * returns true in environments not 'staging' or 'production'
+		 */
+		is_dev(): boolean;
+	};
 
 	const crypt: typeof Crypt;
 
