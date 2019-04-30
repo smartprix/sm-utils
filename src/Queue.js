@@ -463,7 +463,8 @@ class Queue {
 		return new Promise((resolve, reject) => {
 			kue.Job.rangeByType(this.name, 'inactive', 0, 1, 'asc', async (err, jobs) => {
 				if (jobs.length === 0 || err) {
-					reject(new Error('Queue empty ' + err));
+					reject(err || new Error('Queue empty'));
+					return;
 				}
 				const job = jobs[0];
 				await processorWrapper(job, processor, resolve, reject);
