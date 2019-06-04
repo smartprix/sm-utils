@@ -25,14 +25,14 @@ function errorFrameToString(frame, background = 'magenta', foreground = 'white')
 	const columnNumber = frame.getColumnNumber();
 	const functionName = frame.getFunctionNameSanitized() || 'module';
 
-	const header = ` ${fileName} at ${lineNumber}:${columnNumber} in ${functionName}`;
+	const header = ` ${fileName}:${lineNumber}:${columnNumber} in ${functionName}`;
 	const headerSpace = _.repeat(' ', process.stdout.columns - header.length);
 
 	return chalk[`bg${_.upperFirst(background)}`](
 		' ' +
 		chalk[foreground](
 			chalk.bold(fileName) +
-			' at ' +
+			':' +
 			chalk.bold(lineNumber) +
 			':' +
 			columnNumber +
@@ -146,7 +146,7 @@ function d(...args) {
 	const functionName = frame.getFunctionNameSanitized() || 'module';
 	const line = _.trim(frame.getContext().line, ' \t\n;');
 
-	const upperLine = `${fileName} at ${lineNumber}:${columnNumber} in ${functionName}`;
+	const upperLine = `${fileName}:${lineNumber}:${columnNumber} in ${functionName}`;
 	const upperExtraSpace = _.repeat(' ', Math.max(0, process.stdout.columns - upperLine.length - 1));
 	const lowerExtraSpace = _.repeat(' ', Math.max(0, process.stdout.columns - line.length - 1));
 
@@ -155,7 +155,7 @@ function d(...args) {
 			' ' +
 			chalk.white(
 				chalk.bold(fileName) +
-				' at ' +
+				':' +
 				chalk.bold(lineNumber) +
 				':' +
 				columnNumber +
