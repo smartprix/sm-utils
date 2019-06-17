@@ -926,7 +926,7 @@ class RedisCache {
 		// regenerate value in the background
 		this._getOrSettingStale(key, true);
 		setImmediate(async () => {
-			await this.set(key, value, options).catch(()=>{});
+			await this.set(key, value, options).catch(() => {});
 			this._getOrSettingStale(key, DELETE);
 		});
 	}

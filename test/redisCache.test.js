@@ -910,4 +910,43 @@ describe('redis cache library @rediscache', () => {
 			delete RedisCache.prototype[`_original_${fn}`];
 		});
 	});
+
+	it('should throw error if error in value function', async () => {
+		const getValue = function () {
+			throw new Error('Error in getValue');
+		};
+		let errorMsg;
+		try {
+			await cache.getOrSet('a', getValue);
+		}
+		catch (err) {
+			errorMsg = err.message;
+		}
+		expect(errorMsg).to.equal('Error in getValue');
+	});
+
+	describe('unhandled rejections', () => {
+		const unhandledRejections = [];
+		const unhandledRejectionListener = (reason) => {
+			unhandledRejections.push(reason);
+		};
+		before(() => {
+			process.on('unhandledRejection', unhandledRejectionListener);
+		});
+
+		it('should not throw unhandled rejection while setting in background', async () => {
+			const getValue = function () {
+				throw new Error('Error in getValue');
+			};
+			const result = await cache.getOrSet('bg', 5, {staleTTL: 1});
+			await Vachan.sleep(5);
+			expect(await cache.getOrSet('bg', getValue, {staleTTL: 1})).to.equal(result);
+			await Vachan.sleep(100);
+			expect(unhandledRejections.length).to.equal(0);
+		});
+
+		after(() => {
+			process.removeListener('unhandledRejection', unhandledRejectionListener);
+		});
+	});
 });
