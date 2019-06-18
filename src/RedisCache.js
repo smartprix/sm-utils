@@ -828,7 +828,7 @@ class RedisCache {
 			this.logger.error(`[RedisCache] [${this.prefix}] error while setting key ${key}`, error);
 			await this._del(key);
 			this._setting(key, DELETE);
-			return false;
+			throw error;
 		}
 	}
 
@@ -926,7 +926,7 @@ class RedisCache {
 		// regenerate value in the background
 		this._getOrSettingStale(key, true);
 		setImmediate(async () => {
-			await this.set(key, value, options);
+			await this.set(key, value, options).catch(() => {});
 			this._getOrSettingStale(key, DELETE);
 		});
 	}
