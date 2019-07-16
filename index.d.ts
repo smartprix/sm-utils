@@ -1946,6 +1946,13 @@ declare module 'sm-utils' {
 		static isBypassed(): boolean;
 
 		/**
+		 * gets a value from the local cache without touching redis
+		 * @param key
+		 * @param defaultValue
+		 */
+		getLocal<T = any>(key: string, defaultValue?: T): T;
+
+		/**
 		 * gets a value from the cache immediately without waiting
 		 * @param key
 		 * @param defaultValue

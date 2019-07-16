@@ -696,6 +696,18 @@ class RedisCache {
 	 */
 
 	/**
+	 * gets a value from the local cache without touching redis
+	 * @param {string} key
+	 * @param {any} [defaultValue]
+	 */
+	getLocal(key, defaultValue = undefined) {
+		if (!this.useLocalCache) return defaultValue;
+		const localValue = this._localCache(key);
+		if (localValue === undefined || localValue.v === undefined) return defaultValue;
+		return localValue.v;
+	}
+
+	/**
 	 * gets a value from the cache immediately without waiting
 	 * @param {string} key
 	 * @param {any} [defaultValue]
