@@ -86,7 +86,7 @@ class Connect {
 	 * @constructor
 	 */
 	constructor() {
-		this.id = Math.random().toString(36).substring(2);
+		this.id = Math.random().toString(10).substring(2, 12);
 
 		/**
 		 * Various options (or parameters) defining the Connection
