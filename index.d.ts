@@ -2597,16 +2597,16 @@ declare module 'sm-utils' {
 		* @param options object of {concurrency}
 		*	concurrency: Number of maximum concurrently running promises, default is Infinity
 		*/
-		static map<T, U>(iterable: Iterable<T>, mapper: (value?: T, index?: number | string, iterable?: Iterable<T>) => U, options?: { concurrency: number }): Promise<U[]>;
-		static map<T, U>(iterable: { [key: string]: T }, mapper: (value?: T, index?: string, iterable?: { [key: string]: T }) => U, options?: { concurrency: number }): Promise<U[]>;
+		static map<T, U>(iterable: Iterable<T>, mapper: (value: T, index: number | string, iterable: Iterable<T>) => U, options?: { concurrency?: number }): Promise<U[]>;
+		static map<T, U>(iterable: { [key: string]: T }, mapper: (value: T, index: string, iterable: { [key: string]: T }) => U, options?: { concurrency?: number }): Promise<U[]>;
 		/**
 		 * Like promiseMap but for keys
 		 * @param iterable
 		 * @param mapper
 		 * @param options
 		 */
-		static mapKeys<T>(iterable: Iterable<T>, mapper: (value?: T, key?: number | string, iterable?: Iterable<T>) => string, options?: { concurrency: number }): Promise<{ [key: string]: T }>;
-		static mapKeys<T>(iterable: { [key: string]: T }, mapper: (value?: T, key?: number | string, iterable?: { [key: string]: T }) => string, options?: { concurrency: number }): Promise<{ [key: string]: T }>;
+		static mapKeys<T>(iterable: Iterable<T>, mapper: (value: T, key: number | string, iterable: Iterable<T>) => string, options?: { concurrency?: number }): Promise<{ [key: string]: T }>;
+		static mapKeys<T>(iterable: { [key: string]: T }, mapper: (value: T, key: number | string, iterable: { [key: string]: T }) => string, options?: { concurrency?: number }): Promise<{ [key: string]: T }>;
 
 		/**
 		 * Like promiseMap but for values
@@ -2614,8 +2614,8 @@ declare module 'sm-utils' {
 		 * @param mapper
 		 * @param options
 		 */
-		static mapValues<T, U>(iterable: Iterable<T>, mapper: (value?: T, key?: number | string, iterable?: Iterable<T>) => U, options?: { concurrency: number }): Promise<{ [key: string]: U }>;
-		static mapValues<T, U>(iterable: { [key: string]: T }, mapper: (value?: T, key?: string, iterable?: { [key: string]: T }) => U, options?: { concurrency: number }): Promise<{ [key: string]: U }>;
+		static mapValues<T, U>(iterable: Iterable<T>, mapper: (value: T, key: number | string, iterable: Iterable<T>) => U, options?: { concurrency?: number }): Promise<{ [key: string]: U }>;
+		static mapValues<T, U>(iterable: { [key: string]: T }, mapper: (value: T, key: string, iterable: { [key: string]: T }) => U, options?: { concurrency?: number }): Promise<{ [key: string]: U }>;
 	}
 
 
