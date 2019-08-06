@@ -22,6 +22,17 @@ steps:
   commands:
   - USE_PIKA=1 yarn test-only -g @rediscache
 
+# Publish npm package
+- name: npm
+  image: plugins/npm
+  settings:
+    token:
+      from_secret: npm_token
+  when:
+    event:
+    - tag
+
+
 services:
 - name: redis
   image: redis
