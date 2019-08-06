@@ -1,0 +1,31 @@
+kind: pipeline
+name: default
+
+steps:
+- name: install
+  image: smartprix/node:12
+  commands:
+  - yarn lint
+  - yarn build
+  - yarn compile
+  environment:
+    YARN_CACHE_FOLDER: ./../../cache
+
+- name: test
+  image: smartprix/node:12
+  commands:
+  - yarn test-only
+
+# Test RedisCache with pika as backend
+- name: test_pika_redis
+  image: smartprix/node:12
+  commands:
+  - USE_PIKA=1 yarn test-only -g @rediscache
+
+services:
+- name: redis
+  image: redis
+- name: pika
+  image: pikadb/pika
+  commands:
+  - /pika/output/bin/pika -c /pika/output/conf/pika.conf
