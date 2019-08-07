@@ -5,6 +5,7 @@ steps:
 - name: install
   image: smartprix/node:12
   commands:
+  - yarn
   - yarn lint
   - yarn build
   - yarn compile
