@@ -65,3 +65,8 @@ services:
   image: pikadb/pika
   commands:
   - /pika/output/bin/pika -c /pika/output/conf/pika.conf
+
+volumes:
+- name: yarn_cache
+  host:
+    path: /tmp/cache-12
