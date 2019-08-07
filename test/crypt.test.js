@@ -188,4 +188,13 @@ describe('crypt library', () => {
 		expect(seededGenerator.random()).to.equal(0.8101538523824274);
 		expect(seededGenerator.bytes(2)).to.deep.equal(Buffer.from([234, 238]));
 	});
+
+	it('should generate the same output for seededRandom with string key', () => {
+		const seededGenerator = Crypt.seededRandom('product_xyz');
+		expect(seededGenerator.string({length: 13})).to.equal('Sk9mGcYZo7l92');
+		expect(seededGenerator.shuffle([1, 2, 3, 4])).to.deep.equal([3, 2, 1, 4]);
+		expect(seededGenerator.int(0, 100)).to.equal(55);
+		expect(seededGenerator.random()).to.equal(0.5551895806752327);
+		expect(seededGenerator.bytes(2)).to.deep.equal(Buffer.from([228, 97]));
+	});
 });
