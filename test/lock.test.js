@@ -98,7 +98,7 @@ describe('Lock library', () => {
 			expect(await lock._has('b')).to.be.true;
 			// set it slightly less than 100 because setTimeout and process.hrtime might differ by a ms
 			expect(elapsedMs).to.be.above(99);
-			expect(elapsedMs).to.be.below(105);
+			expect(elapsedMs).to.be.below(110);
 		});
 
 		it('waits and acquires locks when called concurrently', async () => {
