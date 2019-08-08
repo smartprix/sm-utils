@@ -10,25 +10,30 @@ const IS_PIKA = Boolean(process.env.USE_PIKA);
 const IS_DRONE = Boolean(process.env.DRONE);
 
 let conf = {
-	host: IS_DRONE && 'redis',
+	host: IS_DRONE ? 'redis' : '127.0.0.1',
 };
+
+let pubSubRedisConf = {
+	host: IS_DRONE ? 'redis' : '127.0.0.1',
+};
+
 if (IS_PIKA) {
 	conf = {
 		port: 9221,
 		type: 'pika',
-		host: IS_DRONE && 'pika',
+		host: IS_DRONE ? 'pika' : '127.0.0.1',
 	};
 
 	// use redis for pub sub
 	// pika pub sub is very slow
-	const pubSubRedisConf = {
+	pubSubRedisConf = {
 		port: 6379,
 		type: 'redis',
-		host: IS_DRONE && 'redis',
+		host: IS_DRONE ? 'redis' : '127.0.0.1',
 	};
-	RedisCache.pubSubRedisConf = pubSubRedisConf;
-	conf.pubSubRedisConf = pubSubRedisConf;
 }
+RedisCache.pubSubRedisConf = pubSubRedisConf;
+conf.pubSubRedisConf = pubSubRedisConf;
 
 function getCache(prefix, options = {}, redisConf = {}) {
 	return new RedisCache(
