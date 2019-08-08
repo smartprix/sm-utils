@@ -1,13 +1,15 @@
 /* eslint-disable no-unused-expressions, max-nested-callbacks */
 
 import {expect} from 'chai';
+import Redis from 'ioredis';
 import {Lock} from '../src/index';
 
 let lock;
 
 describe('Lock library', () => {
 	before(async () => {
-		lock = new Lock();
+		const redis = new Redis({host: process.env.DRONE ? 'redis' : '127.0.0.1'});
+		lock = new Lock(redis);
 		await lock.release('a');
 		await lock.release('b');
 		await lock.release('c');

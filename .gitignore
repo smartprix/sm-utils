@@ -7,3 +7,5 @@ out
 index2.d.ts
 package-lock.json
 yarn.lock
+# github pages temporary directory
+.tmp
