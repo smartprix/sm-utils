@@ -161,6 +161,26 @@ function randomString(options = {}) {
 }
 
 /**
+ * Converts String to int key if not already number.
+ * Returns same number if key is already number
+ * @param {string | number} key
+ */
+function getIntegerKey(key) {
+	if (typeof key === 'number') return key;
+
+	if (typeof key === 'string') {
+		let value = 0;
+		for (let i = 0; i < key.length; ++i) {
+			value = ((value << 5) - value) + key.charCodeAt(i); // value * 31 + c
+			value |= 0; // to 32bit integer
+		}
+		return value;
+	}
+
+	return key;
+}
+
+/**
  * Shuffle an array or a string.
  *
  * @memberof Crypt
@@ -168,7 +188,7 @@ function randomString(options = {}) {
  * @param {Array<T> | string} itemToShuffle item which you want to shuffle
  * @param {object} [options = {}] object of {seed: number}
  * @param {() => number} options.randomFunc Use this random function instead of default
- * @param {number} options.seed optionally give a seed to do a constant shuffle
+ * @param {number | string} options.seed optionally give a seed to do a constant shuffle
  * @return {Array<T> | string} shuffled item
  */
 function shuffle(itemToShuffle, options = {}) {
@@ -189,7 +209,7 @@ function shuffle(itemToShuffle, options = {}) {
 		randomFunc = options.randomFunc;
 	}
 	else if (options.seed) {
-		let seed = options.seed;
+		let seed = getIntegerKey(options.seed);
 		randomFunc = function () {
 			const x = Math.sin(seed++) * 10000;
 			return x - Math.floor(x);
@@ -231,6 +251,7 @@ function shuffle(itemToShuffle, options = {}) {
  * @return {randomFunctions} Object of all random functions
  */
 function seededRandom(seed) {
+	seed = getIntegerKey(seed);
 	return {
 		seed,
 		index: 0,
