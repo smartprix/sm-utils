@@ -44,6 +44,27 @@ steps:
     event:
     - tag
 
+# build docs
+- name: docs
+  image: smartprix/node:12
+  commands:
+  - yarn docs
+  when:
+    event:
+    - tag
+
+# publish docs
+- name: publish
+  image: plugins/gh-pages
+  settings:
+    username:
+      from_secret: github_username
+    password:
+      from_secret: github_token
+    target_branch: master
+    pages_directory: docs/
+    temporary_base: .tmp
+
 - name: rebuild_cache
   image: plugins/volume-cache
   settings:
