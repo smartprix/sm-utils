@@ -11,7 +11,7 @@ function sleep(val, timeout = 20) {
 const processor = jobData => jobData.data;
 
 before(async () => {
-	queue = new Queue('test', {host: process.env.DRONE ? 'redis' : undefined});
+	queue = new Queue('test', {host: process.env.DRONE ? 'redis' : '127.0.0.1'});
 	await queue.delete(0);
 });
 
