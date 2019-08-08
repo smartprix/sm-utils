@@ -7,7 +7,7 @@ import {RedisCache, Vachan} from '../src/index';
 
 let workerpool = Workerpool.pool();
 const IS_PIKA = Boolean(process.env.USE_PIKA);
-const IS_DRONE =  Boolean(process.env.DRONE);
+const IS_DRONE = Boolean(process.env.DRONE);
 
 let conf = {
 	host: IS_DRONE && 'redis',
