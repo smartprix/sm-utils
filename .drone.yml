@@ -64,6 +64,9 @@ steps:
     target_branch: master
     pages_directory: docs/
     temporary_base: .tmp
+  when:
+    event:
+    - tag
 
 - name: rebuild_cache
   image: plugins/volume-cache
