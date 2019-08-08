@@ -7,12 +7,16 @@ import {RedisCache, Vachan} from '../src/index';
 
 let workerpool = Workerpool.pool();
 const IS_PIKA = Boolean(process.env.USE_PIKA);
+const IS_DRONE =  Boolean(process.env.DRONE);
 
-let conf = {};
+let conf = {
+	host: IS_DRONE && 'redis',
+};
 if (IS_PIKA) {
 	conf = {
 		port: 9221,
 		type: 'pika',
+		host: IS_DRONE && 'pika',
 	};
 
 	// use redis for pub sub
@@ -20,6 +24,7 @@ if (IS_PIKA) {
 	const pubSubRedisConf = {
 		port: 6379,
 		type: 'redis',
+		host: IS_DRONE && 'redis',
 	};
 	RedisCache.pubSubRedisConf = pubSubRedisConf;
 	conf.pubSubRedisConf = pubSubRedisConf;

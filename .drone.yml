@@ -1,0 +1,72 @@
+kind: pipeline
+name: default
+
+steps:
+- name: restore_cache
+  # Cache plugin https://github.com/drone-plugins/drone-volume-cache/issues/8
+  image: plugins/volume-cache
+  settings:
+    file: "${DRONE_REPO_NAME}.tar"
+    mount: ./../../cache
+    restore: true
+  volumes:
+  - name: yarn_cache
+    path: /cache
+
+- name: install
+  image: smartprix/node:12
+  commands:
+  - yarn
+  - yarn lint
+  - yarn build
+  - yarn compile
+  environment:
+    YARN_CACHE_FOLDER: ./../../cache
+
+- name: test
+  image: smartprix/node:12
+  commands:
+  - yarn test-only
+
+# Test RedisCache with pika as backend
+- name: test_pika_redis
+  image: smartprix/node:12
+  commands:
+  - USE_PIKA=1 yarn test-only -g @rediscache
+
+# Publish npm package
+- name: npm
+  image: plugins/npm
+  settings:
+    token:
+      from_secret: npm_token
+  when:
+    event:
+    - tag
+
+- name: rebuild_cache
+  image: plugins/volume-cache
+  settings:
+    file: "${DRONE_REPO_NAME}.tar"
+    mount: ./../../cache
+    rebuild: true
+  volumes:
+  - name: yarn_cache
+    path: /cache
+  when:
+    status:
+    - success
+    - failure
+
+services:
+- name: redis
+  image: redis
+- name: pika
+  image: pikadb/pika
+  commands:
+  - /pika/output/bin/pika -c /pika/output/conf/pika.conf
+
+volumes:
+- name: yarn_cache
+  host:
+    path: /tmp/cache-12
