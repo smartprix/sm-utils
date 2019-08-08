@@ -86,7 +86,7 @@ services:
 - name: redis
   image: redis
 - name: pika
-  image: pikadb/pika
+  image: pikadb/pika:v3.0.5
   commands:
   - /pika/output/bin/pika -c /pika/output/conf/pika.conf
 
