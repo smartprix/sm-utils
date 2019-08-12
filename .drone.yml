@@ -56,23 +56,26 @@ steps:
     target:
     - docs
 
-# publish docs
-- name: publish
-  image: plugins/gh-pages
-  settings:
-    username:
-      from_secret: github_username
-    password:
+
+- name: commit-and-push-docs
+  image: docker:git
+  environment:
+    GITHUB_TOKEN:
       from_secret: github_token
-    target_branch: master
-    pages_directory: docs/
-    temporary_base: .tmp
+  commands:
+    - git config user.email "drone@smartprix.com"
+    - git config user.name "Smartprix Drone"
+    - git add --all
+    - git commit -m "Updating docs, `date`"
+    - git remote add origin-docs https://$GITHUB_TOKEN@github.com/$DRONE_REPO.git > /dev/null 2>&1
+    - git push --set-upstream origin-docs master
   when:
     event:
     - tag
     - promote
     target:
     - docs
+    branch: master
 
 - name: rebuild_cache
   image: plugins/volume-cache

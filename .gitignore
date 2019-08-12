@@ -7,5 +7,10 @@ out
 index2.d.ts
 package-lock.json
 yarn.lock
+
+## For Drone
 # github pages temporary directory
 .tmp
+# Pika dir
+db
+log
