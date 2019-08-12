@@ -77,7 +77,7 @@ class Vachan {
 	 * create a lazy promise from an executor function ((resolve, reject) => {})
 	 * a lazy promise defers execution till .then() or .catch() is called
 	 *
-	 * @param {(resolve: (val: any) => void, reject(reason: Error) => void) => void} executor
+	 * @param {function( function(any):void, function(Error):void):void} executor
 	 * function(resolve, reject) {},
 	 * same as promise constructor
 	 * @return {Promise<*>} a lazy promise
@@ -156,7 +156,7 @@ class Vachan {
 	 * Returns a Promise that resolves when condition returns true.
 	 * Rejects if condition throws or returns a Promise that rejects.
 	 * @see https://github.com/sindresorhus/p-wait-for
-	 * @param {() => boolean | Promise<boolean>} conditionFn function that returns a boolean
+	 * @param {(function():boolean | Promise<boolean>)} conditionFn function that returns a boolean
 	 * @param {object|number} [options] can be {interval, timeout} or a number
 	 * @param {number} options.interval: Number of milliseconds to wait before retrying condition (default 50)
 	 * @param {number} options.timeout: will reject the promise on timeout (in ms)

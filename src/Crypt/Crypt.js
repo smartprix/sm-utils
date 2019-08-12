@@ -85,6 +85,7 @@ function countBits(number) {
  * @property {number} length integer
  * @property {boolean} base36 if true will use BASE_36 charset
  * @property {string} charset provide a charset string
+ * @property {function(number):Buffer} [randomBytesFunc] only considered for some fns
  */
 
 /**
@@ -96,7 +97,7 @@ function countBits(number) {
  * By default, length is 20 and charset is ALPHA_NUMERIC
  *
  * @memberof Crypt
- * @param  {number | (randomOpts & {randomBytesFunc?: (size: number) => Buffer})} options
+ * @param  {number | randomOpts} options
  * length of the id or options object
  * @return {string} id
  */
@@ -187,7 +188,7 @@ function getIntegerKey(key) {
  * @template T
  * @param {Array<T> | string} itemToShuffle item which you want to shuffle
  * @param {object} [options = {}] object of {seed: number}
- * @param {() => number} options.randomFunc Use this random function instead of default
+ * @param {function():number} options.randomFunc Use this random function instead of default
  * @param {number | string} options.seed optionally give a seed to do a constant shuffle
  * @return {Array<T> | string} shuffled item
  */
@@ -237,11 +238,11 @@ function shuffle(itemToShuffle, options = {}) {
  * @typedef {object} randomFunctions
  * @property {number} seed
  * @property {number} index
- * @property {() => number)} random number b/w 0 and 1
- * @property {(num: number, max?: number) => } int integer less than num or b/w num and max
- * @property {(size: number) => Buffer} bytes
- * @property {(options: number|randomOpts) => string} string
- * @property {(items: any[] | string) => any[] | string} shuffle
+ * @property {function():number} random number b/w 0 and 1
+ * @property {function(number, (number | undefined)):number} int int less than num or b/w num & max
+ * @property {function(number):Buffer} bytes
+ * @property {function((number | randomOpts)):string} string
+ * @property {function((any[] | string)):(any[] | string)} shuffle
  */
 
 /**

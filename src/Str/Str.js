@@ -220,11 +220,19 @@ const abbreviateUnits = {
 		' Mn': 1e6,
 	},
 };
+
+/**
+ * @typedef {Object} abbreviateOpts
+ * @property {number} number
+ * @property {string} [unit]
+ * @property {number} [decimals]
+ */
+
 /**
  * Abbreviate number
  * @private
  * @param {number} number
- * @returns {{number: number, unit?: string, decimals?: number}}
+ * @returns {abbreviateOpts}
  */
 function _abbreviateNumber(number, options) {
 	const {locale = 'en', abbr = 'none'} = options;

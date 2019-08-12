@@ -1156,8 +1156,8 @@ class Connect {
 	 * It is used for method chaining.
 	 *
 	 * @template T
-	 * @param  {(res: response) => T} successCallback To be called if the Promise is fulfilled
-	 * @param  {(err: Error) => T} [errorCallback] function to be called if the Promise is rejected
+	 * @param  {function(response):T} successCallback To be called if the Promise is fulfilled
+	 * @param  {function(Error):T} [errorCallback] function to be called if the Promise is rejected
 	 * @return {Promise<T>} a Promise in pending state
 	 */
 	async then(successCallback, errorCallback) {
@@ -1168,7 +1168,7 @@ class Connect {
 	 * It is also used for method chaining, but handles rejected cases only.
 	 *
 	 * @template T
-	 * @param  {(err: Error) => T} errorCallback function to be called if the Promise is rejected
+	 * @param  {function(Error):T} errorCallback function to be called if the Promise is rejected
 	 * @return {Promise<T>} a Promise in pending state
 	 */
 	async catch(errorCallback) {
@@ -1177,7 +1177,8 @@ class Connect {
 
 	/**
 	 * finally method of promise returned
-	 * @param {() => T} callback function to be called if the promise is fullfilled or rejected
+	 * @template T
+	 * @param {function():T} callback function to be called if the promise is fullfilled or rejected
 	 * @return {Promise<T>} a Promise in pending state
 	 */
 	async finally(callback) {

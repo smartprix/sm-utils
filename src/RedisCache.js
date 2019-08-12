@@ -212,7 +212,6 @@ class RedisCache {
 			const type = redis.type || options.type || defaultRedis.type;
 			this.isPika = (type === 'pika');
 
-			/** @type [{Redis}, {Redis}] */
 			[this.redis, this.pubRedis] = this.constructor.getRedis(redis);
 		}
 
@@ -242,7 +241,8 @@ class RedisCache {
 	}
 
 	/**
-	 * @param {redisConf} redisConf
+	 * @param {RedisConf} redisConf
+	 * @returns {Redis[]} array of redis instances (size 2), first for data & second for pubsub
 	 */
 	static getRedis(redisConf) {
 		const address = `${redisConf.host}:${redisConf.port}`;
@@ -692,7 +692,7 @@ class RedisCache {
 
 	/**
 	 * @typedef {object} getRedisOpts
-	 * @property {(val: any) => Promise<any> | any} [parse] function to parse value fetched from redis
+	 * @property {function(any):(Promise<any> | any)} [parse] fn to parse value fetched from redis
 	 */
 
 	/**
@@ -880,7 +880,7 @@ class RedisCache {
 	 *  if false, this will generate value in background (and return stale value) if value is stale
 	 * @property {boolean} [forceUpdate=false]
 	 *  get fresh results (ignoring ttl & staleTTL) and update cache
-	 * @property {(val: any) => Promise<any> | any} parse function to parse value fetched from redis
+	 * @property {function(any):(Promise<any> | any)} parse function to parse value fetched from redis
 	 * @property {any} default default value to return in case if value is undefined
 	 */
 
