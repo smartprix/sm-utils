@@ -52,6 +52,9 @@ steps:
   when:
     event:
     - tag
+    - promote
+    target:
+    - docs
 
 # publish docs
 - name: publish
@@ -67,6 +70,9 @@ steps:
   when:
     event:
     - tag
+    - promote
+    target:
+    - docs
 
 - name: rebuild_cache
   image: plugins/volume-cache
