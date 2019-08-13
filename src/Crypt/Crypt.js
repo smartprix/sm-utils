@@ -164,6 +164,7 @@ function randomString(options = {}) {
 /**
  * Converts String to int key if not already number.
  * Returns same number if key is already number
+ * @memberof Crypt
  * @param {string | number} key
  */
 function getIntegerKey(key) {
@@ -248,7 +249,7 @@ function shuffle(itemToShuffle, options = {}) {
 /**
  *
  * @memberof Crypt
- * @param {number} seed integer
+ * @param {number|string} seed integer
  * @return {randomFunctions} Object of all random functions
  */
 function seededRandom(seed) {
