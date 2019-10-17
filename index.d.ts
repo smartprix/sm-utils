@@ -2490,6 +2490,8 @@ declare module 'sm-utils' {
 		silent?: boolean;
 	}
 
+	type PossiblePromises<T> = T | Promise<T> | (() => T | Promise<T>);
+
 	/**
 	 * Promise utility functions
 	 */
@@ -2507,21 +2509,21 @@ declare module 'sm-utils' {
 		 * - any: returns the input wrapped in a promise
 		 * @param promise
 		 */
-		static identity<T>(promise: T | Promise<T> | (() => T | Promise<T>)): Promise<T>;
+		static identity<T>(promise: PossiblePromises<T>): Promise<T>;
 
 		/**
 		 * Execute a promise / function, and exit when it completes
 		 * @param promise
 		 * @param options
 		 */
-		static exit(promise: Promise<any> | Function, options?: vachanOptions): never;
+		static exit(promise: PossiblePromises<any>, options?: vachanOptions): never;
 
 		/**
 		 * Execute a promise / function, without caring about its results
 		 * @param promise
 		 * @param options
 		 */
-		static exec(promise: Promise<any> | Function, options?: vachanOptions): void;
+		static exec(promise: PossiblePromises<any>, options?: vachanOptions): void;
 
 		/**
 		 * create a lazy promise from an executor function ((resolve, reject) => {})
@@ -2559,7 +2561,7 @@ declare module 'sm-utils' {
 		 * @param options can be {timeout} or a number
 		 *	timeout: Milliseconds before timing out
 		*/
-		static timeout<T>(promise: T | Promise<T> | (() => T | Promise<T>), options: { timeout?: number } | number): Promise<T>;
+		static timeout<T>(promise: PossiblePromises<T>, options: { timeout?: number } | number): Promise<T>;
 
 		/**
 		 * Returns a Promise that resolves when condition returns true.
@@ -2570,7 +2572,7 @@ declare module 'sm-utils' {
 		 * @param options.interval: Number of milliseconds to wait before retrying condition (default 50)
 		 * @param options.timeout: will reject the promise on timeout (in ms)
 		 */
-		static waitFor(conditionFn: () => boolean | Promise<boolean>, options?: { interval?: number, timeout?: number } | number): Promise<void>;
+		static waitFor(conditionFn: PossiblePromises<boolean>, options?: { interval?: number, timeout?: number } | number): Promise<void>;
 
 		/**
 		 * Returns an async function that delays calling fn
@@ -2597,16 +2599,16 @@ declare module 'sm-utils' {
 		* @param options object of {concurrency}
 		*	concurrency: Number of maximum concurrently running promises, default is Infinity
 		*/
-		static map<T, U>(iterable: Iterable<T>, mapper: (value: T, index: number | string, iterable: Iterable<T>) => U, options?: { concurrency?: number }): Promise<U[]>;
-		static map<T, U>(iterable: { [key: string]: T }, mapper: (value: T, index: string, iterable: { [key: string]: T }) => U, options?: { concurrency?: number }): Promise<U[]>;
+		static map<T, R, I extends Iterable<T>>(iterable: I, mapper: (value: T, index: number | string, iterable: I) => Promise<R>, options?: { concurrency?: number }): Promise<R[]>;
+		static map<T, R, O extends { [key: string]: T }>(iterable: O, mapper: (value: T, index: string, iterable: O) => Promise<R>, options?: { concurrency?: number }): Promise<R[]>;
 		/**
 		 * Like promiseMap but for keys
 		 * @param iterable
 		 * @param mapper
 		 * @param options
 		 */
-		static mapKeys<T>(iterable: Iterable<T>, mapper: (value: T, key: number | string, iterable: Iterable<T>) => string, options?: { concurrency?: number }): Promise<{ [key: string]: T }>;
-		static mapKeys<T>(iterable: { [key: string]: T }, mapper: (value: T, key: number | string, iterable: { [key: string]: T }) => string, options?: { concurrency?: number }): Promise<{ [key: string]: T }>;
+		static mapKeys<T, R extends string, I extends Iterable<T>>(iterable: I, mapper: (value: T, key: number | string, iterable: I) => Promise<R>, options?: { concurrency?: number }): Promise<{ [keys: string]: T }>;
+		static mapKeys<T, R extends string, O extends { [key: string]: T }>(iterable: O, mapper: (value: T, key: string, iterable: O) => Promise<R>, options?: { concurrency?: number }): Promise<{ [keys: string]: T }>;
 
 		/**
 		 * Like promiseMap but for values
@@ -2614,8 +2616,8 @@ declare module 'sm-utils' {
 		 * @param mapper
 		 * @param options
 		 */
-		static mapValues<T, U>(iterable: Iterable<T>, mapper: (value: T, key: number | string, iterable: Iterable<T>) => U, options?: { concurrency?: number }): Promise<{ [key: string]: U }>;
-		static mapValues<T, U>(iterable: { [key: string]: T }, mapper: (value: T, key: string, iterable: { [key: string]: T }) => U, options?: { concurrency?: number }): Promise<{ [key: string]: U }>;
+		static mapValues<T, R, I extends Iterable<T>>(iterable: I, mapper: (value: T, key: number | string, iterable: I) => Promise<R>, options?: { concurrency?: number }): Promise<{ [K in keyof I]: R }>;
+		static mapValues<T, R, O extends { [key: string]: T }>(iterable: O, mapper: (value: T, key: string, iterable: O) => Promise<R>, options?: { concurrency?: number }): Promise<{ [K in keyof O]: R }>;
 	}
 
 
