@@ -106,12 +106,10 @@ function promiseMapKeys(iterable, mapper, options = {}) {
 	const result = {};
 	return promiseMap(
 		iterable,
-		() => {	// eslint-disable-line
-			return (value, key, iter) => mapper(value, key, iter).then((res) => {
-				result[res] = value;
-				return res;
-			});
-		},
+		(value, key, iter) => mapper(value, key, iter).then((res) => {
+			result[res] = value;
+			return res;
+		}),
 		options
 	).then(() => result);
 }
@@ -128,12 +126,10 @@ function promiseMapValues(iterable, mapper, options = {}) {
 	const result = {};
 	return promiseMap(
 		iterable,
-		() => {	// eslint-disable-line
-			return (value, key, iter) => mapper(value, key, iter).then((res) => {
-				result[key] = res;
-				return res;
-			});
-		},
+		(value, key, iter) => mapper(value, key, iter).then((res) => {
+			result[key] = res;
+			return res;
+		}),
 		options
 	).then(() => result);
 }
