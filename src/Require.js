@@ -14,6 +14,10 @@ const globalDataKey = '_SmUtils_Require';
 if (!global[globalDataKey]) global[globalDataKey] = {};
 const globalData = global[globalDataKey];
 
+function setNpmPrefix(prefix) {
+	globalData.npmPrefix = prefix;
+}
+
 function getNpmPrefix() {
 	if (globalData.npmPrefix != null) return globalData.npmPrefix;
 
@@ -21,6 +25,17 @@ function getNpmPrefix() {
 	try {
 		npmPrefix = execSync('npm config get prefix').toString().trim();
 		if (npmPrefix) npmPrefix = path.join(npmPrefix, 'lib/node_modules');
+
+		// `npm config get prefix` returns `/usr/local` instead of `/usr` sometimes
+		// see if `/usr/local` is actually correct
+		if (npmPrefix === '/usr/local/lib/node_modules') {
+			try {
+				require.resolve(path.join(npmPrefix, 'npm'));
+			}
+			catch (e) {
+				npmPrefix = '/usr/lib/node_modules';
+			}
+		}
 	}
 	catch (e) {
 		npmPrefix = '';
