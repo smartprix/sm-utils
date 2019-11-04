@@ -356,7 +356,8 @@ class Connect {
 	 * @return {boolean} true, if content-type is JSON; false, otherwise
 	 */
 	isJSON() {
-		return this.options.headers['content-type'] === 'application/json';
+		const contentType = this.options.headers['content-type'] || '';
+		return contentType.startsWith('application/json');
 	}
 
 	/**
