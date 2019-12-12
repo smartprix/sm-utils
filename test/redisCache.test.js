@@ -5,7 +5,7 @@ import _ from 'lodash';
 import Workerpool from 'workerpool';
 import {RedisCache, Vachan} from '../src/index';
 
-let workerpool = Workerpool.pool();
+let workerpool = Workerpool.pool({workerType: 'process'});
 const IS_PIKA = Boolean(process.env.USE_PIKA);
 const IS_DRONE = Boolean(process.env.DRONE);
 
