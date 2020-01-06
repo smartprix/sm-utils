@@ -554,11 +554,11 @@ class Connect {
 	compress(askForCompression = true) {
 		this.options.compress = askForCompression;
 		if (askForCompression) {
-			// some sites expect an accept-encoding header
-			this.header('accept-encoding', '');
+			this.header('accept-encoding', `gzip, deflate, ${this.id}`);
 		}
 		else {
-			this.header('accept-encoding', `gzip, deflate, ${this.id}`);
+			// some sites expect an accept-encoding header
+			this.header('accept-encoding', '');
 		}
 		return this;
 	}
