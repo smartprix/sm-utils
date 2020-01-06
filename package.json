@@ -1,6 +1,6 @@
 {
   "name": "sm-utils",
-  "version": "2.18.0",
+  "version": "2.18.1",
   "description": "Uilities for NodeJS",
   "main": "dist/index.js",
   "types": "index.d.ts",
