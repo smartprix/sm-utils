@@ -14,10 +14,6 @@ const globalDataKey = '_SmUtils_Require';
 if (!global[globalDataKey]) global[globalDataKey] = {};
 const globalData = global[globalDataKey];
 
-function setNpmPrefix(prefix) {
-	globalData.npmPrefix = prefix;
-}
-
 function getNpmPrefix() {
 	if (globalData.npmPrefix != null) return globalData.npmPrefix;
 
