@@ -2091,6 +2091,16 @@ declare module 'sm-utils' {
 		 * function to parse when value is fetched from redis
 		 */
 		parse?: (val: any) => Promise<any> | any;
+		/**
+		 * function to process the result
+		 * process gets called after parsing the value
+		 * NOTE: process also gets called before saving the value in localCache, while parse does not
+		 */
+		process?: (val: any) => Promise<any> | any;
+		/**
+		 * function to convert the value to JSON before saving into redis
+		 */
+		toJSON?: (val: any) => any;
 	}
 
 	interface setRedisOpts extends getRedisOpts {
