@@ -77,6 +77,26 @@ function socksProxyAgent(options) {
 	};
 }
 
+// TODO: support keep alive
+// let kAgentMap = new Map();
+// function keepAliveAgent() {
+// 	if (!kAgent) {
+// 		kAgent = {
+// 			http: new http.Agent({
+// 				keepAlive: true,
+// 				maxSockets:
+// 				maxFreeSockets:
+// 			}),
+// 			https: new https.Agent({
+// 				keepAlive: true,
+// 				maxSockets:
+// 				maxFreeSockets:
+// 			}),
+// 		};
+// 	}
+// 	return kAgent;
+// }
+
 /**
  * Simple & Powerful HTTP request client.
  */
