@@ -118,10 +118,10 @@ async function _withDefault(promise, defaultValue) {
 	return value;
 }
 
-async function _withDefaultOpts(promise, opts) {
+async function _withDefaultOpts(promise, opts = {}) {
 	const value = await promise;
 	if (value === undefined) return opts.default;
-	return value;
+	return opts.process ? opts.process(value) : value;
 }
 
 function parseTTL(ttl) {
@@ -395,7 +395,7 @@ class RedisCache {
 	}
 
 	async _setBoth(key, value, options = {}) {
-		if (value === undefined) return;
+		if (value === undefined) return undefined;
 
 		let ttl = (typeof options === 'object') ? options.ttl : options;
 		ttl = parseTTL(ttl);
@@ -408,10 +408,12 @@ class RedisCache {
 			data.t = ttl;
 		}
 
+		const localVal = options.process ? (await options.process(value)) : value;
+
 		if (this.useLocalCache) {
 			const dataLocal = {
 				...data,
-				v: options.process ? (await options.process(value)) : value,
+				v: localVal,
 			};
 			this._localCache(key, dataLocal);
 		}
@@ -423,6 +425,8 @@ class RedisCache {
 			};
 			await this._set(key, dataRedis, ttl);
 		}
+
+		return localVal;
 	}
 
 	_del(key) {
@@ -612,6 +616,10 @@ class RedisCache {
 		return value;
 	}
 
+	_localDel(key) {
+		this._localCache(key, DELETE);
+	}
+
 	_getting(key, value) {
 		return this._fetching(getting, key, value);
 	}
@@ -760,10 +768,10 @@ class RedisCache {
 
 				let val = value.v;
 				if (options.parse) {
-					val = await options.parse(value.v);
+					val = await options.parse(val);
 				}
 				if (options.process) {
-					val = await options.process(value.v);
+					val = await options.process(val);
 				}
 				return [val, value.t];
 			});
@@ -828,9 +836,8 @@ class RedisCache {
 				// resolve it and then cache it
 				this._setting(key, value);
 				const resolvedValue = this._wrapInProxy(key, await value);
-				await this._setBoth(key, resolvedValue, options);
+				ctx.result = await this._setBoth(key, resolvedValue, options);
 				this._setting(key, DELETE);
-				ctx.result = resolvedValue;
 				return true;
 			}
 			if (typeof value === 'function') {
@@ -848,9 +855,8 @@ class RedisCache {
 			// just set it in the store
 			value = this._wrapInProxy(key, value);
 			this._setting(key, Promise.resolve(value));
-			await this._setBoth(key, value, options);
+			ctx.result = await this._setBoth(key, value, options);
 			this._setting(key, DELETE);
-			ctx.result = value;
 			return true;
 		}
 		catch (error) {

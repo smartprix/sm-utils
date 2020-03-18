@@ -755,6 +755,116 @@ describe('redis cache library @rediscache', () => {
 		expect(parseCount).to.equal(2);
 	});
 
+	it('should correctly use process', async () => {
+		const redisCache = getCache('test');
+		let processCount = 0;
+		class T {
+			constructor(obj) {
+				this.obj = obj;
+			}
+
+			toJSON() {
+				return _.toPairs(this.obj);
+			}
+
+			static async fromJSON(obj) {
+				processCount++;
+				return new T(_.fromPairs(obj));
+			}
+		}
+
+		let key = 'processTest';
+		const obj = {a: 'b', c: 'd'};
+		const value = new T(obj);
+		const parsed = JSON.parse(JSON.stringify(value));
+
+		// process after setting and returning
+		expect(await redisCache.getOrSet(
+			key,
+			() => value.toJSON(),
+			{process: T.fromJSON},
+		)).to.deep.equal(value);
+		expect(await redisCache.get(key)).to.deep.equal(value);
+		redisCache._localDel(key);
+		expect(await redisCache.getOrSet(
+			key,
+			() => 1,
+			{process: T.fromJSON},
+		)).to.deep.equal(value);
+		expect(await redisCache.getOrSet(
+			key,
+			() => 1,
+			{process: T.fromJSON},
+		)).to.deep.equal(value);
+		expect(await redisCache.get(key)).to.deep.equal(value);
+
+		// process after parse
+		key = `${key}2`;
+		expect(await redisCache.getOrSet(
+			key,
+			() => value,
+			{parse: T.fromJSON, process: v => v.obj},
+		)).to.deep.equal(obj);
+		expect(await redisCache.get(key)).to.deep.equal(obj);
+		redisCache._localDel(key);
+		expect(await redisCache.getOrSet(
+			key,
+			() => 1,
+			{parse: T.fromJSON, process: v => v.obj},
+		)).to.deep.equal(obj);
+		expect(await redisCache.get(key)).to.deep.equal(obj);
+
+		// process after fetching from redis
+		key = `${key}3`;
+		redisCache.useLocalCache = false;
+		expect(await redisCache.getOrSet(
+			key,
+			() => value.toJSON(),
+			{process: T.fromJSON},
+		)).to.deep.equal(value);
+		expect(await redisCache.get(key)).to.deep.equal(parsed);
+
+		// process while setting in localCache
+		key = `${key}4`;
+		redisCache.useLocalCache = true;
+		redisCache.useRedisCache = false;
+		expect(await redisCache.getOrSet(
+			key,
+			() => value,
+			{process: v => v.toJSON()},
+		)).to.deep.equal(parsed);
+		expect(await redisCache.get(key)).to.deep.equal(parsed);
+
+		// process while bypassed
+		key = `${key}5`;
+		redisCache.bypass(true);
+		expect(await redisCache.getOrSet(
+			key,
+			() => value.toJSON(),
+			{process: T.fromJSON},
+		)).to.deep.equal(value);
+
+		expect(processCount).to.equal(5);
+
+		redisCache.bypass(false);
+		redisCache.useLocalCache = true;
+		redisCache.useRedisCache = true;
+	});
+
+	it('should correctly use toJSON', async () => {
+		const redisCache = getCache('test');
+		const key = 'toJSONTest';
+
+		expect(await redisCache.getOrSet(
+			key,
+			() => '123',
+			{toJSON: () => 234},
+		)).to.deep.equal('123');
+		expect(await redisCache.get(key)).to.deep.equal('123');
+		redisCache._localDel(key);
+		expect(await redisCache.get(key)).to.deep.equal(234);
+	});
+
 	it('should correctly bypass the cache for instance', async () => {
 		let i = 0;
 		expect(await cache.getOrSet('bypass', () => ++i)).to.equal(1);
