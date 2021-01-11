@@ -150,7 +150,7 @@ class Connect {
 			query: {},
 			// encoding of the response, if null body is returned as buffer
 			encoding: 'utf8',
-			// body of the request (valid in case of POST / PUT / PATCH)
+			// body of the request (valid in case of POST / PUT / PATCH / DELETE)
 			body: '',
 			// custom http & https agent (should be {http: agent, https: agent})
 			agent: null,
@@ -871,7 +871,7 @@ class Connect {
 	 */
 	_addFields() {
 		let body = this.options.body;
-		const hasBody = ['POST', 'PUT', 'PATCH'].includes(this.options.method);
+		const hasBody = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(this.options.method);
 
 		if (!body) {
 			if (!_.isEmpty(this.options.fields)) {
