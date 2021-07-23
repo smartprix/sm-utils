@@ -13,6 +13,8 @@ const DIRTY = Symbol('DIRTY');
 const redisMap = {};
 const globalLocalCache = new Map();
 globalLocalCache.set('*', new Map());
+// a map for storing event handlers when registered with cache.on
+const globalEventsMap = new Map();
 const processId = process.pid;
 const getting = new Map();
 const setting = new Map();
@@ -293,8 +295,8 @@ class RedisCache {
 
 	static handleSubscribeMessage(channel, message) {
 		// the channel is RC:${globalPrefix} => RC:a
-		// the message is ${pid}\v${prefix}\v${command}\v${args.join('\v')}
-		const [pid, prefix, command, key, ...args] = message.split('\v');
+		// the message is ${pid}\v${prefix}\v${command}\v${key}\v${JSON.stringify(args)}
+		const [pid, prefix, command, key, args] = message.split('\v');
 
 		// const debugMsg = `${command} ${prefix}:${key} [from ${pid} to ${processId}]`;
 		// RedisCache.logger.log(`[RedisCache] received subscribe command ${debugMsg}`);
@@ -334,8 +336,20 @@ class RedisCache {
 		else if (command === 'set') {
 			// NOTE: set command is not being used currently
 			try {
-				const value = JSON.parse(args[0]);
-				this._localCache(prefix, key, value);
+				const values = JSON.parse(args);
+				this._localCache(prefix, key, values[0]);
+			}
+			catch (e) {
+				this.logger.error(e);
+			}
+		}
+		else if (command === 'emit') {
+			try {
+				const handlers = globalEventsMap.get(`${prefix}:${key}`);
+				if (!handlers) return;
+
+				const values = JSON.parse(args);
+				handlers.forEach(fn => fn(...values));
 			}
 			catch (e) {
 				this.logger.error(e);
@@ -542,12 +556,15 @@ class RedisCache {
 		return undefined;
 	}
 
-	_localCachePublish(command, key = 'null') {
+	_localCachePublish(command, key = 'null', args = []) {
 		// the channel is RC:${globalPrefix} => RC:a
-		// the message is ${pid}\v${prefix}\v${command}\v${args.join('\v')}
+		// the message is ${pid}\v${prefix}\v${command}\v${key}\v${JSON.stringify(args)}
 
 		const channelName = `RC:${this.constructor.globalPrefix}`;
-		const message = `${processId}\v${this.prefix}\v${command}\v${key}`;
+		let message = `${processId}\v${this.prefix}\v${command}\v${key}`;
+		if (args && args.length) {
+			message += `\v${JSON.stringify(args)}`;
+		}
 		this.pubRedis.publish(channelName, message);
 	}
 
@@ -1330,6 +1347,49 @@ class RedisCache {
 		}
 
 		return this._delPattern(keyGlob);
+	}
+
+	/**
+	 * emit an event, that can be read by other processes that subscribe to it
+	 * @param {string} event name of the event
+	 */
+	async emit(event, ...args) {
+		if (!event) {
+			throw new Error('event can not be empty');
+		}
+
+		this._localCachePublish('emit', event, args);
+	}
+
+	/**
+	 * add an event handler for the event
+	 * @param {string} event
+	 * @param {function} fn
+	 */
+	async on(event, fn) {
+		const key = `${this.prefix}:${event}`;
+		let handlers = globalEventsMap.get(key);
+		if (!handlers) {
+			handlers = new Set();
+			globalEventsMap.set(key, handlers);
+		}
+		handlers.add(fn);
+	}
+
+	/**
+	 * remove the event handler for the event
+	 * @param {string} event
+	 * @param {function} fn
+	 */
+	async off(event, fn) {
+		const key = `${this.prefix}:${event}`;
+		if (!fn) {
+			globalEventsMap.delete(key);
+			return;
+		}
+		const handlers = globalEventsMap.get(key);
+		if (!handlers) return;
+		handlers.delete(fn);
 	}
 }
 

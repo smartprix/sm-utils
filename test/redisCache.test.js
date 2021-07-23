@@ -75,6 +75,9 @@ async function workerFunc(indexPath, opts, command) {
 	else if (command === 'del_contains') {
 		await wCache.delContains('aw');
 	}
+	else if (command === 'emit') {
+		await wCache.emit('muladd', 3, 4);
+	}
 
 	ret.push(await wCache.get('aw'));
 	return ret;
@@ -1048,13 +1051,14 @@ describe('redis cache library @rediscache', () => {
 	describe('unhandled rejections', () => {
 		const unhandledRejections = [];
 		const unhandledRejectionListener = (reason) => {
+			console.error('got unhandled rejection');
 			unhandledRejections.push(reason);
 		};
 		before(() => {
 			process.on('unhandledRejection', unhandledRejectionListener);
 		});
 
-		it('should not throw unhandled rejection while setting in background', async () => {
+		it('should not throw unhandled rejection while setting in background results in an error', async () => {
 			const getValue = function () {
 				throw new Error('Error in getValue');
 			};
@@ -1067,6 +1071,34 @@ describe('redis cache library @rediscache', () => {
 
 		after(() => {
 			process.removeListener('unhandledRejection', unhandledRejectionListener);
+		});
+	});
+
+	describe('emit', () => {
+		it('should correctly emit events', async () => {
+			let value = [];
+			const fn = (i, j) => {
+				value.push(i * j);
+			};
+
+			const aCache = getCache('worker_redis');
+
+			await workerExec('emit');
+			aCache.emit('muladd', 4, 5);
+			await Vachan.sleep(100);
+
+			aCache.on('muladd', fn);
+			await workerExec('emit');
+			await workerExec('emit');
+			aCache.emit('muladd', 4, 5);
+			await Vachan.sleep(100);
+
+			aCache.off('muladd', fn);
+			await workerExec('emit');
+			aCache.emit('muladd', 4, 5);
+			await Vachan.sleep(100);
+
+			expect(value).to.deep.equal([12, 12]);
 		});
 	});
 });
