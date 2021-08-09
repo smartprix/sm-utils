@@ -47,7 +47,7 @@
     "mkdirp": "^0.5.1",
     "rimraf": "^3.0.0",
     "sm-tunnel-agent": "^0.6.4",
-    "socks5-client": "^1.2.6",
+    "socks-proxy-agent": "^6.0.0",
     "stack-trace": "^0.0.10",
     "timestring": "^6.0.0",
     "tough-cookie": "^3.0.1",

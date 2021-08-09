@@ -5,10 +5,7 @@ import _ from 'lodash';
 import got from 'got';
 import {CookieJar} from 'tough-cookie';
 import FileCookieStore from 'tough-cookie-file-store';
-import {
-	httpAgent as socksHttpAgent,
-	httpsAgent as socksHttpsAgent,
-} from './socksProxyAgent';
+import {socksAgents} from './socksProxyAgent';
 import {
 	httpAgent as proxyHttpAgent,
 	httpsAgent as proxyHttpsAgent,
@@ -71,10 +68,7 @@ function httpProxyAgent(options) {
 }
 
 function socksProxyAgent(options) {
-	return {
-		http: socksHttpAgent(options),
-		https: socksHttpsAgent(options),
-	};
+	return socksAgents(options);
 }
 
 // TODO: support keep alive
