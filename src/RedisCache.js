@@ -348,7 +348,7 @@ class RedisCache {
 				const handlers = globalEventsMap.get(`${prefix}:${key}`);
 				if (!handlers) return;
 
-				const values = JSON.parse(args);
+				const values = args ? JSON.parse(args) : [];
 				handlers.forEach(fn => fn(...values));
 			}
 			catch (e) {
