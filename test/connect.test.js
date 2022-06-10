@@ -435,6 +435,37 @@ describe('@connect class', () => {
 		expect(responseTimeout).to.equal(null);
 	});
 
+	it('should correctly use keepalive', async () => {
+		const url = 'https://gorest.co.in/public/v2/users';
+
+		let totalKeepalive = 0;
+		let bodyKeepAlive;
+		let res = await Connect.url(url).keepalive();
+		for (let i = 0; i < 20; i++) {
+			const start = Date.now();
+			// eslint-disable-next-line no-await-in-loop
+			res = await Connect.url(url).keepalive();
+			const timeTaken = Date.now() - start;
+			totalKeepalive += timeTaken;
+			bodyKeepAlive = res.body;
+		}
+
+		let totalNoKeepalive = 0;
+		let bodyNoKeepAlive;
+		res = await Connect.url(url);
+		for (let i = 0; i < 20; i++) {
+			const start = Date.now();
+			// eslint-disable-next-line no-await-in-loop
+			res = await Connect.url(url);
+			const timeTaken = Date.now() - start;
+			totalNoKeepalive += timeTaken;
+			bodyNoKeepAlive = res.body;
+		}
+
+		expect(bodyKeepAlive).to.equal(bodyNoKeepAlive);
+		expect(totalKeepalive).to.lt(totalNoKeepalive);
+	}).timeout(10000);
+
 	// Proxy tests
 	// Commented out right now, because this requires an actual proxy
 	/*

@@ -1,3 +1,5 @@
+import http from 'http';
+import https from 'https';
 import path from 'path';
 import util from 'util';
 import {URL, URLSearchParams} from 'url';
@@ -71,25 +73,22 @@ function socksProxyAgent(options) {
 	return socksAgents(options);
 }
 
-// TODO: support keep alive
-// let kAgentMap = new Map();
-// function keepAliveAgent() {
-// 	if (!kAgent) {
-// 		kAgent = {
-// 			http: new http.Agent({
-// 				keepAlive: true,
-// 				maxSockets:
-// 				maxFreeSockets:
-// 			}),
-// 			https: new https.Agent({
-// 				keepAlive: true,
-// 				maxSockets:
-// 				maxFreeSockets:
-// 			}),
-// 		};
-// 	}
-// 	return kAgent;
-// }
+let kAgent;
+function keepAliveAgent() {
+	if (!kAgent) {
+		kAgent = {
+			http: new http.Agent({
+				keepAlive: true,
+				keepAliveMsecs: 3000,
+			}),
+			https: new https.Agent({
+				keepAlive: true,
+				keepAliveMsecs: 3000,
+			}),
+		};
+	}
+	return kAgent;
+}
 
 /**
  * Simple & Powerful HTTP request client.
@@ -148,6 +147,8 @@ class Connect {
 			body: '',
 			// custom http & https agent (should be {http: agent, https: agent})
 			agent: null,
+			// keepalive
+			keepalive: false,
 		};
 
 		// ask for compressed response by default
@@ -732,6 +733,17 @@ class Connect {
 	}
 
 	/**
+	 * Set keepalive connection option
+	 *
+	 * @param {boolean} [isKeepAlive=true] whether to keepalive or not
+	 * @returns {Connect} self
+	 */
+	keepalive(isKeepAlive = true) {
+		this.options.keepalive = isKeepAlive;
+		return this;
+	}
+
+	/**
 	 * Set request method to 'GET'.
 	 *
 	 * @return {Connect} self
@@ -837,7 +849,12 @@ class Connect {
 	 */
 	_addProxy() {
 		const proxy = this.options.proxy;
-		if (!proxy || !proxy.address) return;
+		if (!proxy || !proxy.address) {
+			if (this.options.keepalive) {
+				this.options.agent = keepAliveAgent();
+			}
+			return;
+		}
 
 		const proxyType = proxy.type || 'http';
 		const proxyOpts = {};
