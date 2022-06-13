@@ -12,8 +12,8 @@ function getOpts(options) {
 	return opts;
 }
 
-function socksAgents(options) {
-	const agent = new SocksProxyAgent(getOpts(options))
+function socksProxyAgents(options) {
+	const agent = new SocksProxyAgent(getOpts(options));
 	return {
 		http: agent,
 		https: agent,
@@ -21,5 +21,5 @@ function socksAgents(options) {
 }
 
 export {
-	socksAgents,
+	socksProxyAgents,
 };

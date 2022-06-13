@@ -7,17 +7,23 @@ function modifyOpts(options) {
 	}
 }
 
-function httpAgent(options) {
+function httpProxyAgents(options) {
 	modifyOpts(options);
-	return tunnel.httpOverHttp(options);
+	return {
+		http: tunnel.httpOverHttp(options),
+		https: tunnel.httpsOverHttp(options),
+	};
 }
 
-function httpsAgent(options) {
+function httpsProxyAgents(options) {
 	modifyOpts(options);
-	return tunnel.httpsOverHttp(options);
+	return {
+		http: tunnel.httpOverHttps(options),
+		https: tunnel.httpsOverHttps(options),
+	};
 }
 
 export {
-	httpAgent,
-	httpsAgent,
+	httpProxyAgents,
+	httpsProxyAgents,
 };

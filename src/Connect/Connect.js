@@ -7,10 +7,10 @@ import _ from 'lodash';
 import got from 'got';
 import {CookieJar} from 'tough-cookie';
 import FileCookieStore from 'tough-cookie-file-store';
-import {socksAgents} from './socksProxyAgent';
+import {socksProxyAgents} from './socksProxyAgent';
 import {
-	httpAgent as proxyHttpAgent,
-	httpsAgent as proxyHttpsAgent,
+	httpProxyAgents,
+	httpsProxyAgents,
 } from './httpProxyAgent';
 import File from '../File';
 import Crypt from '../Crypt';
@@ -62,15 +62,10 @@ function makeProxyUrl(proxy) {
 	return `http://${url}`;
 }
 
-function httpProxyAgent(options) {
-	return {
-		http: proxyHttpAgent(options),
-		https: proxyHttpsAgent(options),
-	};
-}
-
-function socksProxyAgent(options) {
-	return socksAgents(options);
+function getDefaultProxyPort(proxyType) {
+	if (proxyType === 'http') return 80;
+	if (proxyType === 'https') return 443;
+	return 1080;
 }
 
 let kAgent;
@@ -856,20 +851,27 @@ class Connect {
 			return;
 		}
 
-		const proxyType = proxy.type || 'http';
-		const proxyOpts = {};
-		const address = proxy.address.replace('http://', '');
-		proxyOpts.host = address.split(':')[0];
-		proxyOpts.port = proxy.port || address.split(':')[1] || 1080;
+		let proxyType = proxy.type || 'http';
+		if (/^https/.test(proxy.address) && proxyType === 'http') {
+			proxyType = 'https';
+		}
+		const address = proxy.address.replace(/^https?:\/\//, '');
+		const proxyOpts = {
+			host: address.split(':')[0],
+			port: proxy.port || address.split(':')[1] || getDefaultProxyPort(proxyType),
+		};
 		if (proxy.auth && proxy.auth.username) {
 			proxyOpts.auth = {...proxy.auth};
 		}
 
-		if (proxyType === 'http' || proxyType === 'https') {
-			this.options.agent = httpProxyAgent({proxy: proxyOpts});
+		if (proxyType === 'http') {
+			this.options.agent = httpProxyAgents({proxy: proxyOpts});
+		}
+		else if (proxyType === 'https') {
+			this.options.agent = httpsProxyAgents({proxy: proxyOpts});
 		}
 		else if (proxyType === 'socks' || proxyType === 'socks5') {
-			this.options.agent = socksProxyAgent({proxy: proxyOpts});
+			this.options.agent = socksProxyAgents({proxy: proxyOpts});
 		}
 	}
 
