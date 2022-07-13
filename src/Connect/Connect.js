@@ -68,6 +68,46 @@ function getDefaultProxyPort(proxyType) {
 	return 1080;
 }
 
+function getProxyOpts(proxy) {
+	if (!proxy || !proxy.address) return null;
+	const proxyOpts = {};
+	let auth;
+	let proxyType = proxy.type || 'http';
+	let address = proxy.address;
+	if (/^https/i.test(address)) {
+		proxyType = 'https';
+	}
+	else if (/^http/i.test(address)) {
+		proxyType = 'http';
+	}
+	else if (/^socks/i.test(address)) {
+		proxyType = 'socks';
+	}
+	address = address.replace(/^(?:https?|socks5?):\/\//i, '');
+	if (/@/.test(address)) {
+		[auth, address] = address.split('@');
+	}
+	if (!address) return null;
+	const [host, port] = address.split(':');
+	if (!host) return null;
+	proxyOpts.host = host;
+	proxyOpts.port = proxy.port || port || getDefaultProxyPort(proxyType);
+	if (auth) {
+		const [username, password] = auth.split(':');
+		if (username) {
+			proxyOpts.auth = {username};
+			if (password) {
+				proxyOpts.auth.password = password;
+			}
+		}
+	}
+	if (proxy.auth && proxy.auth.username) {
+		proxyOpts.auth = {...proxy.auth};
+	}
+	proxyOpts.type = proxyType;
+	return proxyOpts;
+}
+
 let kAgent;
 function keepAliveAgent() {
 	if (!kAgent) {
@@ -688,6 +728,23 @@ class Connect {
 	}
 
 	/**
+	 * Set address and port for an https proxy.
+	 *
+	 * @param {string} proxyAddress
+	 * @param {number} proxyPort
+	 * @return {Connect} self
+	 */
+	httpsProxy(proxyAddress, proxyPort) {
+		Object.assign(this.options.proxy, {
+			address: proxyAddress,
+			port: proxyPort,
+			type: 'https',
+		});
+
+		return this;
+	}
+
+	/**
 	 * Set address and port for a socks proxy.
 	 *
 	 * @param {string} proxyAddress
@@ -843,34 +900,22 @@ class Connect {
 	 * @private
 	 */
 	_addProxy() {
-		const proxy = this.options.proxy;
-		if (!proxy || !proxy.address) {
+		const proxyOpts = getProxyOpts(this.options.proxy);
+		if (!proxyOpts) {
 			if (this.options.keepalive) {
 				this.options.agent = keepAliveAgent();
 			}
 			return;
 		}
 
-		let proxyType = proxy.type || 'http';
-		if (/^https/.test(proxy.address) && proxyType === 'http') {
-			proxyType = 'https';
-		}
-		const address = proxy.address.replace(/^https?:\/\//, '');
-		const proxyOpts = {
-			host: address.split(':')[0],
-			port: proxy.port || address.split(':')[1] || getDefaultProxyPort(proxyType),
-		};
-		if (proxy.auth && proxy.auth.username) {
-			proxyOpts.auth = {...proxy.auth};
-		}
-
-		if (proxyType === 'http') {
+		const type = proxyOpts.type;
+		if (type === 'http') {
 			this.options.agent = httpProxyAgents({proxy: proxyOpts});
 		}
-		else if (proxyType === 'https') {
+		else if (type === 'https') {
 			this.options.agent = httpsProxyAgents({proxy: proxyOpts});
 		}
-		else if (proxyType === 'socks' || proxyType === 'socks5') {
+		else if (type === 'socks' || type === 'socks5') {
 			this.options.agent = socksProxyAgents({proxy: proxyOpts});
 		}
 	}
