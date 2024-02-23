@@ -192,7 +192,7 @@ const abbreviateUnits = {
 	longin: {
 		' Arab': 1e9,
 		' Crore': 1e7,
-		' Lacs': 1e5,
+		' Lakh': 1e5,
 	},
 	long: {
 		' Trillion': 1e12,
@@ -212,7 +212,7 @@ const abbreviateUnits = {
 	autoin: {
 		' Arab': 1e9,
 		' Cr': 1e7,
-		' Lacs': 1e5,
+		' Lakh': 1e5,
 	},
 	auto: {
 		' Tn': 1e12,
