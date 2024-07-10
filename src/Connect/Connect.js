@@ -193,6 +193,10 @@ class Connect {
 		this.userAgent('chrome');
 	}
 
+	static resetKeepAlive() {
+		kAgent = null;
+	}
+
 	/**
 	 * Set the url for the connection.
 	 *
@@ -796,6 +800,17 @@ class Connect {
 	}
 
 	/**
+	 * set custom http & https agent (should be {http: agent, https: agent})
+	 *
+	 * @param {object} agent
+	 * @returns {Connect} self
+	 */
+	requestAgent(agent) {
+		this.options.agent = agent;
+		return this;
+	}
+
+	/**
 	 * Set request method to 'GET'.
 	 *
 	 * @return {Connect} self
@@ -900,23 +915,26 @@ class Connect {
 	 * @private
 	 */
 	_addProxy() {
-		const proxyOpts = getProxyOpts(this.options.proxy);
+		const options = this.options;
+		if (options.agent) return;
+
+		const proxyOpts = getProxyOpts(options.proxy);
 		if (!proxyOpts) {
-			if (this.options.keepalive) {
-				this.options.agent = keepAliveAgent();
+			if (options.keepalive) {
+				options.agent = keepAliveAgent();
 			}
 			return;
 		}
 
 		const type = proxyOpts.type;
 		if (type === 'http') {
-			this.options.agent = httpProxyAgents({proxy: proxyOpts});
+			options.agent = httpProxyAgents({proxy: proxyOpts});
 		}
 		else if (type === 'https') {
-			this.options.agent = httpsProxyAgents({proxy: proxyOpts});
+			options.agent = httpsProxyAgents({proxy: proxyOpts});
 		}
 		else if (type === 'socks' || type === 'socks5') {
-			this.options.agent = socksProxyAgents({proxy: proxyOpts});
+			options.agent = socksProxyAgents({proxy: proxyOpts});
 		}
 	}
 
