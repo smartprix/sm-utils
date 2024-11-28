@@ -1,22 +1,17 @@
 import http from 'http';
 import https from 'https';
 import path from 'path';
-import util from 'util';
+import fs from 'fs/promises';
 import {URL, URLSearchParams} from 'url';
 import _ from 'lodash';
 import got from 'got';
 import {CookieJar} from 'tough-cookie';
-import FileCookieStore from 'tough-cookie-file-store';
 import {socksProxyAgents} from './socksProxyAgent';
 import {
 	httpProxyAgents,
 	httpsProxyAgents,
 } from './httpProxyAgent';
-import File from '../File';
 import Crypt from '../Crypt';
-
-CookieJar.prototype.getCookiesAsync = util.promisify(CookieJar.prototype.getCookies);
-CookieJar.prototype.setCookieAsync = util.promisify(CookieJar.prototype.setCookie);
 
 const userAgents = {
 	chrome: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36',
@@ -123,6 +118,11 @@ function keepAliveAgent() {
 		};
 	}
 	return kAgent;
+}
+
+async function writeFile(filePath, content) {
+	await fs.mkdir(path.dirname(filePath), {recursive: true});
+	await fs.writeFile(filePath, content, {encoding: 'utf8'});
 }
 
 /**
@@ -475,16 +475,14 @@ class Connect {
 	 * @return {Connect} self
 	 */
 	globalCookies(options = true) {
-		if (options === false || options === null) return this;
-		const jar = this.constructor._getGlobalCookieJar();
-		if (options === true) {
-			this.options.cookieJar = jar;
+		if (options === false || options === null) {
+			delete this.options.cookieJar;
+			delete this.options.readCookieJar;
 			return this;
 		}
-		if (options.readOnly) {
-			this.options.readCookieJar = jar;
-		}
 
+		const jar = this.constructor._getGlobalCookieJar();
+		this.cookieJar(jar, options);
 		return this;
 	}
 
@@ -495,8 +493,41 @@ class Connect {
 	 * @return {Connect}         self
 	 */
 	cookieFile(fileName, options = {}) {
-		const cookieJar = this.constructor.newCookieJar(new FileCookieStore(fileName));
-		this.cookieJar(cookieJar, options);
+		const setCookieJar = (cookieJar) => {
+			if (options.readOnly) {
+				this.options.readCookieJar = cookieJar;
+			}
+			else {
+				this.options.cookieJar = cookieJar;
+			}
+		};
+
+		this._cookieFileFn = async () => {
+			try {
+				const contents = await fs.readFile(fileName, {encoding: 'utf8'});
+				const obj = JSON.parse(contents);
+				const cookieJar = CookieJar.fromJSON(obj);
+				setCookieJar(cookieJar);
+			}
+			catch (e) {
+				setCookieJar(this.constructor.newCookieJar());
+			}
+		};
+
+		if (!options.readOnly) {
+			this._cookieFileFnRes = async () => {
+				const cookieJar = this.options.cookieJar;
+				if (!cookieJar) return;
+				try {
+					const contents = JSON.stringify(cookieJar.toJSON());
+					await fs.writeFile(fileName, contents, {encoding: 'utf8'});
+				}
+				catch (e) {
+					// ignore errors
+				}
+			};
+		}
+
 		return this;
 	}
 
@@ -507,6 +538,9 @@ class Connect {
 	 * @return {Connect}             self
 	 */
 	cookieJar(cookieJar, options = {}) {
+		delete this._cookieFileFn;
+		delete this._cookieFileFnRes;
+
 		if (options.readOnly) {
 			this.options.readCookieJar = cookieJar;
 		}
@@ -1010,9 +1044,13 @@ class Connect {
 			cookies.push(`${key}=${value}`);
 		});
 
+		if (this._cookieFileFn) {
+			await this._cookieFileFn();
+		}
+
 		const jar = this.options.readCookieJar || this.options.cookieJar;
 		if (jar) {
-			const jarCookies = await jar.getCookiesAsync(this._url, {});
+			const jarCookies = await jar.getCookies(this._url);
 			if (jarCookies) {
 				jarCookies.forEach((cookie) => {
 					if (!cookieMap[cookie.key]) {
@@ -1070,7 +1108,16 @@ class Connect {
 		const cookies = response.headers['set-cookie'];
 		if (!cookies) return;
 
-		await Promise.all(cookies.map(cookie => jar.setCookieAsync(cookie, response.url)));
+		await Promise.all(cookies.map(cookie => jar.setCookie(cookie, response.url)));
+
+		if (this._cookieFileFnRes) {
+			try {
+				await this._cookieFileFnRes();
+			}
+			catch (e) {
+				// ignore errors
+			}
+		}
 	}
 
 	/**
@@ -1110,7 +1157,7 @@ class Connect {
 
 		const cacheFilePath = path.join(this.resposeCacheDir, cacheKey);
 		try {
-			const contents = await File(cacheFilePath).read();
+			const contents = await fs.readFile(cacheFilePath, {encoding: 'utf8'});
 			const response = {
 				body: contents,
 				statusCode: 200,
@@ -1132,10 +1179,10 @@ class Connect {
 		const promises = [];
 
 		if (this.saveFilePath) {
-			promises.push(File(this.saveFilePath).write(response.body));
+			promises.push(writeFile(this.saveFilePath, response.body));
 		}
 		if (cacheFilePath && response.statusCode === 200) {
-			promises.push(File(cacheFilePath).write(response.body));
+			promises.push(writeFile(cacheFilePath, response.body));
 		}
 
 		if (promises.length) {
