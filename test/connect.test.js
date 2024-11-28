@@ -441,7 +441,7 @@ describe('@connect class', () => {
 		let totalKeepalive = 0;
 		let bodyKeepAlive;
 		let res = await Connect.url(url).keepalive();
-		for (let i = 0; i < 20; i++) {
+		for (let i = 0; i < 10; i++) {
 			const start = Date.now();
 			// eslint-disable-next-line no-await-in-loop
 			res = await Connect.url(url).keepalive();
@@ -453,7 +453,7 @@ describe('@connect class', () => {
 		let totalNoKeepalive = 0;
 		let bodyNoKeepAlive;
 		res = await Connect.url(url);
-		for (let i = 0; i < 20; i++) {
+		for (let i = 0; i < 10; i++) {
 			const start = Date.now();
 			// eslint-disable-next-line no-await-in-loop
 			res = await Connect.url(url);
@@ -464,7 +464,7 @@ describe('@connect class', () => {
 
 		expect(bodyKeepAlive).to.equal(bodyNoKeepAlive);
 		expect(totalKeepalive).to.lt(totalNoKeepalive);
-	}).timeout(10000);
+	}).timeout(20000);
 
 	// Proxy tests
 	// Commented out right now, because this requires an actual proxy

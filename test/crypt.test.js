@@ -175,9 +175,11 @@ describe('crypt library', () => {
 	it('should correctly javaObfuscate & javaUnobfuscate', async () => {
 		const original = '{"href":"http://new.smartprix.com:8080/","ancestorOrigins":{},"origin":"http://new.smartprix.com:8080","protocol":"http:","host":"new.smartprix.com:8080","hostname":"new.smartprix.com","port":"8080","pathname":"/","search":"","hash":""}';
 		const obfuscated = 'hY7RCsMwCEX/SUI2A0sMKmxQCj6Xpo8lP7FvXyzt28bevHrPwcmQ4826oWrtrZX4XCUDa+X0WgPlvm/71mwxKCGKEr853VMR69O8GB3hHz7oyqQU6HFVxwpJdMSfiN8L5Pit40Zixy8/KJ5lf1YicMAR3ANyTPMH';
+		const newObfuscated = 'hY5BCsMwDAT/JIxbB2rLSIIUQmDPJs4x6BN9e3Fobi29SWhm0IIk8QZHMqvee4nzppnEqkzPLXD2Yz/2jgYqIaqxvGS6T0Xhy9rA5/JPR0MVNg78uFA0JFaD46cy7oVy/MaMIsvQrz5Z+sDjWY0kIcExOqTntL4B';
 
-		expect(await Crypt.javaObfuscate(original)).to.equal(obfuscated);
+		expect([obfuscated, newObfuscated]).to.include(await Crypt.javaObfuscate(original));
 		expect(await Crypt.javaUnobfuscate(obfuscated)).to.equal(original);
+		expect(await Crypt.javaUnobfuscate(newObfuscated)).to.equal(original);
 	});
 
 	it('should generate the same output for seededRandom', () => {

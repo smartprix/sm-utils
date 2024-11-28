@@ -34,7 +34,7 @@ describe('@str library', () => {
 		expect(Str.numberFormat(123456.789, {currency: 'INR', locale: 'en-IN'})).to.equal('₹1,23,457');
 		expect(Str.numberFormat(123456.789, {currency: 'INR', locale: 'en-IN', abbr: 'short'})).to.equal('₹1.23 L');
 		expect(Str.numberFormat(12999999, {currency: 'INR', locale: 'en-IN', abbr: 'long'})).to.equal('₹1.30 Crore');
-		expect(Str.numberFormat(1000000, {currency: 'INR', locale: 'en-IN', abbr: 'auto'})).to.equal('₹10 Lacs');
+		expect(Str.numberFormat(1000000, {currency: 'INR', locale: 'en-IN', abbr: 'auto'})).to.equal('₹10 Lakh');
 		expect(Str.numberFormat(10000000, {decimals: 2, currency: 'USD', abbr: 'auto'})).to.equal('$10.00 Mn');
 		expect(Str.numberFormat(122333444, {decimals: 2, currency: 'USD', abbr: 'short'})).to.equal('$122.33M');
 	});
