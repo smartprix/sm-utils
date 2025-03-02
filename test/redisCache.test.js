@@ -935,7 +935,7 @@ describe('redis cache library @rediscache', () => {
 	});
 
 	// eslint-disable-next-line
-	it('should correctly handle useRedisCache=false', async () => {
+	describe('useRedisCach=false', () => {
 		const fns = [
 			'_get',
 			'_set',
@@ -945,92 +945,97 @@ describe('redis cache library @rediscache', () => {
 			'_delPattern',
 			'_clear',
 		];
-
-		// mock redis call functions
-		fns.forEach((fn) => {
-			RedisCache.prototype[`_original_${fn}`] = RedisCache.prototype[fn];
-			RedisCache.prototype[fn] = (...args) => {
-				throw new Error(`Redis.${fn} called with args: ${JSON.stringify(args)}`);
-			};
+		before(() => {
+			// mock redis call functions
+			fns.forEach((fn) => {
+				RedisCache.prototype[`_original_${fn}`] = RedisCache.prototype[fn];
+				RedisCache.prototype[fn] = (...args) => {
+					throw new Error(`Redis.${fn} called with args: ${JSON.stringify(args)}`);
+				};
+			});
+		});
+		after(() => {
+			// restore original functions
+			fns.forEach((fn) => {
+				RedisCache.prototype[fn] = RedisCache.prototype[`_original_${fn}`];
+				delete RedisCache.prototype[`_original_${fn}`];
+			});
 		});
 
-		const prefix = 'test_useRedisCache';
-		const redisCache = getCache(prefix, {useRedisCache: false});
+		// eslint-disable-next-line max-statements
+		it('should correctly handle useRedisCache=false', async () => {
+			const prefix = 'test_useRedisCache';
+			const redisCache = getCache(prefix, {useRedisCache: false});
 
-		RedisCache.redisGetCount = 0;
-		await redisCache.set('a', 'a1');
-		expect(await redisCache.get('a')).to.equal('a1');
-		expect(await redisCache.get('nonexistant')).to.be.undefined;
-		expect(await redisCache.get('nonexistant2', 'yo')).to.equal('yo');
+			RedisCache.redisGetCount = 0;
+			await redisCache.set('a', 'a1');
+			expect(await redisCache.get('a')).to.equal('a1');
+			expect(await redisCache.get('nonexistant')).to.be.undefined;
+			expect(await redisCache.get('nonexistant2', 'yo')).to.equal('yo');
 
-		let counter = 0;
-		const value = () => {
-			counter++;
-			return sleep('b1');
-		};
+			let counter = 0;
+			const value = () => {
+				counter++;
+				return sleep('b1');
+			};
 
-		const promise1 = redisCache.getOrSet('b', value);
-		const promise2 = redisCache.getOrSet('b', value);
-		const promise3 = redisCache.getOrSet('b', value);
-		expect(await redisCache.getOrSet('b', value)).to.equal('b1');
-		expect(await promise1).to.equal('b1');
-		expect(await promise2).to.equal('b1');
-		expect(await promise3).to.equal('b1');
-		expect(counter, 'getOrSet counter is wrong').to.equal(1);
+			const promise1 = redisCache.getOrSet('b', value);
+			const promise2 = redisCache.getOrSet('b', value);
+			const promise3 = redisCache.getOrSet('b', value);
+			expect(await redisCache.getOrSet('b', value)).to.equal('b1');
+			expect(await promise1).to.equal('b1');
+			expect(await promise2).to.equal('b1');
+			expect(await promise3).to.equal('b1');
+			expect(counter, 'getOrSet counter is wrong').to.equal(1);
 
-		expect(await redisCache.has('a')).to.be.true;
-		expect(await redisCache.has('b')).to.be.true;
-		expect(await redisCache.has('c')).to.be.false;
+			expect(await redisCache.has('a')).to.be.true;
+			expect(await redisCache.has('b')).to.be.true;
+			expect(await redisCache.has('c')).to.be.false;
 
-		expect(await redisCache.size()).to.equal(2);
+			expect(await redisCache.size()).to.equal(2);
 
-		await redisCache.del('b');
-		expect(await redisCache.has('b')).to.be.false;
-		expect(await redisCache.get('b')).to.be.undefined;
-		expect(await redisCache.getOrSet('b', value)).to.equal('b1');
-		expect(counter).to.equal(2);
+			await redisCache.del('b');
+			expect(await redisCache.has('b')).to.be.false;
+			expect(await redisCache.get('b')).to.be.undefined;
+			expect(await redisCache.getOrSet('b', value)).to.equal('b1');
+			expect(counter).to.equal(2);
 
-		await redisCache.set('a1', 'a11');
-		await redisCache.set('a2', 'a21');
-		expect(await redisCache.delContains('a')).to.equal(3);
-		expect(await redisCache.get('a')).to.be.undefined;
-		expect(await redisCache.get('a1')).to.be.undefined;
-		expect(await redisCache.get('a2')).to.be.undefined;
+			await redisCache.set('a1', 'a11');
+			await redisCache.set('a2', 'a21');
+			expect(await redisCache.delContains('a')).to.equal(3);
+			expect(await redisCache.get('a')).to.be.undefined;
+			expect(await redisCache.get('a1')).to.be.undefined;
+			expect(await redisCache.get('a2')).to.be.undefined;
 
-		expect(await redisCache.get('b')).to.equal('b1');
-		await redisCache.clear();
-		expect(await redisCache.get('b')).to.be.undefined;
+			expect(await redisCache.get('b')).to.equal('b1');
+			await redisCache.clear();
+			expect(await redisCache.get('b')).to.be.undefined;
 
-		// test sync
-		const result = [];
-		await redisCache.set('aw', 'b');
-		expect(await redisCache.get('aw')).to.equal('b');
+			// test sync
+			const result = [];
+			await redisCache.set('aw', 'b');
+			expect(await redisCache.get('aw')).to.equal('b');
 
-		const exec = workerExec;
-		result.push(await exec('set', {useRedisCache: false}));
-		// allow publish to be synchronized
-		await sleep('', 50);
-		// prefix was different, so value should not be deleted
-		expect(await redisCache.get('aw')).to.equal('b');
+			const exec = workerExec;
+			result.push(await exec('set', {useRedisCache: false}));
+			// allow publish to be synchronized
+			await sleep('', 50);
+			// prefix was different, so value should not be deleted
+			expect(await redisCache.get('aw')).to.equal('b');
 
-		result.push(await exec('set', {useRedisCache: false, prefix}));
-		// allow publish to be synchronized
-		await sleep('', 50);
-		expect(await redisCache.get('aw')).to.be.undefined;
+			result.push(await exec('set', {useRedisCache: false, prefix}));
+			// allow publish to be synchronized
+			await sleep('', 50);
+			expect(await redisCache.get('aw')).to.be.undefined;
 
-		await redisCache.set('aw', 'bw');
-		expect(await redisCache.get('aw')).to.equal('bw');
-		result.push(await exec('del', {useRedisCache: false, prefix}));
-		// allow publish to be synchronized
-		await sleep('', 50);
-		expect(await redisCache.get('aw')).to.be.undefined;
+			await redisCache.set('aw', 'bw');
+			expect(await redisCache.get('aw')).to.equal('bw');
+			result.push(await exec('del', {useRedisCache: false, prefix}));
+			// allow publish to be synchronized
+			await sleep('', 50);
+			expect(await redisCache.get('aw')).to.be.undefined;
 
-		expect(result).to.deep.equal([['bw', 'bw'], [null, 'bw'], [null, null]]);
-
-		// restore original functions
-		fns.forEach((fn) => {
-			RedisCache.prototype[fn] = RedisCache.prototype[`_original_${fn}`];
-			delete RedisCache.prototype[`_original_${fn}`];
+			expect(result).to.deep.equal([['bw', 'bw'], [null, 'bw'], [null, null]]);
 		});
 	});
 
@@ -1057,6 +1062,9 @@ describe('redis cache library @rediscache', () => {
 		before(() => {
 			process.on('unhandledRejection', unhandledRejectionListener);
 		});
+		after(() => {
+			process.removeListener('unhandledRejection', unhandledRejectionListener);
+		});
 
 		it('should not throw unhandled rejection while setting in background results in an error', async () => {
 			const getValue = function () {
@@ -1068,15 +1076,11 @@ describe('redis cache library @rediscache', () => {
 			await Vachan.sleep(100);
 			expect(unhandledRejections.length).to.equal(0);
 		});
-
-		after(() => {
-			process.removeListener('unhandledRejection', unhandledRejectionListener);
-		});
 	});
 
 	describe('emit', () => {
 		it('should correctly emit events', async () => {
-			let value = [];
+			const value = [];
 			const fn = (i, j) => {
 				value.push(i * j);
 			};
@@ -1088,9 +1092,9 @@ describe('redis cache library @rediscache', () => {
 			await Vachan.sleep(100);
 
 			aCache.on('muladd', fn);
-			await workerExec('emit');
-			await workerExec('emit');
 			aCache.emit('muladd', 4, 5);
+			await workerExec('emit');
+			await workerExec('emit');
 			await Vachan.sleep(100);
 
 			aCache.off('muladd', fn);
@@ -1098,7 +1102,7 @@ describe('redis cache library @rediscache', () => {
 			aCache.emit('muladd', 4, 5);
 			await Vachan.sleep(100);
 
-			expect(value).to.deep.equal([12, 12]);
+			expect(value).to.deep.equal([20, 12, 12]);
 		});
 	});
 });
