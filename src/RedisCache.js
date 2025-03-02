@@ -199,7 +199,7 @@ class RedisCache {
 			const redis = options.redis || options;
 			this.redis = redis;
 			this.isPika = false;
-			this.pubRedis = this.subscribe(redis.options);
+			this.pubRedis = this.constructor.subscribe(redis.options);
 		}
 		else {
 			opts = Object.assign({}, legacyOptions, options);
@@ -345,11 +345,7 @@ class RedisCache {
 		}
 		else if (command === 'emit') {
 			try {
-				const handlers = globalEventsMap.get(`${prefix}:${key}`);
-				if (!handlers) return;
-
-				const values = args ? JSON.parse(args) : [];
-				handlers.forEach(fn => fn(...values));
+				this._handleEvent(prefix, key, args ? JSON.parse(args) : []);
 			}
 			catch (e) {
 				this.logger.error(e);
@@ -554,6 +550,17 @@ class RedisCache {
 		}
 
 		return undefined;
+	}
+
+	static _handleEvent(prefix, event, args) {
+		try {
+			const handlers = globalEventsMap.get(`${prefix}:${event}`);
+			if (!handlers) return;
+			handlers.forEach(fn => fn(...args)?.catch?.(e => this.logger.error(e)));
+		}
+		catch (e) {
+			this.logger.error(e);
+		}
 	}
 
 	_localCachePublish(command, key = 'null', args = []) {
@@ -1359,6 +1366,7 @@ class RedisCache {
 		}
 
 		this._localCachePublish('emit', event, args);
+		this.constructor._handleEvent(this.prefix, event, args);
 	}
 
 	/**
@@ -1390,6 +1398,9 @@ class RedisCache {
 		const handlers = globalEventsMap.get(key);
 		if (!handlers) return;
 		handlers.delete(fn);
+		if (!handlers.size) {
+			globalEventsMap.delete(key);
+		}
 	}
 }
 
